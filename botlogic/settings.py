@@ -1,7 +1,5 @@
 import logging
 import os
-import pydantic_settings
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from aiogram import Bot, Dispatcher
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -10,10 +8,11 @@ load_dotenv()
 
 
 @dataclass
-class Secrets:
+class Secrets():
     bot_token: str = os.getenv("TOKEN_DEV")
     admin_id: str = os.getenv("ADMIN_USERS_LIST")
     manager_id: str = os.getenv("MANAGER_ID_LIST")
+
 
 
 logging.basicConfig(

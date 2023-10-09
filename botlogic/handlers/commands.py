@@ -1,5 +1,6 @@
-from aiogram import types, Router
-from aiogram.filters import Command
+
+from aiogram import types, Router, html
+from aiogram.filters import Command, CommandObject
 from aiogram.enums.dice_emoji import DiceEmoji
 from botlogic.settings import Secrets
 
@@ -10,7 +11,17 @@ router = Router()
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message):
-    await message.answer("Hello!")
+    await message.answer("Hello, <b>world</b>!", parse_mode="HTML")
+    await message.answer("Hello, *world*\!", parse_mode="MarkdownV2")
+
+
+@router.message(Command("name"))
+async def cmd_name(message: types.Message, command: CommandObject):
+    if command.args:
+        await message.answer(f"Привет, {html.bold(html.quote(command.args))}")
+    else:
+        await message.answer("Пожалуйста. укажи свое имя после команды /name!")
+
 
 #TODO: Необходимо получить значение выпавшее на кубике
 @router.message(Command("dice"))
