@@ -1,19 +1,17 @@
 import asyncio
 
-from aiogram.filters import Command
 
 from botlogic.handlers.events import start_bot, stop_bot
 from botlogic.settings import bot, dp
-from botlogic.handlers.commands import router, cmd_stop, cmd_dice
-from botlogic.settings import Secrets
+from botlogic.settings import Secrets, router
+from botlogic.handlers.commands import *
 
-
-async def start() -> None:
+async def start():
     dp.include_routers(router)
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
-    dp.message.register(cmd_stop, Command("stop"))
-    dp.message.register(cmd_dice, Command("dice"))
+
+    dp.message.register(cmd_start, cmd_help)
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
