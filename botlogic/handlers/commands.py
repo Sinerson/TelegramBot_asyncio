@@ -1,7 +1,8 @@
 from aiogram.filters import Command, ChatMemberUpdatedFilter, KICKED, MEMBER
 from aiogram.types import Message, ChatMemberUpdated
-from botlogic.settings import dp
+from botlogic.settings import dp, Secrets
 from botlogic.handlers.events import bot_banned, bot_unbanned
+from botlogic.filters import IsAdmin, admin_ids
 
 
 # пример создания фильтра для хэндлера(обработчика)
@@ -20,10 +21,17 @@ async def cmd_start(message: Message):
     await message.answer(text="Start command")
 
 
+# Проверка на админа
+@dp.message(IsAdmin(admin_ids))
+async def answer_if_admins_update(message: Message):
+    await message.answer(text="Вы в списке админов")
+
+
 # Событие апдейта при блокировке бота пользователем
 @dp.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=KICKED))
 async def user_blocked_bot(event: ChatMemberUpdated):
     print(f"{bot_banned()} пользователем {event.from_user.id}")
+
 
 # TODO: Необходимо разобраться как обрабатывать события блокировки бота администраторами, иначе валятся ошибки
 #  отправки уведомлений о запуске и отсановке бота Событие апдейта при разблокировании бота пользователем

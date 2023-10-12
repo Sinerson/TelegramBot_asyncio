@@ -10,7 +10,7 @@ load_dotenv()
 @dataclass
 class Secrets:
     bot_token: str = os.getenv("TOKEN_DEV")
-    admin_id: list[int] = os.getenv("ADMIN_USERS_LIST")
+    admin_id: list[str] = os.getenv("ADMIN_USERS_LIST")
     manager_id: list[int] = os.getenv("MANAGER_ID_LIST")
 
 
