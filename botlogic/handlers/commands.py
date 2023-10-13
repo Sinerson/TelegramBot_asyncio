@@ -1,8 +1,9 @@
+from aiogram import F
 from aiogram.filters import Command, ChatMemberUpdatedFilter, KICKED, MEMBER
 from aiogram.types import Message, ChatMemberUpdated
 from botlogic.settings import dp, Secrets
 from botlogic.handlers.events import bot_banned, bot_unbanned
-from botlogic.filters import IsAdmin, admin_ids
+from botlogic.filters import IsAdmin, admin_ids, NumbersInMessage
 
 
 # пример создания фильтра для хэндлера(обработчика)
@@ -22,9 +23,9 @@ async def cmd_start(message: Message):
 
 
 # Проверка на админа
-@dp.message(IsAdmin(admin_ids))
+'''@dp.message(IsAdmin(admin_ids))
 async def answer_if_admins_update(message: Message):
-    await message.answer(text="Вы в списке админов")
+    await message.answer(text="Вы в списке админов")'''
 
 
 # Событие апдейта при блокировке бота пользователем
@@ -34,7 +35,9 @@ async def user_blocked_bot(event: ChatMemberUpdated):
 
 
 # TODO: Необходимо разобраться как обрабатывать события блокировки бота администраторами, иначе валятся ошибки
-#  отправки уведомлений о запуске и отсановке бота Событие апдейта при разблокировании бота пользователем
+#  отправки уведомлений о запуске и остановке бота
+
+#  Событие апдейта при разблокировании бота пользователем
 @dp.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=MEMBER))
 async def user_blocked_bot(event: ChatMemberUpdated):
     print(f"{bot_unbanned()} пользователем {event.from_user.id}")
@@ -44,6 +47,24 @@ async def user_blocked_bot(event: ChatMemberUpdated):
 @dp.message(Command(commands=["help"]))
 async def cmd_help(message: Message):
     await message.answer("Раздел помощи")
+
+
+# Этот хэндлер будет срабатывать, если сообщение пользователя
+# начинается с фразы "найди числа" и в нем есть числа
+@dp.message(F.text.lower().startswith('найди числа'),
+            NumbersInMessage())
+# Помимо объекта типа Message, принимаем в хэндлер список чисел из фильтра
+async def process_if_numbers(message: Message, numbers: list[int]):
+    await message.answer(
+            text=f'Нашел: {", ".join(str(num) for num in numbers)}')
+
+
+# Этот хэндлер будет срабатывать, если сообщение пользователя
+# начинается с фразы "найди числа", но в нем нет чисел
+@dp.message(F.text.lower().startswith('найди числа'))
+async def process_if_not_numbers(message: Message):
+    await message.answer(
+            text='Не нашел что-то :(')
 
 
 # Хэндлер для всех прочих сообщений, не обрабатываемых первыми двумя (/start, /help)
