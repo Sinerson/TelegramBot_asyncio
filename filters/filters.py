@@ -1,12 +1,12 @@
 from aiogram.filters import BaseFilter
 from handlers.new_user_handlers import Message
-from settings import Secrets
+from settings import BotSecrets
 
 # ID хранятся в строке, через запятую, как параметр класса Secret. Возьмем эту строку заменим в ней пробелы,
 # превратив в список и произведем приведение всех элементов списка к int
-admin_ids: list[int] = list(map(int, Secrets.admin_id.replace(' ', '').replace(';', ',').strip().split(',')))
-user_ids: list[int] = list(map(int, Secrets.user_id.replace(' ', '').replace(';', ',').strip().split(',')))
-manager_ids: list[int] = list(map(int, Secrets.manager_id.replace(' ', '').replace(';', ',').strip().split(',')))
+admin_ids: list[int] = list(map(int, BotSecrets.admin_id.replace(' ', '').replace(';', ',').strip().split(',')))
+user_ids: list[int] = list(map(int, BotSecrets.user_id.replace(' ', '').replace(';', ',').strip().split(',')))
+manager_ids: list[int] = list(map(int, BotSecrets.manager_id.replace(' ', '').replace(';', ',').strip().split(',')))
 
 
 class IsAdmin(BaseFilter):  # Наследуемся от базового фильтра

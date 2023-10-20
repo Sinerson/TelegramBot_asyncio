@@ -3,9 +3,9 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users
-from settings import Secrets
+from settings import BotSecrets
 
-bot = Bot(token=Secrets.bot_token, parse_mode="HTML")
+bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
 dp = Dispatcher()
 
 
