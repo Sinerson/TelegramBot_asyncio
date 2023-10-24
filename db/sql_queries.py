@@ -1,38 +1,47 @@
 # SQL queries
-get_abonent_by_phonenumber = '''
-							select *
-							from INTEGRAL..OTHER_DEVICES
-							where TYPE_CODE = 17 and DEVICE like '%(?)'
-'''
+get_abonent_by_phonenumber = '''select DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
+       S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
+           + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX as ADDRESS
+from (select * from INTEGRAL..OTHER_DEVICES where TYPE_CODE = 17 and DEVICE like '%' + ? ) OD
+join INTEGRAL..CONTRACTS CS on OD.CLIENT_CODE = CS.CLIENT_CODE
+join INTEGRAL..CLIENTS CL on OD.CLIENT_CODE = CL.CLIENT_CODE and CS.CLIENT_CODE = CL.CLIENT_CODE
+left join INTEGRAL..PEOPLES P on CL.PEOPLE_CODE = P.PEOPLE_CODE
+left join INTEGRAL..FIRMS F on CL.FIRM_CODE = F.FIRM_CODE
+join INTEGRAL..ADDRESS A on OD.ADDRESS_CODE = A.ADDRESS_CODE
+join INTEGRAL..STREETS S on A.STREET_CODE = S.STREET_CODE
+join INTEGRAL..TOWNS T on S.TOWN_CODE = T.TOWN_CODE
+group by DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME),
+         S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
+           + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX'''
 
 checkPhone = """select grant_phone
                from SV..TBP_TELEGRAM_BOT
-			   where chat_id = (?)
+			   where chat_id = ?
 			"""
 checkUserExists = """select E = case
 					when exists(
 								select    phonenumber
 								from    SV..TBP_TELEGRAM_BOT
-								where     user_id = (?)
+								where     user_id = ?
 								)
 					then 1
 					else 0
 					end"""
 
 addUser = """insert into SV..TBP_TELEGRAM_BOT (user_id, chat_id, date)
-					values ((?),(?),getdate())"""
+					values (? , ? , getdate())"""
 
 updateUser = """update SV..TBP_TELEGRAM_BOT
-					set phonenumber = (?),
+					set phonenumber = ?,
                     grant_phone = '1',
-                    contract_code = cast((?) as int)
-					where user_id = (?) and chat_id = (?)"""
+                    contract_code = cast(? as int)
+					where user_id = ? and chat_id = ?"""
 
 delPhone = """update SV..TBP_TELEGRAM_BOT
 					set grant_phone = '0'
-					where phonenumber = (?)"""
+					where phonenumber = ?"""
 
-delUser = """delete from SV.dbo.TBP_TELEGRAM_BOT where chat_id = (?)"""
+delUser = """delete from SV.dbo.TBP_TELEGRAM_BOT where chat_id = ?"""
 
 getContractCode = \
 	"""
@@ -40,7 +49,7 @@ getContractCode = \
 					from INTEGRAL..OTHER_DEVICES OD
 					join INTEGRAL..CONTRACT_CLIENTS CL on CL.CLIENT_CODE = OD.CLIENT_CODE
 					join INTEGRAL..CONTRACTS CS on CS.CONTRACT_CODE = CL.CONTRACT_CODE
-					where DEVICE like '%'+right(cast((?) as varchar), 10)+'%'
+					where DEVICE like '%'+right(cast(? as varchar), 10)+'%'
 """
 
 getBalance = \

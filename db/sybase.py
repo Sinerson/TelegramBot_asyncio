@@ -1,6 +1,6 @@
 import pyodbc
 from settings import DbSecrets
-
+from icecream import ic
 
 class DBConnector(object):
     def __init__(self):
@@ -38,15 +38,18 @@ class DbConnection(object):
         return cls.connection
 
     @classmethod
-    def execute_query(cls, query) -> dict:
+    def execute_query(cls, query, params=None) -> list:
         connection = cls.get_connection()
+        result = []
         try:
-            result = []
             cursor = connection.cursor()
         except pyodbc.ProgrammingError:
             connection = cls.get_connection(new=True)
             cursor = connection.cursor()
-        cursor.execute(query)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
         for row in cursor.fetchall():
             columns = [column[0] for column in cursor.description]
             result.append(dict(zip(columns, row)))
