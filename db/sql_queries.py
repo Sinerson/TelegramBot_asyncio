@@ -1,5 +1,5 @@
 # SQL queries
-get_abonent_by_phonenumber = '''select DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
+get_abonent_by_phonenumber_query = '''select DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
        S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
            + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX as ADDRESS
 from (select * from INTEGRAL..OTHER_DEVICES where TYPE_CODE = 17 and DEVICE like '%' + ? ) OD
@@ -52,7 +52,7 @@ getContractCode = \
 					where DEVICE like '%'+right(cast(? as varchar), 10)+'%'
 """
 
-getBalance = \
+getBalance_query = \
 	"""
 					declare     @CurDate datetime,
                                 @CurMonth datetime
@@ -199,3 +199,33 @@ getPersonalAreaPassword = \
 					from INTEGRAL..CLIENT_PINS
 					where CLIENT_CODE = cast((?) as int)
 """
+
+get_admin_query = '''
+select user_id from SV..TBP_TELEGRAM_BOT where admin = 1
+'''
+
+set_admin_query = '''
+update SV..TBP_TELEGRAM_BOT
+set admin = 1, known_user = 1, manager = 0
+where user_id = ?
+'''
+
+get_manager_query = '''
+select user_id from SV..TBP_TELEGRAM_BOT where manager = 1
+'''
+
+set_manager_query = '''
+update SV..TBP_TELEGRAM_BOT
+set manager = 1, known_user = 1, admin = 0
+where user_id = ?
+'''
+
+get_user_query = '''
+select user_id from SV..TBP_TELEGRAM_BOT where known_user = 1
+'''
+
+set_user_query = '''
+update SV..TBP_TELEGRAM_BOT
+set known_user = 1, manager = 0, admin = 0
+where user_id = ?
+'''

@@ -1,30 +1,23 @@
 from icecream import ic
 from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from lexicon.lexicon_ru import LEXICON_RU
 
 # Создаем список списков с кнопками
 buttons: list[list[KeyboardButton]] = [
-    [KeyboardButton(text="Послать сообщение пользователям бота")],
-    [KeyboardButton(text="Проверка связи с БД", request_contact=True)],
-    [KeyboardButton(text="Добавить менеджера"), KeyboardButton(text="Добавить админа")],
-    [KeyboardButton(text="Мой баланс"), KeyboardButton(text="Мои услуги")]
+    [KeyboardButton(text=LEXICON_RU['send_message_to_users'])],
+    [KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
+    [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
+    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True), KeyboardButton(text=LEXICON_RU['my_services'])]
 ]
 
 menu_keyboard = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
 
-
-'''def get_inline_buttons(*args):
-    inline_buttons = []
-    for v in args:
-        sub = v.split(",")
-        inline_buttons.append(sub)
-    ic()
-    return InlineKeyboardMarkup(inline_buttons)
-'''
-url_button_1 = InlineKeyboardButton(text='ул.Кстовская 5-31', callback_data='big_button_1_pressed')
-url_button_2 = InlineKeyboardButton(text='ул.Глебова 4-', callback_data='big_button_1_pressed')
-
-choose_abonent_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [url_button_1],
-    [url_button_2]
-])
+def make_keyboard(abonent_from_db):
+    button_list = []
+    for dicts in abonent_from_db:
+        button = []
+        button.append(InlineKeyboardButton(text=f"{LEXICON_RU['contract']} {str(dicts['CONTRACT'])}, {LEXICON_RU['address']} {str(dicts['ADDRESS'])}",\
+                                           callback_data=f'BALANCE {str(dicts["CONTRACT_CODE"])}'))
+        button_list.append(button)
+    return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
