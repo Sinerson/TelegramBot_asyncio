@@ -35,6 +35,7 @@ class DbConnection(object):
     def get_connection(cls, new=False):
         if new or not cls.connection:
             cls.connection = DBConnector().create_connection()
+            cls.connection.autocommit = True # Если убрать этот пункт, не отрабатывет вызов хранимых процедур с передачей параметров
         return cls.connection
 
     @classmethod

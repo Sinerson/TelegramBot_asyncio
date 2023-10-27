@@ -8,9 +8,16 @@ from db.sybase import DbConnection
 # Получаем из хэндлера callback data и выделяем из нее код контракта, после чего отдаем его назад
 def contract_code_from_callback(callback_data):
     for word in callback_data.split():
-        normalized_contract_code = word.replace('.', '').replace(',', '').strip()
+        normalized_contract_code = word.replace('.', '').replace(',', '').replace(' ', '').strip()
         if normalized_contract_code.isdigit():
             return normalized_contract_code
+
+
+def contract_clinet_type_code(callback_data):
+    for word in callback_data.split():
+        normalized_data = word.replace('.', '').replace(',', '').replace(' ', '').strip()
+        if normalized_data.isdigit():
+            yield normalized_data
 
 
 # Делаем запрос в БД для проверки существования номера телефона и кому он принадлежит
@@ -28,7 +35,7 @@ def get_balance_by_contract_code(contract_code: str):
 def get_client_services_list(contract_code, client_code, client_type_code):
     result = DbConnection.execute_query(
         f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
-    ic(result)
+    return result
 
 
 def contract_code_by_userid(user_id: str):

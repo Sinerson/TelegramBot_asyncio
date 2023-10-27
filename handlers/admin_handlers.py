@@ -7,7 +7,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import menu_keyboard, make_keyboard, make_keyboard_for_services
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
-    get_client_services_list, contract_code_by_userid
+    get_client_services_list, contract_code_by_userid, contract_clinet_type_code
 
 admin_rt = Router()
 
@@ -46,18 +46,21 @@ async def balance_answer(callback: CallbackQuery):
             reply_markup=callback.message.reply_markup)
         await callback.answer()
 
+
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                          F.data.startswith(
                              "SERVICES"))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def services_answer(callback: CallbackQuery):
-    callback_data = callback.data
-    services = get_client_services_list()
+    abonents_data: list = list(map(int, contract_clinet_type_code(callback.data)))
+    services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
+    services_list = []
     for el in services:
-         ic(el)
-        # await callback.message.edit_text(
-            # text=f"{LEXICON_RU['service']} {round(int(el['EO_MONEY']), 2)}, {LEXICON_RU['cost']} {} {LEXICON_RU['rubles']}",
-            # reply_markup=callback.message.reply_markup)
-    await callback.answer()
+        services_list.append(f'Услуга: {el["TARIFF_NAME"]}, стоимость: {round(float(el["TARIFF_COST"]),2)}')
+    await callback.message.edit_text(
+    text=f"{LEXICON_RU['service']} \n {services_list}",
+    reply_markup=callback.message.reply_markup)
+    # await callback.answer()
+
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), F.text == 'Мои услуги')
 async def client_services(message: Message):
