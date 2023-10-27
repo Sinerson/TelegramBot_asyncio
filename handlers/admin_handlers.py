@@ -50,6 +50,7 @@ async def balance_answer(callback: CallbackQuery):
                          F.data.startswith(
                              "SERVICES"))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def services_answer(callback: CallbackQuery):
+    callback_data = callback.data
     services = get_client_services_list()
     for el in services:
          ic(el)
