@@ -1,8 +1,8 @@
 # SQL queries
-get_abonent_by_phonenumber_query = '''select DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
+get_abonent_by_phonenumber_query = '''select DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, rtrim(CONTRACT) as CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
        S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
-           + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX as ADDRESS
-from (select * from INTEGRAL..OTHER_DEVICES where TYPE_CODE = 17 and DEVICE like '%' + ? ) OD
+           + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX as ADDRESS, CL.TYPE_CODE
+from (select * from INTEGRAL..OTHER_DEVICES where TYPE_CODE = 17 and rtrim(DEVICE) like '%' + ? ) OD
 join INTEGRAL..CONTRACTS CS on OD.CLIENT_CODE = CS.CLIENT_CODE
 join INTEGRAL..CLIENTS CL on OD.CLIENT_CODE = CL.CLIENT_CODE and CS.CLIENT_CODE = CL.CLIENT_CODE
 left join INTEGRAL..PEOPLES P on CL.PEOPLE_CODE = P.PEOPLE_CODE
@@ -10,9 +10,9 @@ left join INTEGRAL..FIRMS F on CL.FIRM_CODE = F.FIRM_CODE
 join INTEGRAL..ADDRESS A on OD.ADDRESS_CODE = A.ADDRESS_CODE
 join INTEGRAL..STREETS S on A.STREET_CODE = S.STREET_CODE
 join INTEGRAL..TOWNS T on S.TOWN_CODE = T.TOWN_CODE
-group by DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME),
+group by DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, rtrim(CONTRACT), coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME),
          S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
-           + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX'''
+           + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX, CL.TYPE_CODE'''
 
 checkPhone = """select grant_phone
                from SV..TBP_TELEGRAM_BOT
@@ -141,7 +141,7 @@ getContractCodeByUserId = \
 	"""
 					select contract_code
 					from SV..TBP_TELEGRAM_BOT
-					where user_id = (?)
+					where user_id = ?
 """
 
 getLastTechClaims = \
@@ -172,10 +172,10 @@ getLastTechClaims = \
 """
 getClientCodeByContractCode = \
 	"""
-					select CL.CLIENT_CODE, CL.TYPE_CODE
+					select CL.CLIENT_CODE, CL.TYPE_CODE, CL.TYPE_CODE
 					from INTEGRAL..CONTRACT_CLIENTS CCL
 					join INTEGRAL..CLIENTS CL on CCL.CLIENT_CODE = CL.CLIENT_CODE
-					where cast(CONTRACT_CODE as varchar(10)) = (?)
+					where CONTRACT_CODE = ?
 """
 
 getPromisedPayDate = \
@@ -228,4 +228,15 @@ set_user_query = '''
 update SV..TBP_TELEGRAM_BOT
 set known_user = 1, manager = 0, admin = 0
 where user_id = ?
+'''
+
+get_phonenumber_by_user_id_query = '''
+select phonenumber from SV..TBP_TELEGRAM_BOT where user_id = cast(? as varchar(25))
+'''
+
+get_client_code_by_contract_code = '''
+select CL.CLIENT_CODE, CONTRACT_CODE, TYPE_CODE
+from INTEGRAL..CONTRACT_CLIENTS CC
+join INTEGRAL..CLIENTS CL on CC.CLIENT_CODE = CL.CLIENT_CODE
+where CONTRACT_CODE in ( ? )
 '''
