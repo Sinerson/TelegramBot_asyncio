@@ -1,6 +1,6 @@
 LEXICON_RU: dict[str: str] = { 'yes': '<b>Да</b>',
                                'no': '<b>Нет</b>',
-                               'rubles': '<b>руб.</b>',
+                               'rubles': 'руб.',
                                # new_user_handlers
                                'new_user':'<b>Новый пользователь</b>',
                                'user_havent_phone_in_profile': '<b>У вас не указан номер телефона в профиле Telegram!</b>',
@@ -28,5 +28,7 @@ LEXICON_RU: dict[str: str] = { 'yes': '<b>Да</b>',
                                'phone_not_found': '<b>Совпадений по номеру телефона не найдено</b>',
                                'balance_is': '<b>Баланс составляет:</b>',
                                'service': '<b>Услуга</b>',
-                               'cost': '<b>Стоимость</b>'
+                               'cost': '<b>Стоимость</b>',
+                               'warning_actual_info': 'Внимание! Информация актуальна на момент запроса и, может измениться со временем.',
+                               'something_wrong': 'Что-то пошло не так...'
 }

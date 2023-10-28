@@ -52,17 +52,19 @@ async def balance_answer(callback: CallbackQuery):
                              "SERVICES"))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def services_answer(callback: CallbackQuery):
     abonents_data: list = list(map(int, contract_clinet_type_code(callback.data)))
-    services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
-    services_list = []
-    for el in services:
-        services_list.append(f'Услуга: {el["TARIFF_NAME"]}, стоимость: {round(float(el["TARIFF_COST"]),2)}')
-    await callback.message.edit_text(
-    text=f"{LEXICON_RU['service']} \n {services_list}",
-    reply_markup=callback.message.reply_markup)
-    # await callback.answer()
+    if abonents_data:
+        services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
+        services_list = []
+        for el in services:
+            services_list.append(f"{LEXICON_RU['service']}: {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']),2)} {LEXICON_RU['rubles']}")
+        string = "\n".join(str(el) for el in services_list)
+        await callback.message.edit_text(text=string, parse_mode='HTML')
+        # await callback.answer(text=LEXICON_RU['warning_actual_info'], show_alert=True)
+    else:
+        await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
-@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), F.text == 'Мои услуги')
+@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), F.text.lower() == 'мои услуги')
 async def client_services(message: Message):
     _abonents = contract_code_by_userid(message.from_user.id)
     if len(_abonents) > 1:
