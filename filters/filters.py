@@ -14,7 +14,6 @@ user_ids: list[int] = get_known_users()
 manager_ids: list[int] = get_manager()
 
 
-
 class IsAdmin(BaseFilter):  # Наследуемся от базового фильтра
 
     def __init__(self, admin_ids: list[int]) -> None:

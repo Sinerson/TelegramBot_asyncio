@@ -3,12 +3,11 @@ from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from lexicon.lexicon_ru import LEXICON_RU
 
-# Создаем список списков с кнопками
+# Создаем список списков с кнопками для основного меню
 buttons: list[list[KeyboardButton]] = [
     [KeyboardButton(text=LEXICON_RU['send_message_to_users']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
     [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
-    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True),
-     KeyboardButton(text=LEXICON_RU['my_services'])],
+    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True),KeyboardButton(text=LEXICON_RU['my_services'])],
     [KeyboardButton(text=LEXICON_RU['promised_payment'])]
 ]
 
@@ -25,7 +24,8 @@ def make_keyboard(abonent_from_db):
         button_list.append(button)
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
-def make_keyboard_for_services(abonents_data):
+
+def make_keyboard_for_services(abonents_data) -> InlineKeyboardMarkup:
     button_list = []
     for dicts in abonents_data:
         button = []
@@ -34,3 +34,17 @@ def make_keyboard_for_services(abonents_data):
                                            callback_data=f'SERVICES {str(dicts["CONTRACT_CODE"])}, {str(dicts["CLIENT_CODE"])}, {str(dicts["TYPE_CODE"])}'))
         button_list.append(button)
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
+
+
+def yes_no_keyboard(prise: str) -> InlineKeyboardMarkup:
+    yes_no_buttons: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text=LEXICON_RU['yes'], callback_data=f'DICE yes {prise}')],
+        [InlineKeyboardButton(text=LEXICON_RU['no'], callback_data=f'DICE no {prise}')]
+    ]
+    return InlineKeyboardMarkup(row_width=2, inline_keyboard=yes_no_buttons)
+
+
+def del_dice_kb() -> ReplyKeyboardMarkup:
+    del_buttons = buttons
+    del_buttons[0].pop(1)
+    return ReplyKeyboardMarkup(keyboard=del_buttons, resize_keyboard=True)

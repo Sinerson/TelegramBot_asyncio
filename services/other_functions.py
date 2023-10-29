@@ -1,4 +1,5 @@
 from icecream import ic
+from db.fake_marketing_actions import PRISE_ACTION
 
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
     get_phonenumber_by_user_id_query, getContractCode
@@ -41,6 +42,9 @@ def get_client_services_list(contract_code, client_code, client_type_code):
 def contract_code_by_userid(user_id: str):
     result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
     phonenumber = result[0]['phonenumber'][-10:]
-    # result2: list[dict] = DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
-    # count = len(result2)  # Получим количество абонентов в выборке
     return DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
+
+
+def get_prise(dice_value: int):
+    return PRISE_ACTION[dice_value]
+

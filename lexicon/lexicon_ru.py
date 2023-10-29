@@ -1,5 +1,5 @@
-LEXICON_RU: dict[str: str] = { 'yes': '<b>Да</b>',
-                               'no': '<b>Нет</b>',
+LEXICON_RU: dict[str: str] = { 'yes': 'Да',
+                               'no': 'Нет',
                                'rubles': 'руб.',
                                # new_user_handlers
                                'new_user':'<b>Новый пользователь</b>',
@@ -10,7 +10,7 @@ LEXICON_RU: dict[str: str] = { 'yes': '<b>Да</b>',
                                'you_send_voice_text_or_video': '<b>Вы прислали войс, видео или текст</b>',
                                'you_send_a_location': '<b>Вы прислали геопозицию</b>',
                                'bot_not_understanding': '<b>Извините, это сообщение пока не может быть распознано ботом</b>',
-                               'unknown_callback': '<b>Неизвестный callback</b>',
+                               'unknown_callback': 'Неизвестный callback',
                                # admin_kb
                                'send_message_to_users': 'Рассылка пользователям',
                                'drop_the_dice': 'Бросить кубик',
@@ -30,5 +30,7 @@ LEXICON_RU: dict[str: str] = { 'yes': '<b>Да</b>',
                                'service': '<b>Услуга</b>',
                                'cost': '<b>Стоимость</b>',
                                'warning_actual_info': 'Внимание! Информация актуальна на момент запроса и, может измениться со временем.',
-                               'something_wrong': 'Что-то пошло не так...'
+                               'something_wrong': 'Что-то пошло не так...',
+                               'your_choice': 'Ваш выбор:',
+                               'fixed_thanks': 'добавлен в базу, через некоторое время с вами свяжется менеджер. Спасибо за участие!'
 }
