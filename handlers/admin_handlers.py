@@ -82,17 +82,16 @@ async def send_dice(message: Message):
     prise: str = get_prise(_dice.dice.value)
     await sleep(4)
     yn_keyboard = yes_no_keyboard(prise)
-    await message.answer(text=f"Ваш выигрыш: <b>{prise}</b>\nЗапомнить выбор?", reply_markup=yn_keyboard, parse_mode='HTML')
+    await message.answer(text=f"Ваш выигрыш: <b>{prise}</b>\nОстановитесь на этом варианте?", reply_markup=yn_keyboard, parse_mode='HTML')
 
 
-@admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),F.data.startswith("DICE"))
+@admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), F.data.startswith("DICE"))
 async def dice_callback(callback: CallbackQuery):
     callback_data = callback.data.split()
     if 'yes' in callback_data:
         prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
-        ic(prise_action)
         await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u> {LEXICON_RU['fixed_thanks']}", parse_mode='HTML')
         await callback.answer()
     elif 'no' in callback_data:
-        await callback.message.edit_text(text="Вы отказались от выбора! Кидайте кубик еще раз!", parse_mode='HTML')
+        await callback.message.edit_text(text="Вы отказались от выбора! Можете попытать удачу позже", parse_mode='HTML')
         await callback.answer()
