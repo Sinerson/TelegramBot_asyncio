@@ -220,6 +220,10 @@ set manager = 1, known_user = 1, admin = 0
 where user_id = ?
 '''
 
+get_all_users = '''
+select user_id from SV..TBP_TELEGRAM_BOT
+'''
+
 get_user_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where known_user = 1
 '''

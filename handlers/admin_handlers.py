@@ -9,7 +9,7 @@ from asyncio import sleep
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import menu_keyboard, make_keyboard, make_keyboard_for_services, yes_no_keyboard, del_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
-    get_client_services_list, contract_code_by_userid, contract_clinet_type_code, get_prise
+    get_client_services_list, contract_code_by_userid, contract_clinet_type_code, get_prise, get_all_users_from_db
 
 admin_rt = Router()
 

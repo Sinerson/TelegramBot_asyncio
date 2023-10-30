@@ -2,7 +2,7 @@ from icecream import ic
 from db.fake_marketing_actions import PRISE_ACTION
 
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
-    get_phonenumber_by_user_id_query, getContractCode
+    get_phonenumber_by_user_id_query, getContractCode, get_all_users
 from db.sybase import DbConnection
 
 
@@ -48,3 +48,7 @@ def contract_code_by_userid(user_id: str) -> list:
 def get_prise(dice_value: int) -> str:
     return PRISE_ACTION[dice_value]
 
+
+def get_all_users_from_db() -> list[dict]:
+    result = DbConnection.execute_query(get_all_users)
+    return result
