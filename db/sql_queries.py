@@ -178,11 +178,11 @@ getClientCodeByContractCode = \
 					where CONTRACT_CODE = ?
 """
 
-getPromisedPayDate = \
+PromisedPayDate = \
 """
 					select cast(DATE_CHANGE as smalldatetime) as DATE_CHANGE
 					from INTEGRAL..CLIENT_PROPERTIES
-					where CLIENT_CODE = (?) and PROP_CODE = 823
+					where CLIENT_CODE = ? and PROP_CODE = 823
 """
 
 getInetAccountPassword = \

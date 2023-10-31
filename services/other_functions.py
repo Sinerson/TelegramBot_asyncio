@@ -1,8 +1,11 @@
+import datetime
+from typing import List, Any
+
 from icecream import ic
 from db.fake_marketing_actions import PRISE_ACTION
 
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
-    get_phonenumber_by_user_id_query, getContractCode, get_all_users
+    get_phonenumber_by_user_id_query, getContractCode, get_all_users, PromisedPayDate
 from db.sybase import DbConnection
 
 
@@ -14,7 +17,7 @@ def contract_code_from_callback(callback_data) -> int:
             return normalized_contract_code
 
 
-def contract_clinet_type_code(callback_data: str) -> int:
+def contract_clinet_type_code_from_callback(callback_data: str) -> int:
     for word in callback_data.split():
         normalized_data = word.replace('.', '').replace(',', '').replace(' ', '').strip()
         if normalized_data.isdigit():
@@ -52,3 +55,14 @@ def get_prise(dice_value: int) -> str:
 def get_all_users_from_db() -> list[dict]:
     result = DbConnection.execute_query(get_all_users)
     return result
+
+
+def set_promised_payment(client_code: int) -> list:
+    result = DbConnection.execute_query(f'exec MEDIATE..spMangoSetPromisedPay {client_code}')
+    return result
+
+
+def get_promised_pay_date(client_code: int) -> str:
+    result = DbConnection.execute_query(PromisedPayDate, client_code)
+    f = lambda date:[res["DATE_CHANGE"] for res in date]
+    return f(result)[0].strftime("%Y.%m.%d %H:%M")

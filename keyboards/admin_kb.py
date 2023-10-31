@@ -25,13 +25,13 @@ def make_keyboard(abonent_from_db):
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
 
-def make_keyboard_for_services(abonents_data) -> InlineKeyboardMarkup:
+def keyboard_for_services_and_promised_payment(abonents_data: list[dict], callback_name: str) -> InlineKeyboardMarkup:
     button_list = []
     for dicts in abonents_data:
         button = []
         button.append(InlineKeyboardButton(text=f"{LEXICON_RU['contract']} {str(dicts['CONTRACT'])},"
                                                 f" {LEXICON_RU['address']} {str(dicts['ADDRESS'])}",
-                                           callback_data=f'SERVICES {str(dicts["CONTRACT_CODE"])}, {str(dicts["CLIENT_CODE"])}, {str(dicts["TYPE_CODE"])}'))
+                                           callback_data=f'{callback_name} {str(dicts["CONTRACT_CODE"])}, {str(dicts["CLIENT_CODE"])}, {str(dicts["TYPE_CODE"])}'))
         button_list.append(button)
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
