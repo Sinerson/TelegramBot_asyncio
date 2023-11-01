@@ -2,6 +2,7 @@ import pyodbc
 from settings import DbSecrets
 from icecream import ic
 
+
 class DBConnector(object):
     def __init__(self):
         self.driver = DbSecrets.driver
@@ -35,7 +36,7 @@ class DbConnection(object):
     def get_connection(cls, new=False):
         if new or not cls.connection:
             cls.connection = DBConnector().create_connection()
-            cls.connection.autocommit = True # Если убрать этот пункт, не отрабатывет вызов хранимых процедур с передачей параметров
+            cls.connection.autocommit = True  # принудительный автокоммит, т.к. он почему-то игнорится в строке подключения
         return cls.connection
 
     @classmethod

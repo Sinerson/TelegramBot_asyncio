@@ -7,7 +7,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 buttons: list[list[KeyboardButton]] = [
     [KeyboardButton(text=LEXICON_RU['send_message_to_users']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
     [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
-    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True),KeyboardButton(text=LEXICON_RU['my_services'])],
+    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True), KeyboardButton(text=LEXICON_RU['my_services'])],
     [KeyboardButton(text=LEXICON_RU['promised_payment'])]
 ]
 
@@ -45,6 +45,6 @@ def yes_no_keyboard(prise: str) -> InlineKeyboardMarkup:
 
 
 def del_dice_kb() -> ReplyKeyboardMarkup:
-    del_buttons = buttons
-    del_buttons[0].pop(1)
-    return ReplyKeyboardMarkup(keyboard=del_buttons, resize_keyboard=True)
+    now_buttons = buttons
+    now_buttons[0].pop(1)
+    return ReplyKeyboardMarkup(keyboard=now_buttons, resize_keyboard=True)

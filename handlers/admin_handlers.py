@@ -103,8 +103,10 @@ async def services_answer(callback: CallbackQuery):
 async def dice_callback(callback: CallbackQuery):
     callback_data = callback.data.split()
     if 'yes' in callback_data:
+        kb_without_dice = del_dice_kb()
         prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
-        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u> {LEXICON_RU['fixed_thanks']}", parse_mode='HTML')
+        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>"
+                                              f" {LEXICON_RU['thanks_for_choice']}", parse_mode='HTML')
         await callback.answer()
     elif 'no' in callback_data:
         await callback.message.edit_text(text="Вы отказались от выбора! Можете попытать удачу позже", parse_mode='HTML')
@@ -118,17 +120,17 @@ async def promised_payment_answer(callback: CallbackQuery):
     abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
     if abonents_data:
         result = set_promised_payment(abonents_data[1])[0]["ERROR"]
-        if result == 'New record. Insert done!' or result == 'Existing record. Update Done!':
+        if result.startswith('New record.') or result.startswith('Existing record.'):
             await callback.message.edit_text(text=LEXICON_RU['promised_pay_granted'], parse_mode='HTML')
-        elif result == 'Err1: Your IP is not allowed!':
+        elif result.startswith('Err1'):
             await callback.message.edit_text(text=LEXICON_RU['call_support_err1'], parse_mode='HTML')
-        elif result == 'Err2: Client Code is null':
+        elif result.startswith('Err2'):
             await callback.message.edit_text(text=LEXICON_RU['call_support_err2'], parse_mode='HTML')
-        elif result == 'Err3: Advance Client. Promised pay not allowed!':
+        elif result.startswith('Err3'):
             await callback.message.edit_text(text=LEXICON_RU['advance_client'], parse_mode='HTML')
-        elif result == 'Err4: Too often trying setup properties':
+        elif result.startswith('Err4'):
             prop_date = f'<u><b>{get_promised_pay_date(abonents_data[1])}</b></u>'
-            await callback.message.edit_text(text=f'{LEXICON_RU["less_then_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
+            await callback.message.edit_text(text=f'{LEXICON_RU["less_than_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
         # await callback.message.edit_text(text=services_string, parse_mode='HTML')
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
