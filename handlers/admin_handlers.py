@@ -8,10 +8,10 @@ from asyncio import sleep
 
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_services_and_promised_payment, \
-    yes_no_keyboard, del_dice_kb
+    yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, contract_code_by_userid, contract_clinet_type_code_from_callback, \
-    get_prise, get_all_users_from_db, set_promised_payment, get_promised_pay_date
+    get_prise, set_promised_payment, get_promised_pay_date
 
 admin_rt = Router()
 
@@ -28,7 +28,6 @@ async def answer_if_admins_update(message: Message):
 async def contact_processing(message: Message):
     if message.contact.user_id != message.from_user.id:
         await message.answer(text='Узнать баланс может только сам владелец договора.')
-
     else:
         phone = message.contact.phone_number[-10:]  # Берем последние 10 цифр из номера
         abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
@@ -104,13 +103,13 @@ async def services_answer(callback: CallbackQuery):
 async def dice_callback(callback: CallbackQuery):
     callback_data = callback.data.split()
     if 'yes' in callback_data:
-        kb_without_dice = del_dice_kb()
+        kb_without_dice = without_dice_kb()
         prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
         await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>"
                                               f" {LEXICON_RU['thanks_for_choice']}", parse_mode='HTML')
         await callback.answer()
     elif 'no' in callback_data:
-        await callback.message.edit_text(text="Вы отказались от выбора! Можете попытать удачу позже", parse_mode='HTML')
+        await callback.message.edit_text(text=LEXICON_RU['choice_not_made'], parse_mode='HTML')
         await callback.answer()
 
 
@@ -118,7 +117,8 @@ async def dice_callback(callback: CallbackQuery):
                          F.data.startswith(
                              "PROMISED_PAYMENT"))
 async def promised_payment_answer(callback: CallbackQuery):
-    abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
+    # abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
+    abonents_data: list = list(contract_clinet_type_code_from_callback(callback.data))
     if abonents_data:
         result = set_promised_payment(abonents_data[1])[0]["ERROR"]
         if result.startswith('New record.') or result.startswith('Existing record.'):
@@ -132,6 +132,5 @@ async def promised_payment_answer(callback: CallbackQuery):
         elif result.startswith('Err4'):
             prop_date = f'<u><b>{get_promised_pay_date(abonents_data[1])}</b></u>'
             await callback.message.edit_text(text=f'{LEXICON_RU["less_than_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
-        # await callback.message.edit_text(text=services_string, parse_mode='HTML')
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)

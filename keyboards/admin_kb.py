@@ -44,7 +44,7 @@ def yes_no_keyboard(prise: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=yes_no_buttons)
 
 
-def del_dice_kb() -> ReplyKeyboardMarkup:
+def without_dice_kb() -> ReplyKeyboardMarkup:
     now_buttons = buttons
     now_buttons[0].pop(1)
     return ReplyKeyboardMarkup(keyboard=now_buttons, resize_keyboard=True)

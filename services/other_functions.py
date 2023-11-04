@@ -1,6 +1,3 @@
-import datetime
-from typing import List, Any
-
 from icecream import ic
 from db.fake_marketing_actions import PRISE_ACTION
 
@@ -18,14 +15,22 @@ def contract_code_from_callback(callback_data) -> int:
 
 
 def contract_clinet_type_code_from_callback(callback_data: str) -> int:
+    ''' Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE  в виде генераторных значений
+        Для этого переданную строку callback делим на части и нормализуем, удалим возможные знаки
+        препинания. После этого перебираем получившиеся части и проверяем являются ли они
+        числовыми символами, если да - приводим к int и возвращаем по одному.
+    '''
     for word in callback_data.split():
         normalized_data = word.replace('.', '').replace(',', '').replace(' ', '').strip()
         if normalized_data.isdigit():
-            yield normalized_data
+            yield int(normalized_data)
 
 
 # Делаем запрос в БД для проверки существования номера телефона и кому он принадлежит
-def get_abonents_from_db(phone: str) -> list:
+def get_abonents_from_db(phone: str) -> list[dict]:
+    ''' Функция  возвращает из БД данные по абоненту в виде списка словарей.
+        НА вход принимает телефонный номер в виде строки
+    '''
     result = DbConnection.execute_query(get_abonent_by_phonenumber_query, phone)
     return result
 
@@ -36,7 +41,9 @@ def get_balance_by_contract_code(contract_code: str) -> list:
     return result
 
 
-def get_client_services_list(contract_code: int, client_code: int, client_type_code: int) -> list:
+def get_client_services_list(contract_code: int, client_code: int, client_type_code: int) -> list[dict]:
+    ''' Возвращает услуги абонента в виде списка словарей,
+     при подаче кода контракта, кода клиента и типа клиента в виде int '''
     result = DbConnection.execute_query(
         f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
     return result
@@ -58,6 +65,7 @@ def get_all_users_from_db() -> list[dict]:
 
 
 def set_promised_payment(client_code: int) -> list:
+    ''' Вызов хранимой процедуры для установки свойства доверительного платежа '''
     result = DbConnection.execute_query(f'exec MEDIATE..spMangoSetPromisedPay {client_code}')
     return result
 
