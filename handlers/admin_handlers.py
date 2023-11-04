@@ -90,9 +90,11 @@ async def services_answer(callback: CallbackQuery):
     if abonents_data:
         services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
         services_list = []
+        cnt = 1
         for el in services:
             services_list.append(
-                f"{LEXICON_RU['service']}: {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
+                f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
+            cnt += 1
         services_string = "\n".join(str(el) for el in services_list)
         await callback.message.edit_text(text=services_string, parse_mode='HTML')
     else:
