@@ -26,7 +26,10 @@ async def answer_if_admins_update(message: Message):
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT)
 async def contact_processing(message: Message):
-    if message.contact.user_id == message.from_user.id:
+    if message.contact.user_id != message.from_user.id:
+        await message.answer(text='Узнать баланс может только сам владелец договора.')
+
+    else:
         phone = message.contact.phone_number[-10:]  # Берем последние 10 цифр из номера
         abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
         count = len(abonent_from_db)  # Получим количество абонентов в выборке
@@ -38,8 +41,6 @@ async def contact_processing(message: Message):
             await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
         else:  # Если в выборке никого нет, сообщим пользователю
             await message.answer(LEXICON_RU["phone_not_found"])
-    else:
-        await message.answer(text='Узнать баланс может только сам владелец договора.')
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
