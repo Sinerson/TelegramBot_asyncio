@@ -86,7 +86,7 @@ async def send_dice(message: Message):
                          F.data.startswith(
                              "SERVICES"))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def services_answer(callback: CallbackQuery):
-    abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
+    abonents_data = list(contract_clinet_type_code_from_callback(callback.data))
     if abonents_data:
         services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
         services_list = []

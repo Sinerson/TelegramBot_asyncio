@@ -69,7 +69,7 @@ getBalance_query = \
 """
 
 getPayments = \
-	"""
+	'''
 					declare     @CurDate datetime,
 					            @CurMonth datetime
 					select      @CurDate = getdate()
@@ -92,15 +92,15 @@ getPayments = \
 					            USED = 1
 					group by    MONTH
 					order by    datepart(mm,MONTH)
-"""
+'''
 getLastPayment = \
-	"""
-					select user_id, sum(PAY_MONEY) as PAY_MONEY
+	'''
+					select B.user_id, sum(CP.PAY_MONEY) as PAY_MONEY
 					from INT_PAYM..CONTRACT_PAYS CP
 					join SV..TBP_TELEGRAM_BOT B on CP.CONTRACT_CODE = B.contract_code
-					where PAY_DATE >= dateadd(ss,-120, getdate()) and USED = 1
-					group by user_id, USED
-"""
+					where CP.PAY_DATE >= dateadd(ss,-120, getdate()) and CP.USED = 1
+					group by B.user_id
+'''
 setSendStatus = \
 	"""
 					update SV..TBP_TELEGRAM_BOT
