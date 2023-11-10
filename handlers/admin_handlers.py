@@ -1,6 +1,9 @@
 from aiogram import Router, F
 from aiogram.types import Message, ContentType, CallbackQuery
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import default_state, State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from icecream import ic
 from lexicon.lexicon_ru import LEXICON_RU
@@ -103,9 +106,10 @@ async def services_answer(callback: CallbackQuery):
 
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), F.data.startswith("DICE"))
 async def dice_callback(callback: CallbackQuery):
+    ''' Выбор или отказ от выбора для кубика '''
     callback_data = callback.data.split()
     if 'yes' in callback_data:
-        kb_without_dice = without_dice_kb()
+        # kb_without_dice = without_dice_kb()
         prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
         await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>"
                                               f" {LEXICON_RU['thanks_for_choice']}", parse_mode='HTML')
@@ -119,6 +123,7 @@ async def dice_callback(callback: CallbackQuery):
                          F.data.startswith(
                              "PROMISED_PAYMENT"))
 async def promised_payment_answer(callback: CallbackQuery):
+    ''' Хэндлер для обработки callback установки доверительного платежа '''
     # abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
     abonents_data: list = list(contract_clinet_type_code_from_callback(callback.data))
     if abonents_data:
