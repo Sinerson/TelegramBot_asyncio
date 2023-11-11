@@ -1,8 +1,10 @@
+import pyodbc
 from icecream import ic
 from db.fake_marketing_actions import PRISE_ACTION
 
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
-    get_phonenumber_by_user_id_query, getContractCode, get_all_users, PromisedPayDate
+    get_phonenumber_by_user_id_query, getContractCode, get_all_users, PromisedPayDate, set_admin_query, \
+    set_manager_query
 from db.sybase import DbConnection
 
 
@@ -72,5 +74,17 @@ def set_promised_payment(client_code: int) -> list:
 
 def get_promised_pay_date(client_code: int) -> str:
     result = DbConnection.execute_query(PromisedPayDate, client_code)
-    f = lambda date:[res["DATE_CHANGE"] for res in date]
+    f = lambda date: [res["DATE_CHANGE"] for res in date]
     return f(result)[0].strftime("%Y.%m.%d %H:%M")
+
+
+def add_new_bot_admin(user_id: str) -> list[dict]:
+    ''' Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT '''
+    result = DbConnection.execute_query(set_admin_query, user_id)
+    return result
+
+
+def add_new_bot_manager(user_id: str) -> list[dict]:
+    ''' Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT '''
+    result = DbConnection.execute_query(set_manager_query, user_id)
+    return result

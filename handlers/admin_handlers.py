@@ -13,22 +13,32 @@ from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_servic
     yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, contract_code_by_userid, contract_clinet_type_code_from_callback, \
-    get_prise, set_promised_payment, get_promised_pay_date
+    get_prise, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 admin_rt = Router()
 
 # Создаем "базу данных" пользователей
 user_dict: dict[int, dict[str, str | int | bool]] = {}
 
+
+# Cоздаем класс, наследуемый от StatesGroup, для группы состояний нашей FSM
+class FSMFillForm(StatesGroup):
+    # Создаем экземпляры класса State, последовательно
+    # перечисляя возможные состояния, в которых будет находиться
+    # бот в разные моменты взаимодейтсвия с пользователем
+    fill_id_admin  = State()        # Состояние ожидания ввода id для добавления в админы
+    fill_id_manager = State()  # Состояние ожидания ввода id для добавления в админы
+
+
 # Проверка на админа
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), Command(commands='start'),
-                  F.content_type != ContentType.CONTACT)
+                  F.content_type != ContentType.CONTACT, StateFilter(default_state))
 async def answer_if_admins_update(message: Message):
     await message.answer(text=LEXICON_RU['admin_menu'], reply_markup=menu_keyboard)
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.content_type == ContentType.CONTACT)
+                  F.content_type == ContentType.CONTACT, StateFilter(default_state))
 async def contact_processing(message: Message):
     if message.contact.user_id != message.from_user.id:
         await message.answer(text=LEXICON_RU['balance_for_owner_only'])
@@ -46,9 +56,40 @@ async def contact_processing(message: Message):
             await message.answer(LEXICON_RU["phone_not_found"])
 
 
+@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.content_type == ContentType.CONTACT, StateFilter(FSMFillForm.fill_id_admin))
+async def FSM_contact_admin_processing(message: Message, state: FSMContext):
+    if not message.contact.user_id:
+        await message.answer(text=LEXICON_RU['not_a_telegram_user'])
+        await state.clear()
+    else:
+        result = add_new_bot_admin(user_id=str(message.contact.user_id))
+        if result[0]['RESULT'] == 1:
+            await message.answer(f"Пользователь {message.text} отмечен как администратор бота")
+            await state.clear()
+        else:
+            await message.answer(f"Пользователь уже администратор")
+            await state.clear()
+
+
+@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.content_type == ContentType.CONTACT, StateFilter(FSMFillForm.fill_id_manager))
+async def FSM_contact_manager_processing(message: Message, state: FSMContext):
+    if not message.contact.user_id:
+        await message.answer(text=LEXICON_RU['not_a_telegram_user'])
+        await state.clear()
+    else:
+        result = add_new_bot_manager(user_id=str(message.contact.user_id))
+        if result[0]['RESULT'] == 1:
+            await message.answer(f"Пользователь {message.text} отмечен как менеджер бота")
+            await state.clear()
+        else:
+            await message.answer(f"Пользователь уже менеджер")
+            await state.clear()
+
+
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith(
-                             "BALANCE"))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+                         F.data.startswith("BALANCE"), StateFilter(default_state))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def balance_answer(callback: CallbackQuery):
     balance = get_balance_by_contract_code(contract_code_from_callback(callback.data))
     for el in balance:
@@ -59,7 +100,7 @@ async def balance_answer(callback: CallbackQuery):
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['my_services'].lower())
+                  F.text.lower() == LEXICON_RU['my_services'].lower(), StateFilter(default_state))
 async def client_services(message: Message):
     _abonents = contract_code_by_userid(message.from_user.id)
     if len(_abonents) > 1:
@@ -68,7 +109,7 @@ async def client_services(message: Message):
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['promised_payment'].lower())
+                  F.text.lower() == LEXICON_RU['promised_payment'].lower(), StateFilter(default_state))
 async def promised_payment_set(message: Message):
     _abonents = contract_code_by_userid(message.from_user.id)
     if len(_abonents) > 1:
@@ -77,7 +118,7 @@ async def promised_payment_set(message: Message):
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower())
+                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower(), StateFilter(default_state))
 async def send_dice(message: Message):
     _dice = await message.answer_dice()
     prise: str = get_prise(_dice.dice.value)
@@ -88,9 +129,51 @@ async def send_dice(message: Message):
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['add_admin'].lower())
-async def admin_add(message: Message):
-    pass
+                  F.text.lower() == LEXICON_RU['add_admin'].lower(), StateFilter(default_state))
+async def admin_add_state(message: Message, state: FSMContext):
+    await message.answer(f"{LEXICON_RU['send_me_new_admin_id']} {LEXICON_RU['cancel_action']}")
+    # Устанавливаем состояние ожидания ввода id
+    await state.set_state(FSMFillForm.fill_id_admin)
+
+
+@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['add_manager'].lower(), StateFilter(default_state))
+async def manager_add_state(message: Message, state: FSMContext):
+    await message.answer(f"{LEXICON_RU['send_me_new_manager_id']} {LEXICON_RU['cancel_action']}")
+    # Устанавливаем состояние ожидания ввода id
+    await state.set_state(FSMFillForm.fill_id_manager)
+
+
+@admin_rt.message(
+                  IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids,admin_ids, manager_ids),
+                  StateFilter(FSMFillForm.fill_id_admin),
+                  F.text.isdigit()
+                  )
+async def admin_add_process(message: Message, state: FSMContext):
+    result = add_new_bot_admin(user_id=message.text)
+    if result[0]['RESULT'] == 1:
+        await message.answer(f"Пользователь {message.text} отмечен как администратор бота")
+        await state.clear()
+    else:
+        await message.answer(f"Пользователь уже администратор")
+        await state.clear()
+
+
+@admin_rt.message(
+                  IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids,admin_ids, manager_ids),
+                  StateFilter(FSMFillForm.fill_id_admin),
+                  F.text.isdigit()
+                  )
+async def manager_add_process(message: Message, state: FSMContext):
+    result = add_new_bot_manager(user_id=message.text)
+    if result[0]['RESULT'] == 1:
+        await message.answer(f"Пользователь {message.text} отмечен как менеджер бота")
+        await state.clear()
+    else:
+        await message.answer(f"Пользователь уже менеджер")
+        await state.clear()
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
@@ -149,3 +232,12 @@ async def promised_payment_answer(callback: CallbackQuery):
             await callback.message.edit_text(text=f'{LEXICON_RU["less_than_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
+
+
+# Этот хэндлер будет срабатывать на команду "/cancel" в любых состояниях,
+# кроме состояния по умолчанию, и отключать машину состояний
+@admin_rt.message(Command(commands='cancel'), ~StateFilter(default_state))
+async def process_cancel_command_state(message: Message, state: FSMContext):
+    await message.answer(text='Вы прервали ввод данных! Можете начать сначала.\n\n')
+    # Сбрасываем состояние и очищаем данные, полученные внутри состояний
+    await state.clear()

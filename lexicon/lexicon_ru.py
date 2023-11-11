@@ -10,6 +10,7 @@ LEXICON_RU: dict[str: str] = { 'yes': 'Да',
                                'you_send_voice_text_or_video': '<b>Вы прислали войс, видео или текст</b>',
                                'you_send_a_location': '<b>Вы прислали геопозицию</b>',
                                'bot_not_understanding': '<b>Извините, это сообщение пока не может быть распознано ботом</b>',
+                               'return_to_FSM' : 'Вы сейчас должны ввести корректные данные или прервать выполенние через /cancel !',
                                'unknown_callback': 'Неизвестный callback',
                                # admin_kb
                                'send_message_to_users': 'Рассылка пользователям',
@@ -42,7 +43,11 @@ LEXICON_RU: dict[str: str] = { 'yes': 'Да',
                                'choice_not_made': 'Вы отказались от выбора! Можете попытать удачу позже',
                                'balance_for_owner_only' : 'Узнать баланс может только сам владелец договора.',
                                'your_prise' : 'Ваш выигрыш:',
-                               'do_make_a_choice': 'Остановитесь на этом варианте?'
+                               'do_make_a_choice': 'Остановитесь на этом варианте?',
+                               'send_me_new_admin_id' : 'Отправьте мне id пользователя telegram или контакт из своей записной книжки.',
+                               'send_me_new_manager_id': 'Отправьте мне id пользователя telegram или контакт из своей записной книжки.',
+                               'cancel_action' : 'Для отмены нажмите /cancel',
+                               'not_a_telegram_user' : 'Невозможно добавить! Пользователь не использует Telegram.'
 
 
 }

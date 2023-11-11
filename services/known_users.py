@@ -1,9 +1,9 @@
 from db.sybase import DbConnection
-from db.sql_queries import get_user_query
+from db.sql_queries import get_known_user_query
 
 
 def get_known_users() -> list[int]:
-    result = DbConnection.execute_query(get_user_query)
+    result = DbConnection.execute_query(get_known_user_query)
     known_user_ids = []
     for el in result:
         known_user_ids.append(list(el.values())[0])

@@ -204,35 +204,67 @@ get_admin_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where admin = 1
 '''
 
-set_admin_query = '''
-update SV..TBP_TELEGRAM_BOT
-set admin = 1, known_user = 1, manager = 0
-where user_id = ?
-'''
+set_admin_query = """
+declare @user_id varchar(20), @user_idd varchar(20)
+select @user_idd = ?
+select @user_id = user_id
+from SV..TBP_TELEGRAM_BOT
+where user_id = @user_idd and admin = 0
+if @user_id is not null
+    begin
+    update SV..TBP_TELEGRAM_BOT
+    set admin = 1, manager = 0, known_user = 1
+    where user_id = @user_idd
+    select 1 as RESULT
+    end
+else
+    select 0 as RESULT
+"""
 
 get_manager_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where manager = 1
 '''
 
-set_manager_query = '''
-update SV..TBP_TELEGRAM_BOT
-set manager = 1, known_user = 1, admin = 0
-where user_id = ?
-'''
+set_manager_query = """declare @user_id varchar(20), @user_idd varchar(20)
+select @user_idd = ?
+select @user_id = user_id
+from SV..TBP_TELEGRAM_BOT
+where user_id = @user_idd and manager = 0
+if @user_id is not null
+    begin
+    update SV..TBP_TELEGRAM_BOT
+    set admin = 0, manager = 1, known_user = 1
+    where user_id = @user_idd
+    select 1 as RESULT
+    end
+else
+    select 0 as RESULT
+"""
 
 get_all_users = '''
 select user_id from SV..TBP_TELEGRAM_BOT
 '''
 
-get_user_query = '''
+get_known_user_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where known_user = 1
 '''
 
-set_user_query = '''
-update SV..TBP_TELEGRAM_BOT
-set known_user = 1, manager = 0, admin = 0
-where user_id = ?
-'''
+set_known_user_query = """
+declare @user_id varchar(20), @user_idd varchar(20)
+select @user_idd = ?
+select @user_id = user_id
+from SV..TBP_TELEGRAM_BOT
+where user_id = @user_idd and known_user = 0
+if @user_id is not null
+    begin
+    update SV..TBP_TELEGRAM_BOT
+    set admin = 0, manager = 0, known_user = 1
+    where user_id = @user_idd
+    select 1 as RESULT
+    end
+else
+    select 0 as RESULT
+"""
 
 get_phonenumber_by_user_id_query = '''
 select phonenumber from SV..TBP_TELEGRAM_BOT where user_id = cast(? as varchar(25))
