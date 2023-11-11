@@ -3,7 +3,6 @@ from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state, State, StatesGroup
-from aiogram.fsm.storage.memory import MemoryStorage
 
 from icecream import ic
 from lexicon.lexicon_ru import LEXICON_RU
@@ -18,6 +17,8 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
 
 admin_rt = Router()
 
+# Создаем "базу данных" пользователей
+user_dict: dict[int, dict[str, str | int | bool]] = {}
 
 # Проверка на админа
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), Command(commands='start'),
@@ -30,7 +31,7 @@ async def answer_if_admins_update(message: Message):
                   F.content_type == ContentType.CONTACT)
 async def contact_processing(message: Message):
     if message.contact.user_id != message.from_user.id:
-        await message.answer(text='Узнать баланс может только сам владелец договора.')
+        await message.answer(text=LEXICON_RU['balance_for_owner_only'])
     else:
         phone = message.contact.phone_number[-10:]  # Берем последние 10 цифр из номера
         abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
@@ -82,7 +83,14 @@ async def send_dice(message: Message):
     prise: str = get_prise(_dice.dice.value)
     await sleep(4)
     yn_keyboard = yes_no_keyboard(prise)
-    await message.answer(text=f"Ваш выигрыш: <b>{prise}</b>\nОстановитесь на этом варианте?", reply_markup=yn_keyboard, parse_mode='HTML')
+    await message.answer(text=f"{LEXICON_RU['your_prise']} <b>{prise}</b>\n{LEXICON_RU['do_make_a_choice']}",
+                         reply_markup=yn_keyboard, parse_mode='HTML')
+
+
+@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['add_admin'].lower())
+async def admin_add(message: Message):
+    pass
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),

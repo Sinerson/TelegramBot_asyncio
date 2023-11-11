@@ -5,8 +5,13 @@ from aiogram import Bot, Dispatcher
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users
 from settings import BotSecrets
 
+from aiogram.fsm.storage.memory import MemoryStorage
+
+# Инициализируем хранилище (создаем экземпляр класса MemoryStorage)
+mem_storage = MemoryStorage()
+
 bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
-dp = Dispatcher()
+dp = Dispatcher(storage=mem_storage)
 
 
 async def start() -> None:

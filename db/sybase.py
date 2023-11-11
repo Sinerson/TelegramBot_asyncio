@@ -45,7 +45,7 @@ class DbConnection(object):
         result = []
         try:
             cursor = connection.cursor()
-        except pyodbc.ProgrammingError:
+        except pyodbc.Error:
             connection = cls.get_connection(new=True)
             cursor = connection.cursor()
         if params:
