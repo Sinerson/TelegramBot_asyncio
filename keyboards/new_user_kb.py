@@ -1,4 +1,4 @@
-from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 
 # ----------------------------------- Кнопка отправки контакта ----------------------------------------------
 # Создаем список списков с кнопками

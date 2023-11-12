@@ -205,40 +205,49 @@ select user_id from SV..TBP_TELEGRAM_BOT where admin = 1
 '''
 
 set_admin_query = """
-declare @user_id varchar(20), @user_idd varchar(20)
-select @user_idd = ?
-select @user_id = user_id
-from SV..TBP_TELEGRAM_BOT
-where user_id = @user_idd and admin = 0
-if @user_id is not null
+declare @user_id varchar(20)
+select @user_id = ?
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
     begin
-    update SV..TBP_TELEGRAM_BOT
-    set admin = 1, manager = 0, known_user = 1
-    where user_id = @user_idd
-    select 1 as RESULT
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and admin = 0)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set admin = 1, manager = 0, known_user = 1
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
     end
-else
-    select 0 as RESULT
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
 """
 
 get_manager_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where manager = 1
 '''
 
-set_manager_query = """declare @user_id varchar(20), @user_idd varchar(20)
-select @user_idd = ?
-select @user_id = user_id
-from SV..TBP_TELEGRAM_BOT
-where user_id = @user_idd and manager = 0
-if @user_id is not null
+set_manager_query = """
+declare @user_id varchar(20)
+select @user_id = ?
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
     begin
-    update SV..TBP_TELEGRAM_BOT
-    set admin = 0, manager = 1, known_user = 1
-    where user_id = @user_idd
-    select 1 as RESULT
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and admin = 0)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set admin = 0, manager = 1, known_user = 1
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
     end
-else
-    select 0 as RESULT
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
 """
 
 get_all_users = '''
@@ -250,20 +259,24 @@ select user_id from SV..TBP_TELEGRAM_BOT where known_user = 1
 '''
 
 set_known_user_query = """
-declare @user_id varchar(20), @user_idd varchar(20)
-select @user_idd = ?
-select @user_id = user_id
-from SV..TBP_TELEGRAM_BOT
-where user_id = @user_idd and known_user = 0
-if @user_id is not null
+declare @user_id varchar(20)
+select @user_id = ?
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
     begin
-    update SV..TBP_TELEGRAM_BOT
-    set admin = 0, manager = 0, known_user = 1
-    where user_id = @user_idd
-    select 1 as RESULT
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and admin = 0)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set admin = 0, manager = 0, known_user = 1
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
     end
-else
-    select 0 as RESULT
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
 """
 
 get_phonenumber_by_user_id_query = '''

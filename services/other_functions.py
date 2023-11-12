@@ -8,8 +8,8 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
 from db.sybase import DbConnection
 
 
-# Получаем из хэндлера callback data и выделяем из нее код контракта, после чего отдаем его назад
 def contract_code_from_callback(callback_data) -> int:
+    """ Получаем из хэндлера callback data и выделяем из нее код контракта, после чего отдаем его назад """
     for word in callback_data.split():
         normalized_contract_code = word.replace('.', '').replace(',', '').replace(' ', '').strip()
         if normalized_contract_code.isdigit():
@@ -17,11 +17,11 @@ def contract_code_from_callback(callback_data) -> int:
 
 
 def contract_clinet_type_code_from_callback(callback_data: str) -> int:
-    ''' Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE  в виде генераторных значений
+    """ Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE  в виде генераторных значений
         Для этого переданную строку callback делим на части и нормализуем, удалим возможные знаки
         препинания. После этого перебираем получившиеся части и проверяем являются ли они
         числовыми символами, если да - приводим к int и возвращаем по одному.
-    '''
+    """
     for word in callback_data.split():
         normalized_data = word.replace('.', '').replace(',', '').replace(' ', '').strip()
         if normalized_data.isdigit():
@@ -30,9 +30,9 @@ def contract_clinet_type_code_from_callback(callback_data: str) -> int:
 
 # Делаем запрос в БД для проверки существования номера телефона и кому он принадлежит
 def get_abonents_from_db(phone: str) -> list[dict]:
-    ''' Функция  возвращает из БД данные по абоненту в виде списка словарей.
+    """ Функция  возвращает из БД данные по абоненту в виде списка словарей.
         НА вход принимает телефонный номер в виде строки
-    '''
+    """
     result = DbConnection.execute_query(get_abonent_by_phonenumber_query, phone)
     return result
 
@@ -44,8 +44,8 @@ def get_balance_by_contract_code(contract_code: str) -> list:
 
 
 def get_client_services_list(contract_code: int, client_code: int, client_type_code: int) -> list[dict]:
-    ''' Возвращает услуги абонента в виде списка словарей,
-     при подаче кода контракта, кода клиента и типа клиента в виде int '''
+    """ Возвращает услуги абонента в виде списка словарей,
+     при подаче кода контракта, кода клиента и типа клиента в виде int """
     result = DbConnection.execute_query(
         f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
     return result
@@ -67,7 +67,7 @@ def get_all_users_from_db() -> list[dict]:
 
 
 def set_promised_payment(client_code: int) -> list:
-    ''' Вызов хранимой процедуры для установки свойства доверительного платежа '''
+    """ Вызов хранимой процедуры для установки свойства доверительного платежа """
     result = DbConnection.execute_query(f'exec MEDIATE..spMangoSetPromisedPay {client_code}')
     return result
 
@@ -79,12 +79,12 @@ def get_promised_pay_date(client_code: int) -> str:
 
 
 def add_new_bot_admin(user_id: str) -> list[dict]:
-    ''' Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT '''
+    """ Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT """
     result = DbConnection.execute_query(set_admin_query, user_id)
     return result
 
 
 def add_new_bot_manager(user_id: str) -> list[dict]:
-    ''' Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT '''
+    """ Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT """
     result = DbConnection.execute_query(set_manager_query, user_id)
     return result

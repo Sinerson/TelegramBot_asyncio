@@ -2,7 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state, State, StatesGroup
+from aiogram.fsm.state import default_state
+from services.classes import FSMFillForm
 
 from icecream import ic
 from lexicon.lexicon_ru import LEXICON_RU
@@ -20,16 +21,6 @@ admin_rt = Router()
 # Создаем "базу данных" пользователей
 user_dict: dict[int, dict[str, str | int | bool]] = {}
 
-
-# Cоздаем класс, наследуемый от StatesGroup, для группы состояний нашей FSM
-class FSMFillForm(StatesGroup):
-    # Создаем экземпляры класса State, последовательно
-    # перечисляя возможные состояния, в которых будет находиться
-    # бот в разные моменты взаимодейтсвия с пользователем
-    fill_id_admin  = State()        # Состояние ожидания ввода id для добавления в админы
-    fill_id_manager = State()  # Состояние ожидания ввода id для добавления в админы
-
-
 # Проверка на админа
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), Command(commands='start'),
                   F.content_type != ContentType.CONTACT, StateFilter(default_state))
@@ -46,45 +37,51 @@ async def contact_processing(message: Message):
         phone = message.contact.phone_number[-10:]  # Берем последние 10 цифр из номера
         abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
         count = len(abonent_from_db)  # Получим количество абонентов в выборке
-        if count == 1:  # Если у нас в выборку кто-то попал, тогда
+        if not count:  # Если в выборке никого нет, сообщим пользователю
+            await message.answer(LEXICON_RU["phone_not_found"])
+        elif count == 1:  # Если у нас в выборку кто-то попал, тогда
             keyboard = make_keyboard(abonent_from_db)
             await message.answer(text=LEXICON_RU['click_the_button_under_message'], reply_markup=keyboard)
-        elif count > 1:  # Вариант с выбором абонента
+        else:  # Вариант с выбором абонента
             keyboard = make_keyboard(abonent_from_db)
             await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
-        else:  # Если в выборке никого нет, сообщим пользователю
-            await message.answer(LEXICON_RU["phone_not_found"])
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT, StateFilter(FSMFillForm.fill_id_admin))
-async def FSM_contact_admin_processing(message: Message, state: FSMContext):
+async def fsm_contact_admin_processing(message: Message, state: FSMContext):
     if not message.contact.user_id:
         await message.answer(text=LEXICON_RU['not_a_telegram_user'])
         await state.clear()
     else:
         result = add_new_bot_admin(user_id=str(message.contact.user_id))
         if result[0]['RESULT'] == 1:
-            await message.answer(f"Пользователь {message.text} отмечен как администратор бота")
+            await message.answer(f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как администратор бота")
+            await state.clear()
+        elif result[0]['RESULT'] == 2:
+            await message.answer(f"Пользователь уже администратор")
             await state.clear()
         else:
-            await message.answer(f"Пользователь уже администратор")
+            await message.answer(f"Пользователь не обращался к боту и его нет в БД.")
             await state.clear()
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT, StateFilter(FSMFillForm.fill_id_manager))
-async def FSM_contact_manager_processing(message: Message, state: FSMContext):
+async def fsm_contact_manager_processing(message: Message, state: FSMContext):
     if not message.contact.user_id:
         await message.answer(text=LEXICON_RU['not_a_telegram_user'])
         await state.clear()
     else:
         result = add_new_bot_manager(user_id=str(message.contact.user_id))
         if result[0]['RESULT'] == 1:
-            await message.answer(f"Пользователь {message.text} отмечен как менеджер бота")
+            await message.answer(f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как менеджер бота")
+            await state.clear() # Выходим из машины состояний
+        elif result[0]['RESULT'] == 2:
+            await message.answer(f"Пользователь уже менеджер")
             await state.clear()
         else:
-            await message.answer(f"Пользователь уже менеджер")
+            await message.answer(f"Пользователь не обращался к боту и его нет в БД.")
             await state.clear()
 
 
@@ -155,15 +152,18 @@ async def admin_add_process(message: Message, state: FSMContext):
     if result[0]['RESULT'] == 1:
         await message.answer(f"Пользователь {message.text} отмечен как администратор бота")
         await state.clear()
-    else:
+    elif result[0]['RESULT'] == 2:
         await message.answer(f"Пользователь уже администратор")
+        await state.clear()
+    else:
+        await message.answer(f"Пользователь не обращался к боту и его нет в БД.")
         await state.clear()
 
 
 @admin_rt.message(
                   IsAdmin(admin_ids),
-                  IsKnownUsers(user_ids,admin_ids, manager_ids),
-                  StateFilter(FSMFillForm.fill_id_admin),
+                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  StateFilter(FSMFillForm.fill_id_manager),
                   F.text.isdigit()
                   )
 async def manager_add_process(message: Message, state: FSMContext):
@@ -171,14 +171,19 @@ async def manager_add_process(message: Message, state: FSMContext):
     if result[0]['RESULT'] == 1:
         await message.answer(f"Пользователь {message.text} отмечен как менеджер бота")
         await state.clear()
-    else:
+    elif result[0]['RESULT'] == 2:
         await message.answer(f"Пользователь уже менеджер")
+        await state.clear()
+    else:
+        await message.answer(f"Пользователь не обращался к боту и его нет в БД.\n")
         await state.clear()
 
 
-@admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith(
-                             "SERVICES"))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+@admin_rt.callback_query(IsAdmin(admin_ids),
+                         IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("SERVICES"),
+                         StateFilter(default_state)
+                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def services_answer(callback: CallbackQuery):
     abonents_data = list(contract_clinet_type_code_from_callback(callback.data))
     if abonents_data:
@@ -195,7 +200,11 @@ async def services_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
-@admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), F.data.startswith("DICE"))
+@admin_rt.callback_query(IsAdmin(admin_ids),
+                         IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("DICE"),
+                         StateFilter(default_state)
+                         )
 async def dice_callback(callback: CallbackQuery):
     ''' Выбор или отказ от выбора для кубика '''
     callback_data = callback.data.split()
@@ -210,9 +219,11 @@ async def dice_callback(callback: CallbackQuery):
         await callback.answer()
 
 
-@admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith(
-                             "PROMISED_PAYMENT"))
+@admin_rt.callback_query(IsAdmin(admin_ids),
+                         IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("PROMISED_PAYMENT"),
+                         StateFilter(default_state)
+                         )
 async def promised_payment_answer(callback: CallbackQuery):
     ''' Хэндлер для обработки callback установки доверительного платежа '''
     # abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))

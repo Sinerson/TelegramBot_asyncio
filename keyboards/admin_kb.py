@@ -31,7 +31,8 @@ def keyboard_for_services_and_promised_payment(abonents_data: list[dict], callba
         button = []
         button.append(InlineKeyboardButton(text=f"{LEXICON_RU['contract']} {str(dicts['CONTRACT'])},"
                                                 f" {LEXICON_RU['address']} {str(dicts['ADDRESS'])}",
-                                           callback_data=f'{callback_name} {str(dicts["CONTRACT_CODE"])}, {str(dicts["CLIENT_CODE"])}, {str(dicts["TYPE_CODE"])}'))
+                                           callback_data=f'{callback_name} {str(dicts["CONTRACT_CODE"])},'
+                                                         f' {str(dicts["CLIENT_CODE"])}, {str(dicts["TYPE_CODE"])}'))
         button_list.append(button)
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
