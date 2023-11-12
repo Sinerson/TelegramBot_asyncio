@@ -4,8 +4,17 @@ from db.fake_marketing_actions import PRISE_ACTION
 
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
     get_phonenumber_by_user_id_query, getContractCode, get_all_users, PromisedPayDate, set_admin_query, \
-    set_manager_query
+    set_manager_query, addUser_query
 from db.sybase import DbConnection
+
+
+def add_new_known_user(user_id: int, chat_id: int, phonenumber: int, contract_code: int) -> bool:
+    try:
+        DbConnection.execute_query(addUser_query, user_id, chat_id, phonenumber, contract_code)
+        return True
+    except Exception as e:
+        ic(e)
+        return False
 
 
 def contract_code_from_callback(callback_data) -> int:
@@ -16,7 +25,7 @@ def contract_code_from_callback(callback_data) -> int:
             return normalized_contract_code
 
 
-def contract_clinet_type_code_from_callback(callback_data: str) -> int:
+def contract_client_type_code_from_callback(callback_data: str) -> int:
     """ Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE  в виде генераторных значений
         Для этого переданную строку callback делим на части и нормализуем, удалим возможные знаки
         препинания. После этого перебираем получившиеся части и проверяем являются ли они
@@ -52,9 +61,19 @@ def get_client_services_list(contract_code: int, client_code: int, client_type_c
 
 
 def contract_code_by_userid(user_id: str) -> list:
+    """ Возвращает контракт код для сущесвующих в БД пользователей """
     result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
     phonenumber = result[0]['phonenumber'][-10:]
     return DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
+
+
+def contract_code_by_phone_for_new_users(phonenumber: str) -> list[dict]:
+    """ Возвращает код контракта и номер контракта для пользоватей, не существующих в БД
+        Ипользуется для поиска и добавления в БД новых абонентов, у которых телефон уже зарегистрирован
+    """
+    result = DbConnection.execute_query(getContractCode, phonenumber)
+    ic(result)
+    # return result[0]['CONTRACT_CODE']
 
 
 def get_prise(dice_value: int) -> str:

@@ -28,8 +28,32 @@ checkUserExists = """select E = case
 					else 0
 					end"""
 
-addUser = """insert into SV..TBP_TELEGRAM_BOT (user_id, chat_id, date)
-					values (? , ? , getdate())"""
+addUser_query = """
+begin
+insert into
+SV..TBP_TELEGRAM_BOT(user_id,
+                     chat_id,
+                     phonenumber,
+                     contract_code,
+                     grant_phone,
+                     date,
+                     admin,
+                     manager,
+                     known_user,
+                     bot_blocked
+                    )
+values 
+                    (
+                    cast( ? as varchar(20)),
+                    cast( ? as varchar(20)),
+                    cast(convert(bigint, ?) as varchar(20)),
+                    cast(convert(bigint, ?) as int),
+                    cast('1' as character(1)),
+                    getdate(), 0 , 0 , 1 , 0  
+                    )
+select 1 as RESULT
+end
+"""
 
 updateUser = """update SV..TBP_TELEGRAM_BOT
 					set phonenumber = ?,
@@ -45,7 +69,7 @@ delUser = """delete from SV.dbo.TBP_TELEGRAM_BOT where chat_id = ?"""
 
 getContractCode = \
 	"""
-					select cast(CL.CONTRACT_CODE as numeric(10,0)), cast(CS.CONTRACT as numeric(10,0))
+					select cast(CL.CONTRACT_CODE as numeric(10,0)) as CONTRACT_CODE, cast(CS.CONTRACT as numeric(10,0)) as CONTRACT
 					from INTEGRAL..OTHER_DEVICES OD
 					join INTEGRAL..CONTRACT_CLIENTS CL on CL.CLIENT_CODE = OD.CLIENT_CODE
 					join INTEGRAL..CONTRACTS CS on CS.CONTRACT_CODE = CL.CONTRACT_CODE

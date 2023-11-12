@@ -13,7 +13,7 @@ from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_
 from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_services_and_promised_payment, \
     yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
-    get_client_services_list, contract_code_by_userid, contract_clinet_type_code_from_callback, \
+    get_client_services_list, contract_code_by_userid, contract_client_type_code_from_callback, \
     get_prise, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 admin_rt = Router()
@@ -185,7 +185,7 @@ async def manager_add_process(message: Message, state: FSMContext):
                          StateFilter(default_state)
                          )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def services_answer(callback: CallbackQuery):
-    abonents_data = list(contract_clinet_type_code_from_callback(callback.data))
+    abonents_data = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
         services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
         services_list = []
@@ -227,7 +227,7 @@ async def dice_callback(callback: CallbackQuery):
 async def promised_payment_answer(callback: CallbackQuery):
     ''' Хэндлер для обработки callback установки доверительного платежа '''
     # abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
-    abonents_data: list = list(contract_clinet_type_code_from_callback(callback.data))
+    abonents_data: list = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
         result = set_promised_payment(abonents_data[1])[0]["ERROR"]
         if result.startswith('New record.') or result.startswith('Existing record.'):

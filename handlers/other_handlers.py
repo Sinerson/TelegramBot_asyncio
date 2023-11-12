@@ -13,14 +13,14 @@ async def _photo(message: Message):
     await message.reply(text=LEXICON_RU['you_send_a_photo'])
 
 
+@other_rt.message(F.content_type.in_({'voice', 'video', 'text'}), ~StateFilter(default_state))
+async def _fsm_process_send_voice_video_text(message: Message):
+    await message.answer(text=LEXICON_RU['return_to_FSM'])
+
+
 @other_rt.message(F.content_type.in_({'voice', 'video', 'text'}), StateFilter(default_state))
 async def _process_send_voice_video_text(message: Message):
     await message.answer(text=LEXICON_RU['you_send_voice_text_or_video'])
-
-
-@other_rt.message(F.content_type.in_({'voice', 'video', 'text'}), ~StateFilter(default_state))
-async def _process_send_voice_video_text(message: Message):
-    await message.answer(text=LEXICON_RU['return_to_FSM'])
 
 
 @other_rt.message(F.location)

@@ -40,7 +40,7 @@ class DbConnection(object):
         return cls.connection
 
     @classmethod
-    def execute_query(cls, query, params=None) -> list:
+    def execute_query(cls, query, *params) -> list:
         connection = cls.get_connection()
         result = []
         try:
