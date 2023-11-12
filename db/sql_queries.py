@@ -46,8 +46,8 @@ values
                     (
                     cast( ? as varchar(20)),
                     cast( ? as varchar(20)),
-                    cast(convert(bigint, ?) as varchar(20)),
-                    cast(convert(bigint, ?) as int),
+                    ?,
+                    ?,
                     cast('1' as character(1)),
                     getdate(), 0 , 0 , 1 , 0  
                     )

@@ -65,13 +65,14 @@ async def adding_new_user(message: Message):
                             )
 async def add_new_user_callback_processing(callback: CallbackQuery):
     contractcode_phonenumber = list(contract_client_type_code_from_callback(callback.data))
-    ic(f"contractcode_phonenumber: {contractcode_phonenumber}")
     try:
         result_add_newbie = add_new_known_user(callback.from_user.id,
                                                callback.message.chat.id,
-                                               contractcode_phonenumber[0],
-                                               contractcode_phonenumber[1])
-        ic(result_add_newbie)
+                                               str(contractcode_phonenumber[1]),    # номер телефона
+                                               contractcode_phonenumber[0]          # contract_code
+                                               )
     except Exception as e:
         ic(e)
+    await callback.message.delete()
+    await callback.message.answer(text="Вы добавлены в БД. Воспользуйтесь меню ниже", reply_markup=user_keyboard)
     await callback.answer()

@@ -8,7 +8,7 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
 from db.sybase import DbConnection
 
 
-def add_new_known_user(user_id: int, chat_id: int, phonenumber: int, contract_code: int) -> bool:
+def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_code: int) -> bool:
     try:
         DbConnection.execute_query(addUser_query, user_id, chat_id, phonenumber, contract_code)
         return True
