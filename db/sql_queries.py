@@ -7,9 +7,9 @@ join INTEGRAL..CONTRACTS CS on OD.CLIENT_CODE = CS.CLIENT_CODE
 join INTEGRAL..CLIENTS CL on OD.CLIENT_CODE = CL.CLIENT_CODE and CS.CLIENT_CODE = CL.CLIENT_CODE
 left join INTEGRAL..PEOPLES P on CL.PEOPLE_CODE = P.PEOPLE_CODE
 left join INTEGRAL..FIRMS F on CL.FIRM_CODE = F.FIRM_CODE
-join INTEGRAL..ADDRESS A on OD.ADDRESS_CODE = A.ADDRESS_CODE
-join INTEGRAL..STREETS S on A.STREET_CODE = S.STREET_CODE
-join INTEGRAL..TOWNS T on S.TOWN_CODE = T.TOWN_CODE
+left join INTEGRAL..ADDRESS A on OD.ADDRESS_CODE = A.ADDRESS_CODE
+left join INTEGRAL..STREETS S on A.STREET_CODE = S.STREET_CODE
+left join INTEGRAL..TOWNS T on S.TOWN_CODE = T.TOWN_CODE
 group by DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, rtrim(CONTRACT), coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME),
          S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
            + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX, CL.TYPE_CODE'''
@@ -46,7 +46,7 @@ values
                     (
                     cast( ? as varchar(20)),
                     cast( ? as varchar(20)),
-                    ?,
+                    cast( ? as varchar(20)),
                     ?,
                     cast('1' as character(1)),
                     getdate(), 0 , 0 , 1 , 0  

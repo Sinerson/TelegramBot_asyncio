@@ -1,5 +1,6 @@
 from db.sybase import DbConnection
 from db.sql_queries import get_known_user_query
+from icecream import ic
 
 
 def get_known_users() -> list[int]:

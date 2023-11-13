@@ -49,6 +49,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'send_me_new_admin_id': 'Отправьте мне id пользователя telegram или контакт из своей записной книжки.',
                               'send_me_new_manager_id': 'Отправьте мне id пользователя telegram или контакт из своей записной книжки.',
                               'cancel_action': 'Для отмены нажмите /cancel',
-                              'not_a_telegram_user': 'Невозможно добавить! Пользователь не использует Telegram.'
+                              'not_a_telegram_user': 'Невозможно добавить! Пользователь не использует Telegram.',
+                              'choose_abonent' : '<b>Выберите абонента</b>'
 
                               }

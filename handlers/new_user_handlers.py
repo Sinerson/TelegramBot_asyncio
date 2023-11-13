@@ -68,7 +68,7 @@ async def add_new_user_callback_processing(callback: CallbackQuery):
     try:
         result_add_newbie = add_new_known_user(callback.from_user.id,
                                                callback.message.chat.id,
-                                               str(contractcode_phonenumber[1]),    # номер телефона
+                                               contractcode_phonenumber[1],    # номер телефона
                                                contractcode_phonenumber[0]          # contract_code
                                                )
     except Exception as e:
