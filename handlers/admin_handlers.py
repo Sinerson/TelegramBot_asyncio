@@ -14,13 +14,11 @@ from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_
 from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_services_and_promised_payment, \
     yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
-    get_client_services_list, contract_code_by_userid, contract_client_type_code_from_callback, \
+    get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 admin_rt = Router()
 
-# Создаем "базу данных" пользователей
-user_dict: dict[int, dict[str, str | int | bool]] = {}
 
 # Проверка на админа
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids), Command(commands='start'),
@@ -57,8 +55,10 @@ async def fsm_contact_admin_processing(message: Message, state: FSMContext):
     else:
         result = add_new_bot_admin(user_id=str(message.contact.user_id))
         if result[0]['RESULT'] == 1:
-            await message.answer(f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как администратор бота")
-            await bot.send_message(chat_id=message.contact.user_id,text=f"Пользователь {message.from_user.first_name} {message.from_user.last_name} добавил вас в администраторы бота. Для обновления меню нажмите /start")
+            await message.answer(
+                f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как администратор бота")
+            await bot.send_message(chat_id=message.contact.user_id,
+                                   text=f"Пользователь {message.from_user.first_name} {message.from_user.last_name} добавил вас в администраторы бота. Для обновления меню нажмите /start")
             await state.clear()
         elif result[0]['RESULT'] == 2:
             await message.answer(f"Пользователь уже администратор")
@@ -77,9 +77,11 @@ async def fsm_contact_manager_processing(message: Message, state: FSMContext):
     else:
         result = add_new_bot_manager(user_id=str(message.contact.user_id))
         if result[0]['RESULT'] == 1:
-            await message.answer(f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как менеджер бота")
-            await bot.send_message(chat_id=message.contact.user_id,  text=f"Пользователь {message.from_user.first_name} {message.from_user.last_name} добавил вас в менеджеры бота. Для обновления меню нажмите /start")
-            await state.clear() # Выходим из машины состояний
+            await message.answer(
+                f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как менеджер бота")
+            await bot.send_message(chat_id=message.contact.user_id,
+                                   text=f"Пользователь {message.from_user.first_name} {message.from_user.last_name} добавил вас в менеджеры бота. Для обновления меню нажмите /start")
+            await state.clear()  # Выходим из машины состояний
         elif result[0]['RESULT'] == 2:
             await message.answer(f"Пользователь уже менеджер")
             await state.clear()
@@ -89,20 +91,21 @@ async def fsm_contact_manager_processing(message: Message, state: FSMContext):
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith("BALANCE"), StateFilter(default_state))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+                         F.data.startswith("BALANCE"), StateFilter(
+        default_state))  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def balance_answer(callback: CallbackQuery):
     balance = get_balance_by_contract_code(contract_code_from_callback(callback.data))
     for el in balance:
         await callback.message.edit_text(
-            text=f"{LEXICON_RU['balance_is']} {round(int(el['EO_MONEY']), 2)} {LEXICON_RU['rubles']}", parse_mode='HTML')
-            # reply_markup=callback.message.reply_markup, parse_mode='HTML')
+            text=f"{LEXICON_RU['balance_is']} {round(int(el['EO_MONEY']), 2)} {LEXICON_RU['rubles']}",
+            parse_mode='HTML')
         await callback.answer()
 
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['my_services'].lower(), StateFilter(default_state))
 async def client_services(message: Message):
-    _abonents = contract_code_by_userid(message.from_user.id)
+    _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
         keyboard = keyboard_for_services_and_promised_payment(_abonents, 'SERVICES')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
@@ -114,13 +117,14 @@ async def client_services(message: Message):
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['promised_payment'].lower(), StateFilter(default_state))
 async def promised_payment_set(message: Message):
-    _abonents = contract_code_by_userid(message.from_user.id)
+    _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
         keyboard = keyboard_for_services_and_promised_payment(_abonents, 'PROMISED_PAYMENT')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
     else:
         keyboard = keyboard_for_services_and_promised_payment(_abonents, 'PROMISED_PAYMENT')
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+
 
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['drop_the_dice'].lower(), StateFilter(default_state))
@@ -150,11 +154,11 @@ async def manager_add_state(message: Message, state: FSMContext):
 
 
 @admin_rt.message(
-                  IsAdmin(admin_ids),
-                  IsKnownUsers(user_ids,admin_ids, manager_ids),
-                  StateFilter(FSMFillForm.fill_id_admin),
-                  F.text.isdigit()
-                  )
+    IsAdmin(admin_ids),
+    IsKnownUsers(user_ids, admin_ids, manager_ids),
+    StateFilter(FSMFillForm.fill_id_admin),
+    F.text.isdigit()
+)
 async def admin_add_process(message: Message, state: FSMContext):
     result = add_new_bot_admin(user_id=message.text)
     if result[0]['RESULT'] == 1:
@@ -169,11 +173,11 @@ async def admin_add_process(message: Message, state: FSMContext):
 
 
 @admin_rt.message(
-                  IsAdmin(admin_ids),
-                  IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  StateFilter(FSMFillForm.fill_id_manager),
-                  F.text.isdigit()
-                  )
+    IsAdmin(admin_ids),
+    IsKnownUsers(user_ids, admin_ids, manager_ids),
+    StateFilter(FSMFillForm.fill_id_manager),
+    F.text.isdigit()
+)
 async def manager_add_process(message: Message, state: FSMContext):
     result = add_new_bot_manager(user_id=message.text)
     if result[0]['RESULT'] == 1:
@@ -214,7 +218,7 @@ async def services_answer(callback: CallbackQuery):
                          StateFilter(default_state)
                          )
 async def dice_callback(callback: CallbackQuery):
-    ''' Выбор или отказ от выбора для кубика '''
+    """ Выбор или отказ от выбора для кубика """
     callback_data = callback.data.split()
     if 'yes' in callback_data:
         # kb_without_dice = without_dice_kb()
@@ -233,7 +237,7 @@ async def dice_callback(callback: CallbackQuery):
                          StateFilter(default_state)
                          )
 async def promised_payment_answer(callback: CallbackQuery):
-    ''' Хэндлер для обработки callback установки доверительного платежа '''
+    """ Хэндлер для обработки callback установки доверительного платежа """
     # abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
     abonents_data: list = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
@@ -250,7 +254,8 @@ async def promised_payment_answer(callback: CallbackQuery):
                 await callback.message.edit_text(text=LEXICON_RU['advance_client'], parse_mode='HTML')
             elif result["ERROR"].startswith('Err4'):
                 prop_date = f'<u><b>{get_promised_pay_date(abonents_data[1])}</b></u>'
-                await callback.message.edit_text(text=f'{LEXICON_RU["less_than_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
+                await callback.message.edit_text(
+                    text=f'{LEXICON_RU["less_than_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 

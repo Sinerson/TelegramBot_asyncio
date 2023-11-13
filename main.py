@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 
-from handlers import new_user_handlers, admin_handlers, other_handlers, known_users
+from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers
 from settings import BotSecrets
 
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -18,7 +18,7 @@ async def start() -> None:
     # Регистрируем роутеры в диспетчере
     dp.include_router(new_user_handlers.new_user_rt)
     dp.include_router(admin_handlers.admin_rt)
-    dp.include_router(known_users.user_rt)
+    dp.include_router(known_users_handlers.user_rt)
     dp.include_router(other_handlers.other_rt)
 
     try:

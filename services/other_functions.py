@@ -40,7 +40,7 @@ def contract_client_type_code_from_callback(callback_data: str) -> int:
 # Делаем запрос в БД для проверки существования номера телефона и кому он принадлежит
 def get_abonents_from_db(phone: str) -> list[dict]:
     """ Функция  возвращает из БД данные по абоненту в виде списка словарей.
-        НА вход принимает телефонный номер в виде строки
+        На вход принимает телефонный номер в виде строки
     """
     result = DbConnection.execute_query(get_abonent_by_phonenumber_query, phone)
     return result
@@ -54,14 +54,15 @@ def get_balance_by_contract_code(contract_code: str) -> list:
 
 def get_client_services_list(contract_code: int, client_code: int, client_type_code: int) -> list[dict]:
     """ Возвращает услуги абонента в виде списка словарей,
-     при подаче кода контракта, кода клиента и типа клиента в виде int """
+        при подаче кода контракта, кода клиента и типа клиента в виде int
+    """
     result = DbConnection.execute_query(
         f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
     return result
 
 
-def contract_code_by_userid(user_id: str) -> list:
-    """ Возвращает контракт код для сущесвующих в БД пользователей """
+def phone_number_by_userid(user_id: str) -> list:
+    """ Возвращает номер телефона для сущесвующих в БД пользователей по user_id"""
     result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
     phonenumber = result[0]['phonenumber'][-10:]
     return DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)

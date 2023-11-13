@@ -1,17 +1,15 @@
 from aiogram import Router, F
-from aiogram.types import Message, ContentType, CallbackQuery
 from aiogram.filters import Command, StateFilter
-from lexicon.lexicon_ru import LEXICON_RU
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state, State, StatesGroup
+from aiogram.fsm.state import default_state
+from aiogram.types import Message, ContentType, CallbackQuery
+from icecream import ic
 
 from filters.filters import NewUser, user_ids, manager_ids, admin_ids
 from keyboards.new_user_kb import new_user_keyboard, make_keyboard_for_newbie
-from keyboards.user_keyboard import user_keyboard
-from services.other_functions import contract_code_by_phone_for_new_users, add_new_known_user, get_abonents_from_db,\
+from keyboards.known_user_keyboard import user_keyboard
+from lexicon.lexicon_ru import LEXICON_RU
+from services.other_functions import add_new_known_user, get_abonents_from_db, \
     contract_client_type_code_from_callback
-
-from icecream import ic
 
 new_user_rt = Router()
 
@@ -69,7 +67,7 @@ async def add_new_user_callback_processing(callback: CallbackQuery):
         result_add_newbie = add_new_known_user(callback.from_user.id,
                                                callback.message.chat.id,
                                                contractcode_phonenumber[1],    # номер телефона
-                                               contractcode_phonenumber[0]          # contract_code
+                                               contractcode_phonenumber[0]     # contract_code
                                                )
     except Exception as e:
         ic(e)
