@@ -7,6 +7,7 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     set_manager_query, addUser_query
 from db.sybase import DbConnection
 
+from settings import ExternalLinks
 
 def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_code: int) -> bool:
     try:
@@ -82,9 +83,9 @@ def get_prise(dice_value: int) -> str:
 
 
 def get_prise_new(dice_value: int) -> str:
-    """ Для работы с Google Spreadsheet """
-    df = pd.read_csv('https://docs.google.com/spreadsheets/d/1bpz_2CxKY7wi1Icd-aEHOGpL1A7441N5Eveyq8dwRw0/export?format=csv')
-    df_dict: dict = dict(zip(df.index, df.values))
+    """ Для работы с Google Spreadsheet через pandas"""
+    df = pd.read_csv(ExternalLinks.marketing_doc_link)
+    df_dict: dict = dict(zip(df.ACTION_ID, df.ACTION_NAME))
     return df_dict[dice_value]
 
 
