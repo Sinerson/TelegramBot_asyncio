@@ -8,14 +8,16 @@ load_dotenv()
 
 @dataclass
 class BotSecrets:
+    """ Класс содержит данные для использования бота """
     bot_token: str = os.getenv("TOKEN_DEV")
-    admin_id: str = os.getenv("ADMIN_USERS_LIST")
-    manager_id: str = os.getenv("MANAGER_ID_LIST")
-    user_id: str = os.getenv("USERS_LIST")
+    # admin_id: str = os.getenv("ADMIN_USERS_LIST")
+    # manager_id: str = os.getenv("MANAGER_ID_LIST")
+    # user_id: str = os.getenv("USERS_LIST")
 
 
 @dataclass
 class DbSecrets:
+    """ Класс содержит переменные для строки подключения к БД """
     driver: str = os.getenv("DRIVER")
     server: str = os.getenv("SERVER")
     port: str = os.getenv("PORT")
@@ -33,6 +35,7 @@ class DbSecrets:
 
 @dataclass
 class ExternalLinks:
+    """ Класс содержит одну переменную, со ссылкой на документ Google Spreadsheet """
     marketing_doc_link: str = os.getenv("MARKETING_ACTION_LINK")
 
 

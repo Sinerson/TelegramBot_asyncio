@@ -63,7 +63,7 @@ def get_client_services_list(contract_code: int, client_code: int, client_type_c
     return result
 
 
-def phone_number_by_userid(user_id: str) -> list:
+def phone_number_by_userid(user_id: int) -> list:
     """ Возвращает номер телефона для сущесвующих в БД пользователей по user_id"""
     result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
     phonenumber = result[0]['phonenumber'][-10:]
@@ -80,6 +80,7 @@ def contract_code_by_phone_for_new_users(phonenumber: str) -> list[dict]:
 
 
 def get_prise(dice_value: int) -> str:
+    """ Тестовая заглушка, данные возвращает из словаря """
     return PRISE_ACTION[dice_value]
 
 

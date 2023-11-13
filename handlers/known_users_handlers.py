@@ -5,16 +5,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from services.classes import FSMFillForm
 from keyboards.known_user_keyboard import user_keyboard
-from filters.filters import IsKnownUsers, user_ids, admin_ids, manager_ids
 from lexicon.lexicon_ru import LEXICON_RU
 from asyncio import sleep
 
-from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
-from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_services_and_promised_payment, \
-    yes_no_keyboard, without_dice_kb
+from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
+from keyboards.admin_kb import keyboard_for_services_and_promised_payment, yes_no_keyboard
+from keyboards.known_user_keyboard import without_dice_kb_known_users
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise, get_prise_new,set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
+    get_prise, get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 user_rt = Router()
 
@@ -25,7 +24,9 @@ user_rt = Router()
                  StateFilter(default_state)
                  )
 async def cmd_start(message: Message):
-    await message.answer(text="Для взаимодействия с ботом, воспользуйтесь появившимся меню из кнопок", reply_markup=user_keyboard)
+    await message.answer(text="Для взаимодействия с ботом, воспользуйтесь появившимся меню из кнопок",
+                         reply_markup=user_keyboard)
+
 
 # Хэндлер на команду запроса баланса
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
@@ -150,18 +151,18 @@ async def send_dice(message: Message):
 
 # Обработка коллбэка для кубика
 @user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith("DICE"),
-                         StateFilter(default_state)
-                         )
+                        F.data.startswith("DICE"),
+                        StateFilter(default_state)
+                        )
 async def dice_callback(callback: CallbackQuery):
     """ Выбор или отказ от выбора для кубика """
     callback_data = callback.data.split()
     if 'yes' in callback_data:
-        # kb_without_dice = without_dice_kb()
+        kb_without_dice = without_dice_kb_known_users()
         prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
-        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>"
-                                              f" {LEXICON_RU['thanks_for_choice']}", parse_mode='HTML')
-        await callback.answer()
+        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>", parse_mode='HTML')
+        # await callback.answer()
+        await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)
     elif 'no' in callback_data:
         await callback.message.edit_text(text=LEXICON_RU['choice_not_made'], parse_mode='HTML')
         await callback.answer()
