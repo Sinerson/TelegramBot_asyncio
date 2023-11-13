@@ -14,7 +14,7 @@ from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_servic
     yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
+    get_prise, get_prise_new,set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 user_rt = Router()
 
@@ -135,14 +135,13 @@ async def promised_payment_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
-# Хэндлер для кубика
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower(),
                  StateFilter(default_state)
                  )
 async def send_dice(message: Message):
     _dice = await message.answer_dice()
-    prise: str = get_prise(_dice.dice.value)
+    prise: str = get_prise_new(_dice.dice.value)
     await sleep(4)
     yn_keyboard = yes_no_keyboard(prise)
     await message.answer(text=f"{LEXICON_RU['your_prise']} <b>{prise}</b>\n{LEXICON_RU['do_make_a_choice']}",

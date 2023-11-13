@@ -16,7 +16,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'unknown_callback': 'Неизвестный callback',
                               # admin_kb / known_users_kb
                               'send_message_to_users': 'Рассылка пользователям',
-                              'drop_the_dice': 'Бросить кость удачи ',
+                              'drop_the_dice': 'Бросить кость удачи',
                               'add_manager': 'Добавить менеджера',
                               'add_admin': 'Добавить админа',
                               'my_balance': 'Мой баланс',

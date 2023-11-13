@@ -1,4 +1,4 @@
-import pyodbc
+import pandas as pd
 from icecream import ic
 from db.fake_marketing_actions import PRISE_ACTION
 
@@ -79,6 +79,13 @@ def contract_code_by_phone_for_new_users(phonenumber: str) -> list[dict]:
 
 def get_prise(dice_value: int) -> str:
     return PRISE_ACTION[dice_value]
+
+
+def get_prise_new(dice_value: int) -> str:
+    """ Для работы с Google Spreadsheet """
+    df = pd.read_csv('https://docs.google.com/spreadsheets/d/1bpz_2CxKY7wi1Icd-aEHOGpL1A7441N5Eveyq8dwRw0/export?format=csv')
+    df_dict: dict = dict(zip(df.index, df.values))
+    return df_dict[dice_value]
 
 
 def get_all_users_from_db() -> list[dict]:
