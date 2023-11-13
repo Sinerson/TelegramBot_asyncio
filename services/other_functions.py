@@ -9,6 +9,7 @@ from db.sybase import DbConnection
 
 from settings import ExternalLinks
 
+
 def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_code: int) -> bool:
     try:
         DbConnection.execute_query(addUser_query, user_id, chat_id, phonenumber, contract_code)
@@ -26,7 +27,7 @@ def contract_code_from_callback(callback_data) -> int:
             return normalized_contract_code
 
 
-def contract_client_type_code_from_callback(callback_data: str) -> int:
+def contract_client_type_code_from_callback(callback_data: str) -> any:
     """ Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE  в виде генераторных значений
         Для этого переданную строку callback делим на части и нормализуем, удалим возможные знаки
         препинания. После этого перебираем получившиеся части и проверяем являются ли они

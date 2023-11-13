@@ -238,7 +238,6 @@ async def dice_callback(callback: CallbackQuery):
                          )
 async def promised_payment_answer(callback: CallbackQuery):
     """ Хэндлер для обработки callback установки доверительного платежа """
-    # abonents_data: list = list(map(int, contract_clinet_type_code_from_callback(callback.data)))
     abonents_data: list = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
         result = set_promised_payment(abonents_data[1])[0]
