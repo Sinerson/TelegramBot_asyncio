@@ -37,10 +37,10 @@ def keyboard_for_services_and_promised_payment(abonents_data: list[dict], callba
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
 
-def yes_no_keyboard(prise: str) -> InlineKeyboardMarkup:
+def yes_no_keyboard(prise: str, dice_value: int) -> InlineKeyboardMarkup:
     yes_no_buttons: list[list[InlineKeyboardButton]] = [
-        [InlineKeyboardButton(text=LEXICON_RU['yes'], callback_data=f'DICE yes {prise}')],
-        [InlineKeyboardButton(text=LEXICON_RU['no'], callback_data=f'DICE no {prise}')]
+        [InlineKeyboardButton(text=LEXICON_RU['yes'], callback_data=f'DICE yes {prise} {dice_value}')],
+        [InlineKeyboardButton(text=LEXICON_RU['no'], callback_data=f'DICE no {prise} {dice_value}')]
     ]
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=yes_no_buttons)
 

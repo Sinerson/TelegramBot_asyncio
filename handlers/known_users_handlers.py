@@ -7,7 +7,7 @@ from services.classes import FSMFillForm
 from keyboards.known_user_keyboard import user_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
 from asyncio import sleep
-
+from icecream import ic
 from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import keyboard_for_services_and_promised_payment, yes_no_keyboard
 from keyboards.known_user_keyboard import without_dice_kb_known_users
@@ -144,7 +144,7 @@ async def send_dice(message: Message):
     _dice = await message.answer_dice()
     prise: str = get_prise_new(_dice.dice.value)
     await sleep(4)
-    yn_keyboard = yes_no_keyboard(prise)
+    yn_keyboard = yes_no_keyboard(prise, _dice.dice.value)
     await message.answer(text=f"{LEXICON_RU['your_prise']} <b>{prise}</b>\n{LEXICON_RU['do_make_a_choice']}",
                          reply_markup=yn_keyboard, parse_mode='HTML')
 
@@ -159,7 +159,7 @@ async def dice_callback(callback: CallbackQuery):
     callback_data = callback.data.split()
     if 'yes' in callback_data:
         kb_without_dice = without_dice_kb_known_users()
-        prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
+        prise_action = " ".join(callback_data[callback_data.index("yes") + 1:-1])
         await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>", parse_mode='HTML')
         # await callback.answer()
         await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)

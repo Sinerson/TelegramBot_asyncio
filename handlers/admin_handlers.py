@@ -15,7 +15,7 @@ from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_servic
     yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
+    get_prise, get_prise_new,set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 admin_rt = Router()
 
@@ -130,9 +130,9 @@ async def promised_payment_set(message: Message):
                   F.text.lower() == LEXICON_RU['drop_the_dice'].lower(), StateFilter(default_state))
 async def send_dice(message: Message):
     _dice = await message.answer_dice()
-    prise: str = get_prise(_dice.dice.value)
+    prise: str = get_prise_new(_dice.dice.value)
     await sleep(4)
-    yn_keyboard = yes_no_keyboard(prise)
+    yn_keyboard = yes_no_keyboard(prise, _dice.dice.value)
     await message.answer(text=f"{LEXICON_RU['your_prise']} <b>{prise}</b>\n{LEXICON_RU['do_make_a_choice']}",
                          reply_markup=yn_keyboard, parse_mode='HTML')
 
@@ -221,11 +221,12 @@ async def dice_callback(callback: CallbackQuery):
     """ Выбор или отказ от выбора для кубика """
     callback_data = callback.data.split()
     if 'yes' in callback_data:
-        # kb_without_dice = without_dice_kb()
-        prise_action = " ".join(callback_data[callback_data.index("yes") + 1:])
-        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>"
-                                              f" {LEXICON_RU['thanks_for_choice']}", parse_mode='HTML')
-        await callback.answer()
+        kb_without_dice = without_dice_kb()
+        prise_action = " ".join(callback_data[callback_data.index("yes") + 1:-1])
+        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>",
+                                         parse_mode='HTML')
+        # await callback.answer()
+        await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)
     elif 'no' in callback_data:
         await callback.message.edit_text(text=LEXICON_RU['choice_not_made'], parse_mode='HTML')
         await callback.answer()
