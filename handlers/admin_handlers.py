@@ -11,11 +11,11 @@ from lexicon.lexicon_ru import LEXICON_RU
 from asyncio import sleep
 
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
-from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_for_services_and_promised_payment, \
+from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_with_contract_client_type_code, \
     yes_no_keyboard, without_dice_kb
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise, get_prise_new,set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
+    get_prise_new,set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
 
 admin_rt = Router()
 
@@ -107,10 +107,10 @@ async def balance_answer(callback: CallbackQuery):
 async def client_services(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'SERVICES')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
     else:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'SERVICES')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
@@ -119,10 +119,10 @@ async def client_services(message: Message):
 async def promised_payment_set(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'PROMISED_PAYMENT')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'PROMISED_PAYMENT')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
     else:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'PROMISED_PAYMENT')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'PROMISED_PAYMENT')
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 

@@ -209,15 +209,15 @@ PromisedPayDate = \
 					where CLIENT_CODE = ? and PROP_CODE = 823
 """
 
-getInetAccountPassword = \
+getInetAccountPassword_query = \
 """
 					select rtrim(LOGIN) as LOGIN, MEDIATE.dbo.ContractPasswordDecode(rtrim(PASSWORD)) as PASSWORD
 					from INTEGRAL..OTHER_DEVICES OD
 					join INTEGRAL..CONTRACT_CLIENTS CCL on OD.CLIENT_CODE = CCL.CLIENT_CODE
-					where CONTRACT_CODE = (?) and OD.TYPE_CODE = 14
+					where CONTRACT_CODE = ? and OD.TYPE_CODE = 14
 """
 
-getPersonalAreaPassword = \
+getPersonalAreaPassword_query = \
 """
 					select rtrim(PIN) as PIN, rtrim(PIN_PASSWORD) as PIN_PASSWORD
 					from INTEGRAL..CLIENT_PINS

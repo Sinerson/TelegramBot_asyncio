@@ -4,7 +4,7 @@ from db.fake_marketing_actions import PRISE_ACTION
 
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
     get_phonenumber_by_user_id_query, getContractCode, get_all_users, PromisedPayDate, set_admin_query, \
-    set_manager_query, addUser_query
+    set_manager_query, addUser_query, getInetAccountPassword_query, getPersonalAreaPassword_query
 from db.sybase import DbConnection
 
 from settings import ExternalLinks
@@ -117,4 +117,16 @@ def add_new_bot_admin(user_id: str) -> list[dict]:
 def add_new_bot_manager(user_id: str) -> list[dict]:
     """ Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT """
     result = DbConnection.execute_query(set_manager_query, user_id)
+    return result
+
+
+def inet_account_password(contract_code: int) -> list[dict]:
+    """ Возращаем логин и пароль от учетной записи интернет """
+    result = DbConnection.execute_query(getInetAccountPassword_query, contract_code)
+    return result
+
+
+def personal_area_password(client_code: int) -> list[dict]:
+    """ Возращаем логин и пароль от личного кабинета """
+    result = DbConnection.execute_query(getPersonalAreaPassword_query, client_code)
     return result

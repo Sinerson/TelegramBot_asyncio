@@ -9,11 +9,12 @@ from lexicon.lexicon_ru import LEXICON_RU
 from asyncio import sleep
 from icecream import ic
 from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
-from keyboards.admin_kb import keyboard_for_services_and_promised_payment, yes_no_keyboard
+from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard
 from keyboards.known_user_keyboard import without_dice_kb_known_users
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise, get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
+    get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager,\
+    inet_account_password, personal_area_password
 
 user_rt = Router()
 
@@ -35,10 +36,10 @@ async def cmd_start(message: Message):
 async def known_client_balance_request(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'BALANCE')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'BALANCE')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
     else:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'BALANCE')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'BALANCE')
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
@@ -64,10 +65,10 @@ async def balance_answer(callback: CallbackQuery):
 async def client_services(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'SERVICES')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
     else:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'SERVICES')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
@@ -100,10 +101,10 @@ async def services_answer(callback: CallbackQuery):
 async def promised_payment_set(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'PROMISED_PAYMENT')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'PROMISED_PAYMENT')
         await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
     else:
-        keyboard = keyboard_for_services_and_promised_payment(_abonents, 'PROMISED_PAYMENT')
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'PROMISED_PAYMENT')
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
@@ -159,14 +160,91 @@ async def dice_callback(callback: CallbackQuery):
     callback_data = callback.data.split()
     if 'yes' in callback_data:
         kb_without_dice = without_dice_kb_known_users()
-        # prise_action = " ".join(callback_data[callback_data.index("yes") + 1:-1])
         prise_action = get_prise_new(int(" ".join(callback_data[-1:])))
-        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b>{prise_action}</b></u>", parse_mode='HTML')
+        #
+        # TODO: нужна функция для добавления свойства на абонента. Свойство с комментарием в виде выбранного варианта выигрыша
+        #
+        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
+                                         parse_mode='HTML',
+                                         disable_web_page_preview=True
+                                         )
         await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)
         await callback.answer()
     elif 'no' in callback_data:
         await callback.message.edit_text(text=LEXICON_RU['choice_not_made'], parse_mode='HTML')
         await callback.answer()
+
+
+# Хэндлер на команду запроса пароля от аккаунта интернет
+@user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                 F.text.lower() == LEXICON_RU['inet_password'].lower(),
+                 StateFilter(default_state))
+async def known_client_inet_password(message: Message):
+    _abonents = phone_number_by_userid(message.from_user.id)
+    if len(_abonents) > 1:
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'INET_PASSWORD')
+        await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+    else:
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'INET_PASSWORD')
+        await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+
+
+# Обработка callback для пароля на интернет
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                        F.data.startswith("INET_PASSWORD"),
+                        StateFilter(default_state)
+                        )
+async def inet_password_answer(callback: CallbackQuery):
+    result = inet_account_password(list(contract_client_type_code_from_callback(callback.data))[0])
+    await callback.message.edit_text(text=f"*Имя пользователя:* `{result[0]['LOGIN']}`\n"
+                                          f"*Пароль:* `{result[0]['PASSWORD']}`\n\n"
+                                          f"Подробнее, как настроить PPPoE на роутере или компьютере, можете"
+                                          f" [посмотреть на нашем сайте](https://sv-tel.ru/help/technical/)"
+                                     , parse_mode='MarkdownV2', disable_web_page_preview=True)
+    await callback.answer()
+
+
+# Хэндлер на команду запроса пароля от ЛК
+@user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                 F.text.lower() == LEXICON_RU['personal_area_password'].lower(),
+                 StateFilter(default_state))
+async def known_client_personal_area_password(message: Message):
+    _abonents = phone_number_by_userid(message.from_user.id)
+    if len(_abonents) > 1:
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'LK')
+        await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+    else:
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'LK')
+        await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+
+
+# Обработка callback для пароля от ЛК
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                        F.data.startswith("LK"),
+                        StateFilter(default_state)
+                        )
+async def personal_area_password_answer(callback: CallbackQuery):
+    callback_parse = list(contract_client_type_code_from_callback(callback.data))
+    result = personal_area_password(callback_parse[1]) # Вытащим по индексу CLIENT_CODE
+    if not result:
+        await callback.message.edit_text(text="Учетные данные не обнаружены, обратитесь в тех.поддержку.")
+    else:
+        if len(result) > 1:
+            await callback.message.edit_text(text="Найдено несколько пар учетных данных. Можно использовать любые.")
+            cnt = len(result)
+            while cnt > 0:
+                for el in result:
+                    await callback.message.answer(text=f"*Имя пользователя:* `{el['PIN']}`\n*Пароль:* `{el['PIN_PASSWORD']}`", parse_mode='MarkdownV2')
+                    cnt -= 1
+            await callback.message.answer(text=f"Перейти в личный кабинет можно по <a href='https://bill.sv-tel.ru/'>ссылке</a>", parse_mode='HTML', disable_web_page_preview=True)
+        else:
+            await callback.message.edit_text(text=f"*Имя пользователя:* `{result[0]['PIN']}`\n"
+                                                  f"*Пароль:* `{result[0]['PIN_PASSWORD']}`\n\n"
+                                                  f"Перейти в личный кабинет можно по"
+                                                  f" [ссылке](https://bill.sv-tel.ru)",
+                                                  parse_mode='MarkdownV2', disable_web_page_preview=True)
+    await callback.answer()
+
 
 
 # Хэндлер для команды /help

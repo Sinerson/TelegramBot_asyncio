@@ -25,7 +25,7 @@ def make_keyboard(abonent_from_db):
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
 
-def keyboard_for_services_and_promised_payment(abonents_data: list[dict], callback_name: str) -> InlineKeyboardMarkup:
+def keyboard_with_contract_client_type_code(abonents_data: list[dict], callback_name: str) -> InlineKeyboardMarkup:
     button_list = []
     for dicts in abonents_data:
         button = []
