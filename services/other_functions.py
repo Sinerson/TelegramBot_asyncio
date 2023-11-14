@@ -19,7 +19,7 @@ def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_co
         return False
 
 
-def contract_code_from_callback(callback_data) -> int:
+def contract_code_from_callback(callback_data) -> any:
     """ Получаем из хэндлера callback data и выделяем из нее код контракта, после чего отдаем его назад """
     for word in callback_data.split():
         normalized_contract_code = word.replace('.', '').replace(',', '').replace(' ', '').strip()
@@ -28,7 +28,7 @@ def contract_code_from_callback(callback_data) -> int:
 
 
 def contract_client_type_code_from_callback(callback_data: str) -> any:
-    """ Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE  в виде генераторных значений
+    """ Возвращаем CONTRACT_CODE, CLIENT_CODE, TYPE_CODE в виде генераторных значений
         Для этого переданную строку callback делим на части и нормализуем, удалим возможные знаки
         препинания. После этого перебираем получившиеся части и проверяем являются ли они
         числовыми символами, если да - приводим к int и возвращаем по одному.

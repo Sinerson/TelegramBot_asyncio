@@ -56,7 +56,7 @@ async def _balance_request_contact_processing(message: Message):
                          StateFilter(default_state))
 async def _balance_answer(callback: CallbackQuery):
     """ Ответ на запрос баланса """
-    balance = get_balance_by_contract_code(contract_code_from_callback(callback.data))
+    balance: list[dict] = get_balance_by_contract_code(contract_code_from_callback(callback.data))
     for el in balance:
         await callback.message.edit_text(
             text=f"{LEXICON_RU['balance_is']} {round(int(el['EO_MONEY']), 2)} {LEXICON_RU['rubles']}",

@@ -23,7 +23,7 @@ async def start() -> None:
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, allowed_updates=["message", "inline_query", "chat_member", "my_chat_member"])
     finally:
         await bot.session.close()
 
