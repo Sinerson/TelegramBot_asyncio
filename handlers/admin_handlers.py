@@ -19,7 +19,6 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
 admin_rt = Router()
 
 
-# Проверка на админа
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   Command(commands='start'),
@@ -27,6 +26,7 @@ admin_rt = Router()
                   StateFilter(default_state)
                   )
 async def _answer_if_admins_update(message: Message):
+    """ Хэндлер для команды start от пользователей в группе администраторы """
     await message.answer(text=LEXICON_RU['admin_menu'], reply_markup=menu_keyboard)
 
 
@@ -35,20 +35,19 @@ async def _answer_if_admins_update(message: Message):
                   F.content_type == ContentType.CONTACT,
                   StateFilter(default_state))
 async def _balance_request_contact_processing(message: Message):
-    if message.contact.user_id != message.from_user.id:
-        await message.answer(text=LEXICON_RU['balance_for_owner_only'])
-    else:
-        phone = message.contact.phone_number[-10:]  # Берем последние 10 цифр из номера
-        abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
-        count = len(abonent_from_db)  # Получим количество абонентов в выборке
-        if not count:  # Если в выборке никого нет, сообщим пользователю
-            await message.answer(LEXICON_RU["phone_not_found"])
-        elif count == 1:  # Если у нас в выборку кто-то попал, тогда
-            keyboard = make_keyboard(abonent_from_db)
-            await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
-        else:  # Вариант с выбором абонента
-            keyboard = make_keyboard(abonent_from_db)
-            await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+    """ Хэндлер на поступившее сообщение от администратора, содержащее контактную информацию
+    Администраторы могут узнавать баланс любого пользователя """
+    phone = message.contact.phone_number[-10:]  # Берем последние 10 цифр из номера
+    abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
+    count = len(abonent_from_db)  # Получим количество абонентов в выборке
+    if not count:  # Если в выборке никого нет, сообщим пользователю
+        await message.answer(LEXICON_RU["phone_not_found"])
+    elif count == 1:  # Если у нас в выборку кто-то попал, тогда
+        keyboard = make_keyboard(abonent_from_db)
+        await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+    else:  # Вариант с выбором абонента
+        keyboard = make_keyboard(abonent_from_db)
+        await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids),
@@ -56,6 +55,7 @@ async def _balance_request_contact_processing(message: Message):
                          F.data.startswith("BALANCE"),
                          StateFilter(default_state))
 async def _balance_answer(callback: CallbackQuery):
+    """ Ответ на запрос баланса """
     balance = get_balance_by_contract_code(contract_code_from_callback(callback.data))
     for el in balance:
         await callback.message.edit_text(
@@ -67,6 +67,7 @@ async def _balance_answer(callback: CallbackQuery):
 @admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['drop_the_dice'].lower(), StateFilter(default_state))
 async def _send_dice(message: Message):
+    """ Отсылка игральной кости и получение значения которое выпало"""
     _dice = await message.answer_dice()
     prise: str = get_prise_new(_dice.dice.value)
     await sleep(4)
@@ -126,8 +127,11 @@ async def _fsm_contact_admin_processing(message: Message, state: FSMContext):
             await state.clear()
 
 
-@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['add_admin'].lower(), StateFilter(default_state))
+@admin_rt.message(IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['add_admin'].lower(),
+                  StateFilter(default_state)
+                  )
 async def _admin_add_state(message: Message, state: FSMContext):
     await message.answer(f"{LEXICON_RU['send_me_new_admin_id']} {LEXICON_RU['cancel_action']}")
     # Устанавливаем состояние ожидания ввода id
