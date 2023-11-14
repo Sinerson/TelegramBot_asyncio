@@ -88,8 +88,6 @@ def get_prise_new(dice_value: int) -> str:
     """ Для работы с Google Spreadsheet через pandas"""
     df = pd.read_csv(ExternalLinks.marketing_doc_link)
     df_dict: dict = dict(zip(df.ACTION_ID, df.ACTION_NAME))
-    ic(df_dict)
-    ic(df_dict[dice_value])
     return df_dict[dice_value]
 
 

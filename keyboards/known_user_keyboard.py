@@ -1,6 +1,7 @@
 from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
 from lexicon.lexicon_ru import LEXICON_RU
 from icecream import ic
+import copy
 # ----------------------------------- Кнопка отправки контакта ----------------------------------------------
 # Создаем список списков с кнопками
 buttons: list[list[KeyboardButton]] = [
@@ -14,6 +15,6 @@ user_keyboard = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
 
 
 def without_dice_kb_known_users() -> ReplyKeyboardMarkup:
-    now_buttons = buttons
+    now_buttons = copy.copy(buttons)
     now_buttons.pop(3)
     return ReplyKeyboardMarkup(keyboard=now_buttons, resize_keyboard=True)
