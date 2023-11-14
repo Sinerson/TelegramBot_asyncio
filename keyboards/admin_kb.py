@@ -1,6 +1,9 @@
-from icecream import ic
 from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
+import copy
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
+
 from lexicon.lexicon_ru import LEXICON_RU
 
 # Создаем список списков с кнопками для основного меню
@@ -46,6 +49,6 @@ def yes_no_keyboard(dice_value: int) -> InlineKeyboardMarkup:
 
 
 def without_dice_kb() -> ReplyKeyboardMarkup:
-    now_buttons = buttons
+    now_buttons = copy.copy(buttons)
     now_buttons[0].pop(1)
     return ReplyKeyboardMarkup(keyboard=now_buttons, resize_keyboard=True)
