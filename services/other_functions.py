@@ -1,12 +1,12 @@
 import pandas as pd
 from icecream import ic
+
 from db.fake_marketing_actions import PRISE_ACTION
-
-from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, getClientCodeByContractCode, \
-    get_phonenumber_by_user_id_query, getContractCode, get_all_users, PromisedPayDate, set_admin_query, \
-    set_manager_query, addUser_query, getInetAccountPassword_query, getPersonalAreaPassword_query
+from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, get_phonenumber_by_user_id_query, \
+    getContractCode, get_all_users, PromisedPayDate, set_admin_query, \
+    set_manager_query, addUser_query, getInetAccountPassword_query, getPersonalAreaPassword_query, set_bot_blocked, \
+    set_bot_unblocked
 from db.sybase import DbConnection
-
 from settings import ExternalLinks
 
 
@@ -129,4 +129,16 @@ def inet_account_password(contract_code: int) -> list[dict]:
 def personal_area_password(client_code: int) -> list[dict]:
     """ Возращаем логин и пароль от личного кабинета """
     result = DbConnection.execute_query(getPersonalAreaPassword_query, client_code)
+    return result
+
+
+def user_banned_bot_processing(user_id: int) -> list[dict]:
+    """ Устанавливаем статус блокировки бота пользователем """
+    result = DbConnection.execute_query(set_bot_blocked, user_id)
+    return result
+
+
+def user_unbanned_bot_processing(user_id: int) -> list[dict]:
+    """ Устанавливаем статус блокировки бота пользователем """
+    result = DbConnection.execute_query(set_bot_unblocked, user_id)
     return result

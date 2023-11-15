@@ -303,9 +303,9 @@ if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
     end
 """
 
-get_phonenumber_by_user_id_query = '''
+get_phonenumber_by_user_id_query = """
 select phonenumber from SV..TBP_TELEGRAM_BOT where user_id = cast(? as varchar(25))
-'''
+"""
 
 get_client_code_by_contract_code = '''
 select CL.CLIENT_CODE, CONTRACT_CODE, TYPE_CODE
@@ -313,3 +313,45 @@ from INTEGRAL..CONTRACT_CLIENTS CC
 join INTEGRAL..CLIENTS CL on CC.CLIENT_CODE = CL.CLIENT_CODE
 where CONTRACT_CODE in ( ? )
 '''
+
+set_bot_blocked = """
+declare @user_id varchar(20)
+select @user_id = cast(? as varchar(20))
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and bot_blocked = 0)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set bot_blocked = 1
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
+    end
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
+"""
+
+set_bot_unblocked = """
+declare @user_id varchar(20)
+select @user_id = cast(? as varchar(20))
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and bot_blocked = 1)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set bot_blocked = 0
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
+    end
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
+"""

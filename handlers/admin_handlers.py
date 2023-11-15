@@ -14,7 +14,8 @@ from main import bot
 from services.classes import FSMFillForm
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager
+    get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager, \
+    user_unbanned_bot_processing
 
 admin_rt = Router()
 
@@ -27,6 +28,7 @@ admin_rt = Router()
                   )
 async def _answer_if_admins_update(message: Message):
     """ Хэндлер для команды start от пользователей в группе администраторы """
+    user_unbanned_bot_processing(message.from_user.id)
     await message.answer(text=LEXICON_RU['admin_menu'], reply_markup=menu_keyboard)
 
 
@@ -115,9 +117,9 @@ async def _fsm_contact_admin_processing(message: Message, state: FSMContext):
         result = add_new_bot_admin(user_id=str(message.contact.user_id))
         if result[0]['RESULT'] == 1:
             await message.answer(
-                f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как администратор бота")
+                f"Пользователь {message.contact.first_name} отмечен как администратор бота")
             await bot.send_message(chat_id=message.contact.user_id,
-                                   text=f"Пользователь {message.from_user.first_name} {message.from_user.last_name} добавил вас в администраторы бота. Для обновления меню нажмите /start")
+                                   text=f"Пользователь {message.from_user.first_name} добавил вас в администраторы бота. Для обновления меню нажмите /start")
             await state.clear()
         elif result[0]['RESULT'] == 2:
             await message.answer(f"Пользователь уже администратор")
@@ -168,10 +170,10 @@ async def _fsm_contact_manager_processing(message: Message, state: FSMContext):
     else:
         result = add_new_bot_manager(user_id=str(message.contact.user_id))
         if result[0]['RESULT'] == 1:
-            await message.answer(
-                f"Пользователь {message.contact.first_name} {message.contact.last_name} отмечен как менеджер бота")
+            await message.answer(f"Пользователь {message.contact.first_name} отмечен как менеджер бота")
             await bot.send_message(chat_id=message.contact.user_id,
-                                   text=f"Пользователь {message.from_user.first_name} {message.from_user.last_name} добавил вас в менеджеры бота. Для обновления меню нажмите /start")
+                                   text=f"Пользователь {message.from_user.first_name}"
+                                        f" добавил вас в менеджеры бота. Для обновления меню нажмите /start")
             await state.clear()  # Выходим из машины состояний
         elif result[0]['RESULT'] == 2:
             await message.answer(f"Пользователь уже менеджер")
@@ -181,8 +183,11 @@ async def _fsm_contact_manager_processing(message: Message, state: FSMContext):
             await state.clear()
 
 
-@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['add_manager'].lower(), StateFilter(default_state))
+@admin_rt.message(IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['add_manager'].lower(),
+                  StateFilter(default_state)
+                  )
 async def _manager_add_state(message: Message, state: FSMContext):
     await message.answer(f"{LEXICON_RU['send_me_new_manager_id']} {LEXICON_RU['cancel_action']}")
     # Устанавливаем состояние ожидания ввода id

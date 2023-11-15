@@ -1,20 +1,19 @@
-from aiogram import Router, F
-from aiogram.types import Message, ContentType, CallbackQuery
-from aiogram.filters import Command, StateFilter
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state
-from services.classes import FSMFillForm
-from keyboards.known_user_keyboard import user_keyboard
-from lexicon.lexicon_ru import LEXICON_RU
 from asyncio import sleep
-from icecream import ic
+
+from aiogram import Router, F
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.state import default_state
+from aiogram.types import Message, CallbackQuery
+
 from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard
+from keyboards.known_user_keyboard import user_keyboard
 from keyboards.known_user_keyboard import without_dice_kb_known_users
-from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
+from lexicon.lexicon_ru import LEXICON_RU
+from services.other_functions import get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
-    get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager,\
-    inet_account_password, personal_area_password
+    get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
+    user_unbanned_bot_processing
 
 user_rt = Router()
 
@@ -25,6 +24,7 @@ user_rt = Router()
                  StateFilter(default_state)
                  )
 async def cmd_start(message: Message):
+    user_unbanned_bot_processing(message.from_user.id)
     await message.answer(text="Для взаимодействия с ботом, воспользуйтесь появившимся меню из кнопок",
                          reply_markup=user_keyboard)
 
