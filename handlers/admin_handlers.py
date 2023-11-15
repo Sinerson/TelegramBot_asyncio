@@ -1,5 +1,5 @@
 from asyncio import sleep
-
+from icecream import ic
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -8,14 +8,14 @@ from aiogram.types import Message, ContentType, CallbackQuery
 
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_with_contract_client_type_code, \
-    yes_no_keyboard, without_dice_kb
+    yes_no_keyboard, without_dice_kb, stop_spam_kb
 from lexicon.lexicon_ru import LEXICON_RU
 from main import bot
 from services.classes import FSMFillForm
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager, \
-    user_unbanned_bot_processing
+    user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users
 
 admin_rt = Router()
 
@@ -74,8 +74,8 @@ async def _send_dice(message: Message):
     prise: str = get_prise_new(_dice.dice.value)
     await sleep(4)
     yn_keyboard = yes_no_keyboard(_dice.dice.value)
-    await message.answer(text=f"{LEXICON_RU['your_prise']} <b>{prise}</b>\n{LEXICON_RU['do_make_a_choice']}",
-                         reply_markup=yn_keyboard, parse_mode='HTML')
+    await message.answer(text=f"{LEXICON_RU['your_prise']} ||__*{prise}*__||\n{LEXICON_RU['do_make_a_choice']}",
+                         reply_markup=yn_keyboard, parse_mode='MarkdownV2')
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids),
@@ -210,6 +210,37 @@ async def _manager_add_requst(message: Message, state: FSMContext):
     else:
         await message.answer(f"Пользователь не обращался к боту и его нет в БД.\n")
         await state.clear()
+
+
+@admin_rt.message(IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['make_a_spam'].lower(),
+                  StateFilter(default_state)
+                  )
+async def _send_message_to_users_request(message: Message, state: FSMContext):
+    await message.answer(f"{LEXICON_RU['send_me_message_to_send']} {LEXICON_RU['cancel_action']}")
+    # Устанавливаем состояние ожидания ввода сообщения для рассылки пользователям
+    await state.set_state(FSMFillForm.fill_message_to_send)
+
+
+@admin_rt.message(IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  StateFilter(FSMFillForm.fill_message_to_send)
+                  )
+async def _send_message_to_user_processing(message: Message, state: FSMContext):
+    user_list = get_list_unbanned_known_users()
+    user_cnt = len(user_list)
+    for user in user_list:
+        await bot.send_message(chat_id=user,
+                                   text=f"{message.md_text}\n\nДля отказа от получения уведомлений, нажмите кнопку под сообщением",
+                                   reply_markup= stop_spam_kb(user),
+                                   parse_mode='MarkdownV2',
+                                   disable_notification=False)
+        await sleep(0.01)
+    await message.answer(text=f"Рассылка закончена, сообщение отправлено {user_cnt} пользователям\.",
+                         parse_mode='MarkdownV2',
+                         disable_notification=False)
+    await state.clear()
 
 
 @admin_rt.message(IsAdmin(admin_ids),

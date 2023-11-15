@@ -1,5 +1,4 @@
 from aiogram import Router, F
-from aiogram import Router, F
 from aiogram.filters import StateFilter
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, KICKED
 from aiogram.fsm.state import default_state

@@ -40,7 +40,8 @@ SV..TBP_TELEGRAM_BOT(user_id,
                      admin,
                      manager,
                      known_user,
-                     bot_blocked
+                     bot_blocked,
+                     wish_news
                     )
 values 
                     (
@@ -49,7 +50,7 @@ values
                     cast( ? as varchar(20)),
                     ?,
                     cast('1' as character(1)),
-                    getdate(), 0 , 0 , 1 , 0  
+                    getdate(), 0 , 0 , 1 , 0, 1  
                     )
 select 1 as RESULT
 end
@@ -132,10 +133,10 @@ setSendStatus = \
 					from SV..TBP_TELEGRAM_BOT
 					where user_id = (?)
 """
-getTechClaims = \
+getTechClaims_query = \
 	"""
 					declare @ContractCode int
-					select @ContractCode = (?)
+					select @ContractCode = ?
 					select  A.APPL_ID as CLAIM_NUM,
 					        rtrim(S.STATUS_NAME) as STATUS_NAME,
 					        cast(A.APPL_DATE_CREATE as smalldatetime) as APPL_DATE_CREATE, -- Дата создания
@@ -161,9 +162,9 @@ getTechClaims = \
 					        A.APPL_DATE_CLOSE is null
 """
 
-getContractCodeByUserId = \
+getContractCodeByUserId_query = \
 	"""
-					select contract_code
+					select contract_code as CONTRACT_CODE
 					from SV..TBP_TELEGRAM_BOT
 					where user_id = ?
 """
@@ -274,13 +275,22 @@ if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
     end
 """
 
-get_all_users = '''
+get_all_users_query = """
 select user_id from SV..TBP_TELEGRAM_BOT
-'''
+"""
 
-get_known_user_query = '''
+get_known_user_query = """
 select user_id from SV..TBP_TELEGRAM_BOT where known_user = 1
-'''
+"""
+
+get_all_unbanned_users_query = """
+select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0
+"""
+
+get_all_known_unbanned_users_query = """
+select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0 and known_user = 1
+"""
+
 
 set_known_user_query = """
 declare @user_id varchar(20)
@@ -344,6 +354,27 @@ if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
         begin
             update SV..TBP_TELEGRAM_BOT
             set bot_blocked = 0
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
+    end
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
+"""
+
+decline_notify_query = """
+declare @user_id varchar(20)
+select @user_id = cast(? as varchar(20))
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and wish_news = 1)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set wish_news = 0
             where user_id = @user_id
             select 1 as RESULT
         end

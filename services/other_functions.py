@@ -3,9 +3,10 @@ from icecream import ic
 
 from db.fake_marketing_actions import PRISE_ACTION
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, get_phonenumber_by_user_id_query, \
-    getContractCode, get_all_users, PromisedPayDate, set_admin_query, \
+    getContractCode, get_all_users_query, PromisedPayDate, set_admin_query, \
     set_manager_query, addUser_query, getInetAccountPassword_query, getPersonalAreaPassword_query, set_bot_blocked, \
-    set_bot_unblocked
+    set_bot_unblocked, get_all_unbanned_users_query, decline_notify_query, get_all_known_unbanned_users_query,\
+    getTechClaims_query, getContractCodeByUserId_query
 from db.sybase import DbConnection
 from settings import ExternalLinks
 
@@ -92,7 +93,7 @@ def get_prise_new(dice_value: int) -> str:
 
 
 def get_all_users_from_db() -> list[dict]:
-    result = DbConnection.execute_query(get_all_users)
+    result = DbConnection.execute_query(get_all_users_query)
     return result
 
 
@@ -141,4 +142,32 @@ def user_banned_bot_processing(user_id: int) -> list[dict]:
 def user_unbanned_bot_processing(user_id: int) -> list[dict]:
     """ Устанавливаем статус блокировки бота пользователем """
     result = DbConnection.execute_query(set_bot_unblocked, user_id)
+    return result
+
+
+def get_list_unbanned_users() -> list:
+    result = DbConnection.execute_query(get_all_unbanned_users_query)
+    return result
+
+
+def get_list_unbanned_known_users() -> list:
+    result = DbConnection.execute_query(get_all_known_unbanned_users_query)
+    return result
+
+
+def notify_decline(user_id: int) -> bool:
+    result = DbConnection.execute_query(decline_notify_query, user_id)[0]['RESULT']
+    if result != 1:
+        return False
+    else:
+        return True
+
+
+def get_tech_claims(contract_code: int) -> list[dict]:
+    result = DbConnection.execute_query(getTechClaims_query, contract_code)
+    return result
+
+
+def get_contract_code_by_user_id(user_id: int) -> int:
+    result = DbConnection.execute_query(getContractCodeByUserId_query, str(user_id))
     return result

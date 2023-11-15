@@ -1,5 +1,5 @@
 from asyncio import sleep
-
+from icecream import ic
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import default_state
@@ -13,7 +13,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
-    user_unbanned_bot_processing
+    user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims
 
 user_rt = Router()
 
@@ -137,6 +137,7 @@ async def promised_payment_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
+# Хэндлер на запрос броска кубика
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower(),
                  StateFilter(default_state)
@@ -146,8 +147,8 @@ async def send_dice(message: Message):
     prise: str = get_prise_new(_dice.dice.value)
     await sleep(4)
     yn_keyboard = yes_no_keyboard(_dice.dice.value)
-    await message.answer(text=f"{LEXICON_RU['your_prise']} <b>{prise}</b>\n{LEXICON_RU['do_make_a_choice']}",
-                         reply_markup=yn_keyboard, parse_mode='HTML')
+    await message.answer(text=f"{LEXICON_RU['your_prise']} ||*{prise}*||\n{LEXICON_RU['do_make_a_choice']}",
+                         reply_markup=yn_keyboard, parse_mode='MarkdownV2')
 
 
 # Обработка коллбэка для кубика
@@ -179,7 +180,7 @@ async def dice_callback(callback: CallbackQuery):
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['inet_password'].lower(),
                  StateFilter(default_state))
-async def known_client_inet_password(message: Message):
+async def known_client_inet_password_request(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
         keyboard = keyboard_with_contract_client_type_code(_abonents, 'INET_PASSWORD')
@@ -234,9 +235,13 @@ async def personal_area_password_answer(callback: CallbackQuery):
             cnt = len(result)
             while cnt > 0:
                 for el in result:
-                    await callback.message.answer(text=f"*Имя пользователя:* `{el['PIN']}`\n*Пароль:* `{el['PIN_PASSWORD']}`", parse_mode='MarkdownV2')
+                    await callback.message.answer(text=f"*Имя пользователя:* `{el['PIN']}`\n*Пароль:* `{el['PIN_PASSWORD']}`",
+                                                  parse_mode='MarkdownV2'
+                                                  )
                     cnt -= 1
-            await callback.message.answer(text=f"Перейти в личный кабинет можно по <a href='https://bill.sv-tel.ru/'>ссылке</a>", parse_mode='HTML', disable_web_page_preview=True)
+            await callback.message.answer(text=f"Перейти в личный кабинет можно по <a href='https://bill.sv-tel.ru/'>ссылке</a>",
+                                          parse_mode='HTML',
+                                          disable_web_page_preview=True)
         else:
             await callback.message.edit_text(text=f"*Имя пользователя:* `{result[0]['PIN']}`\n"
                                                   f"*Пароль:* `{result[0]['PIN_PASSWORD']}`\n\n"
@@ -245,6 +250,60 @@ async def personal_area_password_answer(callback: CallbackQuery):
                                                   parse_mode='MarkdownV2', disable_web_page_preview=True)
     await callback.answer()
 
+
+# Хэндлер обработки коллбэка прекращения подписки на рассылку (сама кнопка генерится в admin_handler.py)
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                        F.data.startswith("STOP_SPAM"),
+                        StateFilter(default_state)
+                        )
+async def _unsubscribe_from_spam_result(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    result = notify_decline(user_id)
+    if result is True:
+        await callback.message.edit_text(text="Вы отписались от получения уведомлений")
+    else:
+        ic(result)
+    await callback.answer()
+
+
+# Хэндлер для запроса заявок пользователя
+@user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                 F.text.lower() == LEXICON_RU['my_support_tickets'].lower(),
+                 StateFilter(default_state)
+                 )
+async def tech_claims_request(message: Message):
+    _abonents = phone_number_by_userid(message.from_user.id)
+    if len(_abonents) > 1:
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'TECH_CLAIMS')
+        await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+    else:
+        keyboard = keyboard_with_contract_client_type_code(_abonents, 'TECH_CLAIMS')
+        await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+
+
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                        F.data.startswith("TECH_CLAIMS"),
+                        StateFilter(default_state)
+                        )
+async def tech_claims_answer(callback: CallbackQuery):
+    """ Хэндлер для обработки callback на вывод заявок в тех.поддержку """
+    abonents_data: list = list(contract_client_type_code_from_callback(callback.data))
+    tech_claims = get_tech_claims(abonents_data[0])
+    if not tech_claims:
+        await callback.message.edit_text(text="Заявок за последнюю неделю не обнаружено")
+    else:
+        await callback.message.edit_text(
+            text=f"Список заявок в техническую поддержку за последние 7 дней\n",parse_mode='MarkdownV2')
+        for claim in tech_claims:
+            await callback.message.answer(text=f"Заявка №<b>{claim['CLAIM_NUM']}</b>\n"
+                                               f"Текущий статус: <b>{claim['STATUS_NAME']}</b>\n"
+                                               # f"Дата создания: *{claim['APPL_DATE_CREATE']}*\n"
+                                               # f"Назначена дата выполнения: *{claim['APPL_DATE_RUN']}*\n"
+                                               f"ФИО: <b>{claim['CLIENT_NAME']}</b>\n"
+                                               f"Адрес: <b>{claim['ADDRESS_NAME']}</b>\n"
+                                               f"Заявлено: <b>{claim['ERROR_NAME']}</b>\n"
+                                               f"Доп.инфо: <b>{claim['INFO_PROBLEMS_NAME']}</b>",
+                                               parse_mode='HTML')
 
 
 # Хэндлер для команды /help

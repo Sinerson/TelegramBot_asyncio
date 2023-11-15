@@ -8,9 +8,10 @@ from lexicon.lexicon_ru import LEXICON_RU
 
 # Создаем список списков с кнопками для основного меню
 buttons: list[list[KeyboardButton]] = [
-    [KeyboardButton(text=LEXICON_RU['send_message_to_users']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
+    [KeyboardButton(text=LEXICON_RU['make_a_spam']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
     [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
-    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True), KeyboardButton(text=LEXICON_RU['my_services'])],
+    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True),
+     KeyboardButton(text=LEXICON_RU['my_services'])],
     [KeyboardButton(text=LEXICON_RU['promised_payment'])]
 ]
 
@@ -52,3 +53,10 @@ def without_dice_kb() -> ReplyKeyboardMarkup:
     now_buttons = copy.copy(buttons)
     now_buttons[0].pop(1)
     return ReplyKeyboardMarkup(keyboard=now_buttons, resize_keyboard=True)
+
+
+def stop_spam_kb(user_id: int) -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text=LEXICON_RU['stop_spam'], callback_data=f"STOP_SPAM {user_id}")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
