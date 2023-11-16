@@ -230,13 +230,16 @@ async def _send_message_to_users_request(message: Message, state: FSMContext):
 async def _send_message_to_user_processing(message: Message, state: FSMContext):
     user_list = get_list_unbanned_known_users()
     user_cnt = len(user_list)
+    cnt = 0
     for user in user_list:
-        await bot.send_message(chat_id=user,
-                                   text=f"{message.md_text}\n\nДля отказа от получения уведомлений, нажмите кнопку под сообщением",
-                                   reply_markup= stop_spam_kb(user),
-                                   parse_mode='MarkdownV2',
-                                   disable_notification=False)
-        await sleep(0.01)
+        while cnt < 1:
+            await bot.send_message(chat_id=message.from_user.id,
+                                       text=f"{message.md_text}\n\nДля отказа от получения уведомлений, нажмите кнопку под сообщением",
+                                       reply_markup= stop_spam_kb(message.from_user.id),
+                                       parse_mode='MarkdownV2',
+                                       disable_notification=False)
+            await sleep(0.01)
+            cnt += 1
     await message.answer(text=f"Рассылка закончена, сообщение отправлено {user_cnt} пользователям\.",
                          parse_mode='MarkdownV2',
                          disable_notification=False)
