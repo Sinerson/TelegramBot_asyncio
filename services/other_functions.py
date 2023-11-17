@@ -5,8 +5,9 @@ from db.fake_marketing_actions import PRISE_ACTION
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, get_phonenumber_by_user_id_query, \
     getContractCode, get_all_users_query, PromisedPayDate, set_admin_query, \
     set_manager_query, addUser_query, getInetAccountPassword_query, getPersonalAreaPassword_query, set_bot_blocked, \
-    set_bot_unblocked, get_all_unbanned_users_query, decline_notify_query, get_all_known_unbanned_users_query,\
-    getTechClaims_query, getContractCodeByUserId_query
+    set_bot_unblocked, get_all_unbanned_users_query, decline_notify_query, get_all_known_unbanned_users_query, \
+    getTechClaims_query, getContractCodeByUserId_query, add_prise_query, add_client_properties_w_commentary, \
+    add_client_properties_wo_commentary, getClientCodeByContractCode
 from db.sybase import DbConnection
 from settings import ExternalLinks
 
@@ -170,4 +171,25 @@ def get_tech_claims(contract_code: int) -> list[dict]:
 
 def get_contract_code_by_user_id(user_id: int) -> int:
     result = DbConnection.execute_query(getContractCodeByUserId_query, str(user_id))
+    return result
+
+
+def get_client_code_by_user_id(user_id: int) -> int:
+    contract_code = int(get_contract_code_by_user_id(user_id)[0]['CONTRACT_CODE'])
+    result = DbConnection.execute_query(getClientCodeByContractCode, contract_code)
+    return int(result[0]['CLIENT_CODE'])
+
+
+def insert_prise_to_db(user_id: int, prise: str) -> list[dict]:
+    """ Функция добавления в таблицу с абонентами выбранного приза """
+    result = DbConnection.execute_query(add_prise_query, user_id, prise)
+    return result
+
+
+def insert_client_properties(client_code: int, prop_code: int, commentary: str = None) -> list[dict]:
+    """ Вставка свойства абонента на основе кода свойства """
+    if commentary:
+        result = DbConnection.execute_query(add_client_properties_w_commentary, client_code, prop_code, commentary)
+    else:
+        result = DbConnection.execute_query(add_client_properties_wo_commentary, client_code, prop_code)
     return result

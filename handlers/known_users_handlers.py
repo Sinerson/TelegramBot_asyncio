@@ -13,7 +13,8 @@ from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
-    user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims
+    user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
+    insert_client_properties, get_client_code_by_user_id
 
 user_rt = Router()
 
@@ -162,9 +163,9 @@ async def dice_callback(callback: CallbackQuery):
     if 'yes' in callback_data:
         kb_without_dice = without_dice_kb_known_users()
         prise_action = get_prise_new(int(" ".join(callback_data[-1:])))
-        #
-        # TODO: нужна функция для добавления свойства на абонента. Свойство с комментарием в виде выбранного варианта выигрыша
-        #
+        insert_prise_to_db(callback.from_user.id, prise_action)
+        # client_code = get_client_code_by_user_id(callback.from_user.id)
+        # insert_client_properties(client_code, 1138, prise_action)
         await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
                                          parse_mode='HTML',
                                          disable_web_page_preview=True

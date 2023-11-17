@@ -228,6 +228,8 @@ async def _send_message_to_users_request(message: Message, state: FSMContext):
                   StateFilter(FSMFillForm.fill_message_to_send)
                   )
 async def _send_message_to_user_processing(message: Message, state: FSMContext):
+    """ Функция рассылки сообщений пользователям. Сейчас заглушена, и рассылка осуществляется через эхо -сообщение в
+    целях безопасности и избежания спама """
     user_list = get_list_unbanned_known_users()
     user_cnt = len(user_list)
     cnt = 0

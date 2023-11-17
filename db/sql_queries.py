@@ -197,7 +197,7 @@ getLastTechClaims = \
 """
 getClientCodeByContractCode = \
 	"""
-					select CL.CLIENT_CODE, CL.TYPE_CODE, CL.TYPE_CODE
+					select CL.CLIENT_CODE, CL.TYPE_CODE
 					from INTEGRAL..CONTRACT_CLIENTS CCL
 					join INTEGRAL..CLIENTS CL on CCL.CLIENT_CODE = CL.CLIENT_CODE
 					where CONTRACT_CODE = ?
@@ -288,7 +288,7 @@ select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0
 """
 
 get_all_known_unbanned_users_query = """
-select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0 and known_user = 1
+select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0 and known_user = 1 and wish_news = 1
 """
 
 
@@ -382,6 +382,67 @@ if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
         select 2 as RESULT
     end
 if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
+"""
+
+add_prise_query = """
+declare @user_id varchar(20)
+select @user_id = cast(? as varchar(20))
+if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id /*and action_name is null*/)
+        begin
+            update SV..TBP_TELEGRAM_BOT
+            set action_name = ?
+            where user_id = @user_id
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
+    end
+if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
+    begin
+        select 0 as RESULT
+    end
+"""
+
+add_client_properties_w_commentary = """
+declare @ClientCode int, @PropCode int, @Commentary univarchar(4096)
+select @ClientCode = ?, @PropCode = ?, @Commentary = ?
+if EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
+    begin
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @ClientCode and action_name is null)
+        begin
+            insert into INTEGRAL..CLIENT_PROPERTIES(CLIENT_CODE, PROP_CODE, QUANTITY, DATE_OPERATE, COMMENTARY, USER_CODE, DATE_CHANGE)
+            values (@ClientCode, @PropCode, 1, getdate(), @Commentary, 139, getdate())
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
+    end
+if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
+    begin
+        select 0 as RESULT
+    end
+"""
+
+add_client_properties_wo_commentary = """
+declare @ClientCode int, @PropCode int
+select @ClientCode = ?, @PropCode = ?
+if EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
+    begin
+        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @ClientCode and action_name is null)
+        begin
+            insert into INTEGRAL..CLIENT_PROPERTIES(CLIENT_CODE, PROP_CODE, QUANTITY, DATE_OPERATE, COMMENTARY, USER_CODE, DATE_CHANGE)
+            values (@ClientCode, @PropCode, 1, getdate(), null, 139, getdate())
+            select 1 as RESULT
+        end
+        else
+        select 2 as RESULT
+    end
+if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
     begin
         select 0 as RESULT
     end
