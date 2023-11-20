@@ -164,6 +164,7 @@ async def dice_callback(callback: CallbackQuery):
         kb_without_dice = without_dice_kb_known_users()
         prise_action = get_prise_new(int(" ".join(callback_data[-1:])))
         insert_prise_to_db(callback.from_user.id, prise_action)
+        # TODO: Пока функционал навешивания свойства на абонента под вопросом, поэтому 2 строки ниже закомментил
         # client_code = get_client_code_by_user_id(callback.from_user.id)
         # insert_client_properties(client_code, 1138, prise_action)
         await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",

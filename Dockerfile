@@ -23,15 +23,17 @@ WORKDIR $HOME_TDS/freetds-1.4.6
 RUN ./configure --with-tdsver=5.0 --with-unixodbc=/usr/local
 RUN make && make install
 WORKDIR /usr/local/etc
-COPY odbc.ini .
+COPY odbc.ini ./odbcinst.ini
+COPY ./odbcinst.ini ./odbc.ini
 COPY freetds.conf .
+RUN apt-get update
+RUN apt-get install -y unixodbc unixodbc-dev
+RUN odbcinst -i -d 'Adaptive Server Enterprise' -f odbcinst.ini
 WORKDIR /opt/telegram_bot
 #ADD odbcinst.ini /etc/odbcinst.ini
-RUN apt-get update
 #RUN apt-get install -y tdsodbc unixodbc-dev
 #RUN apt install unixodbc -y
 #RUN apt-get clean -y
-RUN apt-get install -y unixodbc unixodbc-dev
 
 RUN pip install --upgrade pip
 RUN pip install aiofiles~=23.2.1
@@ -66,4 +68,4 @@ RUN pip install wheel==0.41.2
 RUN pip install yarl==1.9.2
 RUN odbcinst -j
 #ENTRYPOINT /tmp/entrypoint.sh
-#CMD ["python", "main.py"]
+CMD ["python", "main.py"]
