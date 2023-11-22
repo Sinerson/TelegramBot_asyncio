@@ -27,6 +27,7 @@ COPY odbc.ini ./odbcinst.ini
 COPY ./odbcinst.ini ./odbc.ini
 COPY freetds.conf .
 RUN apt-get update
+RUN apt-get -y install redis
 RUN apt-get install -y unixodbc unixodbc-dev
 RUN odbcinst -i -d 'Adaptive Server Enterprise' -f odbcinst.ini
 WORKDIR /opt/telegram_bot
@@ -66,6 +67,10 @@ RUN pip install six==1.16.0
 RUN pip install typing_extensions==4.8.0
 RUN pip install wheel==0.41.2
 RUN pip install yarl==1.9.2
-RUN odbcinst -j
+RUN pip install redis==5.0.1
+RUN pip install aioredis==2.0.1
+#RUN odbcinst -j
 #ENTRYPOINT /tmp/entrypoint.sh
+RUN ["echo 'vm.overcommit_memory >> /etc/sysctl.conf'"]
+CMD ["redis-server & >> /var/log/redis.log"]
 CMD ["python", "main.py"]
