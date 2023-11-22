@@ -32,6 +32,7 @@ class DbSecrets:
     proc_name: str = os.getenv("CLIENT_HOST_PROC")
     app_name: str = os.getenv("APPLICATION_NAME_DEV")
     optimize_prepare: str = os.getenv("OPTIMIZE_PREPARE")
+    dynamic_prepare: str = os.getenv("DYNAMIC_PREPARE")
 
 
 @dataclass

@@ -3,10 +3,10 @@ from icecream import ic
 
 from db.fake_marketing_actions import PRISE_ACTION
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, get_phonenumber_by_user_id_query, \
-    getContractCode, get_all_users_query, PromisedPayDate, set_admin_query, \
-    set_manager_query, addUser_query, getInetAccountPassword_query, getPersonalAreaPassword_query, set_bot_blocked, \
-    set_bot_unblocked, get_all_unbanned_users_query, decline_notify_query, get_all_known_unbanned_users_query, \
-    getTechClaims_query, getContractCodeByUserId_query, add_prise_query, add_client_properties_w_commentary, \
+    getContractCode, get_all_users_query, PromisedPayDate, \
+    getInetAccountPassword_query, getPersonalAreaPassword_query, \
+    get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
+    getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
     add_client_properties_wo_commentary, getClientCodeByContractCode
 from db.sybase import DbConnection
 from settings import ExternalLinks
@@ -14,7 +14,7 @@ from settings import ExternalLinks
 
 def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_code: int) -> bool:
     try:
-        DbConnection.execute_query(addUser_query, user_id, chat_id, phonenumber, contract_code)
+        DbConnection.execute_query(f"exec MEDIATE..spAddNewUserTelegramBot {user_id},{chat_id},'{phonenumber}',{contract_code}")
         return True
     except Exception as e:
         ic(e)
@@ -112,13 +112,13 @@ def get_promised_pay_date(client_code: int) -> str:
 
 def add_new_bot_admin(user_id: str) -> list[dict]:
     """ Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT """
-    result = DbConnection.execute_query(set_admin_query, user_id)
+    result = DbConnection.execute_query(f"exec MEDIATE..spAddNewAdminTelegramBot {user_id}")
     return result
 
 
 def add_new_bot_manager(user_id: str) -> list[dict]:
     """ Возвращает  результат запроса в виде списка словаря в котором 0 или 1 по ключу RESULT """
-    result = DbConnection.execute_query(set_manager_query, user_id)
+    result = DbConnection.execute_query(f"exec MEDIATE..spAddNewManagerTelegramBot {user_id}")
     return result
 
 
@@ -136,13 +136,13 @@ def personal_area_password(client_code: int) -> list[dict]:
 
 def user_banned_bot_processing(user_id: int) -> list[dict]:
     """ Устанавливаем статус блокировки бота пользователем """
-    result = DbConnection.execute_query(set_bot_blocked, user_id)
+    result = DbConnection.execute_query(f"exec MEDIATE..spSetUserBlockedTelegramBot {user_id}")
     return result
 
 
 def user_unbanned_bot_processing(user_id: int) -> list[dict]:
     """ Устанавливаем статус блокировки бота пользователем """
-    result = DbConnection.execute_query(set_bot_unblocked, user_id)
+    result = DbConnection.execute_query(f"exec MEDIATE..spSetUserUnblockedTelegramBot {user_id}")
     return result
 
 
@@ -157,7 +157,7 @@ def get_list_unbanned_known_users() -> list:
 
 
 def notify_decline(user_id: int) -> bool:
-    result = DbConnection.execute_query(decline_notify_query, user_id)[0]['RESULT']
+    result = DbConnection.execute_query(f"exec MEDIATE..spDeclineWishNewsTelegramBot {user_id}")[0]['RESULT']
     if result != 1:
         return False
     else:
@@ -182,7 +182,7 @@ def get_client_code_by_user_id(user_id: int) -> int:
 
 def insert_prise_to_db(user_id: int, prise: str) -> list[dict]:
     """ Функция добавления в таблицу с абонентами выбранного приза """
-    result = DbConnection.execute_query(add_prise_query, user_id, prise)
+    result = DbConnection.execute_query(f"exec MEDIATE..spAddPriseFromTelegramBot {user_id},'{prise}'")
     return result
 
 

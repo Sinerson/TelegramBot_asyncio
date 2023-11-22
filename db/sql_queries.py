@@ -28,33 +28,33 @@ checkUserExists = """select E = case
 					else 0
 					end"""
 
-addUser_query = """
-begin
-insert into
-SV..TBP_TELEGRAM_BOT(user_id,
-                     chat_id,
-                     phonenumber,
-                     contract_code,
-                     grant_phone,
-                     date,
-                     admin,
-                     manager,
-                     known_user,
-                     bot_blocked,
-                     wish_news
-                    )
-values 
-                    (
-                    cast( ? as varchar(20)),
-                    cast( ? as varchar(20)),
-                    cast( ? as varchar(20)),
-                    ?,
-                    cast('1' as character(1)),
-                    getdate(), 0 , 0 , 1 , 0, 1  
-                    )
-select 1 as RESULT
-end
-"""
+# addUser_query = """
+# begin
+# insert into
+# SV..TBP_TELEGRAM_BOT(user_id,
+#                      chat_id,
+#                      phonenumber,
+#                      contract_code,
+#                      grant_phone,
+#                      date,
+#                      admin,
+#                      manager,
+#                      known_user,
+#                      bot_blocked,
+#                      wish_news
+#                     )
+# values
+#                     (
+#                     cast( ? as varchar(20)),
+#                     cast( ? as varchar(20)),
+#                     cast( ? as varchar(20)),
+#                     ?,
+#                     cast('1' as character(1)),
+#                     getdate(), 0 , 0 , 1 , 0, 1
+#                     )
+# select 1 as RESULT
+# end
+# """
 
 updateUser = """update SV..TBP_TELEGRAM_BOT
 					set phonenumber = ?,
@@ -135,8 +135,6 @@ setSendStatus = \
 """
 getTechClaims_query = \
 	"""
-					declare @ContractCode int
-					select @ContractCode = ?
 					select  A.APPL_ID as CLAIM_NUM,
 					        rtrim(S.STATUS_NAME) as STATUS_NAME,
 					        cast(A.APPL_DATE_CREATE as smalldatetime) as APPL_DATE_CREATE, -- Дата создания
@@ -158,7 +156,7 @@ getTechClaims_query = \
 					        left join SV..TIA_ERRORS E on A.APPL_ERRORS_ID = E.ERRORS_ID
 					        join INTEGRAL..CONTRACTS CS on B.CONTRACT_ID = cast(CS.CONTRACT as int)
 					where   A.APPL_DATE_CREATE >= dateadd(dd, -7, getdate()) and
-					        CS.CONTRACT_CODE = @ContractCode and
+					        CS.CONTRACT_CODE = ? and
 					        A.APPL_DATE_CLOSE is null
 """
 
@@ -222,58 +220,16 @@ getPersonalAreaPassword_query = \
 """
 					select rtrim(PIN) as PIN, rtrim(PIN_PASSWORD) as PIN_PASSWORD
 					from INTEGRAL..CLIENT_PINS
-					where CLIENT_CODE = cast((?) as int)
+					where CLIENT_CODE = ?
 """
 
 get_admin_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where admin = 1
 '''
 
-set_admin_query = """
-declare @user_id varchar(20)
-select @user_id = ?
-if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and admin = 0)
-        begin
-            update SV..TBP_TELEGRAM_BOT
-            set admin = 1, manager = 0, known_user = 1
-            where user_id = @user_id
-            select 1 as RESULT
-        end
-        else
-        select 2 as RESULT
-    end
-if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        select 0 as RESULT
-    end
-"""
-
 get_manager_query = '''
 select user_id from SV..TBP_TELEGRAM_BOT where manager = 1
 '''
-
-set_manager_query = """
-declare @user_id varchar(20)
-select @user_id = ?
-if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and admin = 0)
-        begin
-            update SV..TBP_TELEGRAM_BOT
-            set admin = 0, manager = 1, known_user = 1
-            where user_id = @user_id
-            select 1 as RESULT
-        end
-        else
-        select 2 as RESULT
-    end
-if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        select 0 as RESULT
-    end
-"""
 
 get_all_users_query = """
 select user_id from SV..TBP_TELEGRAM_BOT
@@ -290,7 +246,6 @@ select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0
 get_all_known_unbanned_users_query = """
 select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0 and known_user = 1 and wish_news = 1
 """
-
 
 set_known_user_query = """
 declare @user_id varchar(20)
@@ -314,7 +269,7 @@ if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
 """
 
 get_phonenumber_by_user_id_query = """
-select phonenumber from SV..TBP_TELEGRAM_BOT where user_id = cast(? as varchar(25))
+select phonenumber from SV..TBP_TELEGRAM_BOT where cast(user_id as bigint) = ?
 """
 
 get_client_code_by_contract_code = '''
@@ -323,91 +278,7 @@ from INTEGRAL..CONTRACT_CLIENTS CC
 join INTEGRAL..CLIENTS CL on CC.CLIENT_CODE = CL.CLIENT_CODE
 where CONTRACT_CODE in ( ? )
 '''
-
-set_bot_blocked = """
-declare @user_id varchar(20)
-select @user_id = cast(? as varchar(20))
-if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and bot_blocked = 0)
-        begin
-            update SV..TBP_TELEGRAM_BOT
-            set bot_blocked = 1
-            where user_id = @user_id
-            select 1 as RESULT
-        end
-        else
-        select 2 as RESULT
-    end
-if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        select 0 as RESULT
-    end
-"""
-
-set_bot_unblocked = """
-declare @user_id varchar(20)
-select @user_id = cast(? as varchar(20))
-if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and bot_blocked = 1)
-        begin
-            update SV..TBP_TELEGRAM_BOT
-            set bot_blocked = 0
-            where user_id = @user_id
-            select 1 as RESULT
-        end
-        else
-        select 2 as RESULT
-    end
-if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        select 0 as RESULT
-    end
-"""
-
-decline_notify_query = """
-declare @user_id varchar(20)
-select @user_id = cast(? as varchar(20))
-if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id and wish_news = 1)
-        begin
-            update SV..TBP_TELEGRAM_BOT
-            set wish_news = 0
-            where user_id = @user_id
-            select 1 as RESULT
-        end
-        else
-        select 2 as RESULT
-    end
-if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        select 0 as RESULT
-    end
-"""
-
-add_prise_query = """
-declare @user_id varchar(20)
-select @user_id = cast(? as varchar(20))
-if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        if EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id /*and action_name is null*/)
-        begin
-            update SV..TBP_TELEGRAM_BOT
-            set action_name = ?
-            where user_id = @user_id
-            select 1 as RESULT
-        end
-        else
-        select 2 as RESULT
-    end
-if NOT EXISTS(select 1 from SV..TBP_TELEGRAM_BOT where user_id = @user_id)
-    begin
-        select 0 as RESULT
-    end
-"""
-
+# TODO: переделать на хранимку
 add_client_properties_w_commentary = """
 declare @ClientCode int, @PropCode int, @Commentary univarchar(4096)
 select @ClientCode = ?, @PropCode = ?, @Commentary = ?
@@ -427,7 +298,7 @@ if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
         select 0 as RESULT
     end
 """
-
+# TODO: переделать на хранимку
 add_client_properties_wo_commentary = """
 declare @ClientCode int, @PropCode int
 select @ClientCode = ?, @PropCode = ?

@@ -51,7 +51,12 @@ async def adding_new_user(message: Message):
             if result is False:
                 await message.answer(text="Произошла ошибка при попытке добавить вас в базу данных, попробуйте еще раз.")
             else:
-                await message.answer(text="Вы добавлены в БД. Воспользуйтесь меню ниже", reply_markup=user_keyboard)
+                await message.answer(text=f"Идентифицировали Вас по нашему биллингу, как :\n"
+                                          f"__{abonent_from_db[0]['NAME']}__\n"
+                                          f"лицевой счет №__{abonent_from_db[0]['CONTRACT']}__\n"
+                                          f"Вы добавлены в БД\. Воспользуйтесь меню ниже",
+                                     reply_markup=user_keyboard,
+                                     parse_mode='MarkdownV2')
         else:  # Вариант с выбором абонента
             keyboard = make_keyboard_for_newbie(abonent_from_db, phone)
             await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
