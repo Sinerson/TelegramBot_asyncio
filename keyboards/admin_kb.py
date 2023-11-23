@@ -10,9 +10,9 @@ from lexicon.lexicon_ru import LEXICON_RU
 buttons: list[list[KeyboardButton]] = [
     [KeyboardButton(text=LEXICON_RU['make_a_spam']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
     [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
-    [KeyboardButton(text=LEXICON_RU['my_balance'], request_contact=True),
-     KeyboardButton(text=LEXICON_RU['my_services'])],
-    [KeyboardButton(text=LEXICON_RU['promised_payment'])]
+    [KeyboardButton(text=LEXICON_RU['my_balance']), KeyboardButton(text=LEXICON_RU['my_services'])],
+    [KeyboardButton(text=LEXICON_RU['inet_password']), KeyboardButton(text=LEXICON_RU['personal_area_password'])],
+    [KeyboardButton(text=LEXICON_RU['promised_payment']), KeyboardButton(text=LEXICON_RU['my_support_tickets'])]
 ]
 
 menu_keyboard = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)

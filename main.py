@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import Redis, RedisStorage
-# from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers, ban_unban_handler
 from settings import BotSecrets
@@ -11,8 +11,8 @@ from settings import BotSecrets
 redis = Redis(host='localhost')
 
 # Инициализируем хранилище (создаем экземпляр класса MemoryStorage)
-# storage = MemoryStorage()
-storage = RedisStorage(redis=redis)
+storage = MemoryStorage()
+# storage = RedisStorage(redis=redis)
 
 bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
 

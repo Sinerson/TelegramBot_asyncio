@@ -96,7 +96,7 @@ async def _dice_callback(callback: CallbackQuery):
             text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
             parse_mode='HTML',
             disable_web_page_preview=True
-            )
+        )
         await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)
         await callback.answer()
     elif 'no' in callback_data:
@@ -213,7 +213,7 @@ async def _manager_add_requst(message: Message, state: FSMContext):
 
 
 @admin_rt.message(IsAdmin(admin_ids),
-                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  # IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['make_a_spam'].lower(),
                   StateFilter(default_state)
                   )
@@ -224,8 +224,9 @@ async def _send_message_to_users_request(message: Message, state: FSMContext):
 
 
 @admin_rt.message(IsAdmin(admin_ids),
-                  IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  StateFilter(FSMFillForm.fill_message_to_send)
+                  # IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  StateFilter(FSMFillForm.fill_message_to_send),
+                  ~Command(commands='cancel')
                   )
 async def _send_message_to_user_processing(message: Message, state: FSMContext):
     """ Функция рассылки сообщений пользователям. Сейчас заглушена, и рассылка осуществляется через эхо- сообщение в
@@ -236,14 +237,16 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     cnt = 0
     for user in user_list:
         while cnt < 1:
+            # ic(user) {'user_id': '1000713266'}
             await bot.send_message(chat_id=message.from_user.id,
-                                       text=f"{message.md_text}\n\nДля отказа от получения уведомлений, нажмите кнопку под сообщением",
-                                       reply_markup= stop_spam_kb(message.from_user.id),
-                                       parse_mode='MarkdownV2',
-                                       disable_notification=False)
+                                   text=f"{message.md_text}\n\n"
+                                        f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
+                                   reply_markup=stop_spam_kb(message.from_user.id),
+                                   parse_mode='MarkdownV2',
+                                   disable_notification=False)
             await sleep(0.01)
             cnt += 1
-    await message.answer(text=f"Рассылка закончена, сообщение отправлено {user_cnt} пользователям\.",
+    await message.answer(text=f"Рассылка закончена, сообщение отправлено {cnt} пользователям\.",
                          parse_mode='MarkdownV2',
                          disable_notification=False)
     await state.clear()
@@ -326,6 +329,42 @@ async def _promised_payment_answer(callback: CallbackQuery):
                     text=f'{LEXICON_RU["less_than_one_month"]}{LEXICON_RU["prev_date"]} {prop_date}', parse_mode='HTML')
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
+
+
+# Этот хэндлер будет срабатывать на команду "/cancel" в состоянии ожидания ввода сообщения для рассылки,
+# и отключать машину состояний
+@admin_rt.message(IsAdmin(admin_ids),
+                  Command(commands='cancel'),
+                  StateFilter(FSMFillForm.fill_message_to_send)
+                  )
+async def _process_command_state_cancellation(message: Message, state: FSMContext):
+    await message.answer(text='Вы отказались от рассылки пользователям! Можете начать сначала.\n\n')
+    # Сбрасываем состояние и очищаем данные, полученные внутри состояний
+    await state.clear()
+
+
+# Этот хэндлер будет срабатывать на команду "/cancel" в состоянии ожидания получения данных нового админа,
+# и отключать машину состояний
+@admin_rt.message(IsAdmin(admin_ids),
+                  Command(commands='cancel'),
+                  StateFilter(FSMFillForm.fill_id_admin)
+                  )
+async def _process_command_state_cancellation(message: Message, state: FSMContext):
+    await message.answer(text='Вы прервали добавление нового администратора! Можете начать сначала.\n\n')
+    # Сбрасываем состояние и очищаем данные, полученные внутри состояний
+    await state.clear()
+
+
+# Этот хэндлер будет срабатывать на команду "/cancel" в состоянии ожидания получения данных нового менеджера,
+# и отключать машину состояний
+@admin_rt.message(IsAdmin(admin_ids),
+                  Command(commands='cancel'),
+                  StateFilter(FSMFillForm.fill_id_manager)
+                  )
+async def _process_command_state_cancellation(message: Message, state: FSMContext):
+    await message.answer(text='Вы прервали добавление нового менеджера! Можете начать сначала.\n\n')
+    # Сбрасываем состояние и очищаем данные, полученные внутри состояний
+    await state.clear()
 
 
 # Этот хэндлер будет срабатывать на команду "/cancel" в любых состояниях,

@@ -1,5 +1,6 @@
 FROM python:3.11
-
+MAINTAINER Bogdan Tabolin <tbp@sv-tel.ru>
+LABEL multi.label1="value1" multi.label2="value2" other="value3"
 ADD entrypoint.sh /tmp
 RUN chmod +x /tmp/entrypoint.sh
 RUN chmod 766 /etc/passwd
@@ -7,7 +8,7 @@ RUN chmod 766 /etc/passwd
 WORKDIR /opt/telegram_bot
 
 COPY . /opt/telegram_bot
-
+COPY redis.conf .
 RUN apt-get install gcc
 RUN apt-get install make
 ENV HOME_TDS /usr/src
@@ -69,8 +70,7 @@ RUN pip install wheel==0.41.2
 RUN pip install yarl==1.9.2
 RUN pip install redis==5.0.1
 RUN pip install aioredis==2.0.1
-#RUN odbcinst -j
-#ENTRYPOINT /tmp/entrypoint.sh
-RUN ["echo 'vm.overcommit_memory >> /etc/sysctl.conf'"]
-CMD ["redis-server & >> /var/log/redis.log"]
-CMD ["python", "main.py"]
+
+ENTRYPOINT /tmp/entrypoint.sh
+#CMD ["redis-server & >> /var/log/redis.log"]
+#CMD ["python", "main.py"]

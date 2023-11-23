@@ -264,7 +264,7 @@ async def _unsubscribe_from_spam_result(callback: CallbackQuery):
     if result is True:
         await callback.message.edit_text(text="Вы отписались от получения уведомлений")
     else:
-        await callback.message.answer(text="У вас нет подписки на рассылку. Если вы все же получили сообщение,"
+        await callback.message.edit_text(text="У вас нет подписки на рассылку. Если вы все же получили сообщение,"
                                            " значит оно относится к категории обязательных. Обещаем не слать"
                                            " такие сообщения слишком часто.")
     await callback.answer()
