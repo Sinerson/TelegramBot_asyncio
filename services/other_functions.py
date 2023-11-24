@@ -72,7 +72,8 @@ def phone_number_by_userid(user_id: int) -> list:
     """ Возвращает номер телефона для сущесвующих в БД пользователей по user_id"""
     result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
     phonenumber = result[0]['phonenumber'][-10:]
-    return DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
+    result2 = DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
+    return result2
 
 
 def contract_code_by_phone_for_new_users(phonenumber: str) -> list[dict]:
@@ -109,7 +110,7 @@ def get_question_for_quiz() -> tuple[list[Any], list[Any], list[Any]]:
     df_question = list(df['QUESTION'].dropna())
     df_answer_variants = list(df['ANSWER_VARIANTS'].dropna().drop_duplicates())
     df_correct_answer = list(df['CORRECT_ANSWER'].dropna().drop_duplicates())
-    return df_question, df_answer_variants,df_correct_answer
+    return df_question, df_answer_variants, df_correct_answer
 
 
 def get_all_users_from_db() -> list[dict]:

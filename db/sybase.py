@@ -16,13 +16,11 @@ class DBConnector(object):
         self.hostname = DbSecrets.hostname
         self.procname = DbSecrets.proc_name
         self.appname = DbSecrets.app_name
-        self.optimizeprepare = DbSecrets.optimize_prepare
-        self.dynamic_prepare = DbSecrets.dynamic_prepare
+
 
     def create_connection(self):
         return pyodbc.connect(';'.join([self.driver, self.server, self.port, self.dbname, self.user, self.passw,
-                                        self.lang, self.autocommit, self.hostname, self.procname, self.appname,
-                                        self.optimizeprepare, self.dynamic_prepare]))
+                                        self.lang, self.autocommit, self.hostname, self.procname, self.appname]))
 
     def __enter__(self):
         self.dbconn = self.create_connection()

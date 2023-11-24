@@ -18,7 +18,7 @@ from services.other_functions import get_balance_by_contract_code, contract_code
 
 user_rt = Router()
 
-
+# region Commnd Start
 # Хэндлер на команду /start для простых пользователей
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  Command(commands='start'),
@@ -30,6 +30,9 @@ async def cmd_start(message: Message):
                          reply_markup=user_keyboard)
 
 
+# endregion
+
+# region Balance
 # Хэндлер на команду запроса баланса
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['my_balance'].lower(),
@@ -58,6 +61,9 @@ async def balance_answer(callback: CallbackQuery):
         await callback.answer()
 
 
+# endregion
+
+# region Client Services
 # Хэндлер для запроса услуг
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['my_services'].lower(),
@@ -94,6 +100,9 @@ async def services_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
+#endregion
+
+# region Promised Payment
 # Хэндлер для запроса доверительного платежа
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['promised_payment'].lower(),
@@ -138,6 +147,9 @@ async def promised_payment_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
+#endregion
+
+# region Dice
 # Хэндлер на запрос броска кубика
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower(),
@@ -178,6 +190,9 @@ async def dice_callback(callback: CallbackQuery):
         await callback.answer()
 
 
+# endregion
+
+# region Inet password
 # Хэндлер на команду запроса пароля от аккаунта интернет
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['inet_password'].lower(),
@@ -221,6 +236,9 @@ async def known_client_personal_area_password(message: Message):
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
+#endregion
+
+# region LK password
 # Обработка callback для пароля от ЛК
 @user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
                         F.data.startswith("LK"),
@@ -253,6 +271,9 @@ async def personal_area_password_answer(callback: CallbackQuery):
     await callback.answer()
 
 
+#endregion
+
+# region Stop get events
 # Хэндлер обработки коллбэка прекращения подписки на рассылку (сама кнопка генерится в admin_handler.py)
 @user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
                         F.data.startswith("STOP_SPAM"),
@@ -270,6 +291,9 @@ async def _unsubscribe_from_spam_result(callback: CallbackQuery):
     await callback.answer()
 
 
+#endregion
+
+# region Support tickets
 # Хэндлер для запроса заявок пользователя
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  F.text.lower() == LEXICON_RU['my_support_tickets'].lower(),
@@ -307,12 +331,16 @@ async def tech_claims_answer(callback: CallbackQuery):
                                                f"Адрес: <b>{claim['ADDRESS_NAME']}</b>\n"
                                                f"Заявлено: <b>{claim['ERROR_NAME']}</b>\n"
                                                f"Доп.инфо: <b>{claim['INFO_PROBLEMS_NAME']}</b>",
-                                               parse_mode='HTML')
+                                          parse_mode='HTML')
 
 
+#endregion
+
+# region Commnd Help
 # Хэндлер для команды /help
 @user_rt.message(Command(commands=["help"]),
                  StateFilter(default_state)
                  )
 async def cmd_help(message: Message):
     await message.answer("Раздел помощи. Пока пустой.")
+#endregion

@@ -33,7 +33,6 @@ RUN apt-get install -y unixodbc unixodbc-dev
 RUN odbcinst -i -d 'Adaptive Server Enterprise' -f odbcinst.ini
 WORKDIR /opt/telegram_bot
 #ADD odbcinst.ini /etc/odbcinst.ini
-#RUN apt-get install -y tdsodbc unixodbc-dev
 #RUN apt install unixodbc -y
 #RUN apt-get clean -y
 
@@ -71,6 +70,6 @@ RUN pip install yarl==1.9.2
 RUN pip install redis==5.0.1
 RUN pip install aioredis==2.0.1
 
-ENTRYPOINT /tmp/entrypoint.sh
-#CMD ["redis-server & >> /var/log/redis.log"]
+#ENTRYPOINT /tmp/entrypoint.sh
+CMD ["redis-server", "/opt/telegram_bot/redis.conf"]
 #CMD ["python", "main.py"]
