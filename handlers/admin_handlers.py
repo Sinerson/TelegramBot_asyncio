@@ -122,12 +122,12 @@ async def _dice_callback(callback: CallbackQuery):
 
 # endregion
 
-# region Poll
+# region Poll ( regular + quiz )
 @admin_rt.message(IsAdmin(admin_ids),
                   F.text.lower() == LEXICON_RU['make_poll'].lower(),
                   StateFilter(default_state))
-async def _send_poll(message: Message):
-    """ Отправка викторины, созданной через Pandas DataFrame Google Spreadsheets"""
+async def _send_poll_regular(message: Message):
+    """ Отправка опроса, созданной через Pandas DataFrame Google Spreadsheets"""
     # подготовим данные
     _poll: tuple = get_question_for_poll()
     _question = _poll[0]
@@ -144,13 +144,26 @@ async def _send_poll(message: Message):
     ic(result.poll.total_voter_count)
 
 
-@admin_rt.poll_answer()
-async def _get_poll_answer(message: Message):
-    ic(message)
-    ic(message.user.id)
-    ic(message.user.first_name)
-    ic(message.poll_id)
-    ic(message.option_ids)
+@admin_rt.message(IsAdmin(admin_ids),
+                  F.text.lower() == LEXICON_RU['make_quiz'].lower(),
+                  StateFilter(default_state))
+async def _send_poll_quiz(message: Message):
+    """ Отправка викторины, созданной через Pandas DataFrame Google Spreadsheets"""
+    # подготовим данные
+    _poll: tuple = get_question_for_poll()
+    _question = _poll[0]
+    _answers = _poll[1]
+    result: Message = await bot(SendPoll(chat_id=message.chat.id,
+                                         question=_question[0],
+                                         options=_answers,
+                                         correct_option_id=0,
+                                         is_anonymous=False,
+                                         disable_notification=True,
+                                         type='quiz',
+                                         protect_content=True
+                                         ))
+    ic(result.poll.id)
+    ic(result.poll.total_voter_count)
 # endregion
 
 # region Add Admin
