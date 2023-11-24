@@ -21,7 +21,7 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager, \
     user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users, \
-    get_question_for_poll
+    get_question_for_poll, get_question_for_quiz
 
 admin_rt = Router()
 
@@ -150,13 +150,14 @@ async def _send_poll_regular(message: Message):
 async def _send_poll_quiz(message: Message):
     """ Отправка викторины, созданной через Pandas DataFrame Google Spreadsheets"""
     # подготовим данные
-    _poll: tuple = get_question_for_poll()
+    _poll: tuple = get_question_for_quiz()
     _question = _poll[0]
     _answers = _poll[1]
+    _correct_answer = _poll[2]
     result: Message = await bot(SendPoll(chat_id=message.chat.id,
                                          question=_question[0],
                                          options=_answers,
-                                         correct_option_id=0,
+                                         correct_option_id=2,
                                          is_anonymous=False,
                                          disable_notification=True,
                                          type='quiz',

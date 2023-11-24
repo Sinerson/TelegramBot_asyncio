@@ -104,6 +104,14 @@ def get_question_for_poll() -> tuple[list[Any], list[Any]]:
     return df_question, df_answer_variants
 
 
+def get_question_for_quiz() -> tuple[list[Any], list[Any], list[Any]]:
+    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Опросы")
+    df_question = list(df['QUESTION'].dropna())
+    df_answer_variants = list(df['ANSWER_VARIANTS'].dropna().drop_duplicates())
+    df_correct_answer = list(df['CORRECT_ANSWER'].dropna().drop_duplicates())
+    return df_question, df_answer_variants,df_correct_answer
+
+
 def get_all_users_from_db() -> list[dict]:
     result = DbConnection.execute_query(get_all_users_query)
     return result

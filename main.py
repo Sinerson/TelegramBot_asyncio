@@ -26,7 +26,7 @@ dp = Dispatcher(storage=storage)
 async def start() -> None:
     # Регистрируем роутеры в диспетчере
     dp.include_router(ban_unban_handler.ban_rt)
-    dp.include_router()
+    dp.include_router(poll_handler.poll_rt)
     dp.include_router(new_user_handlers.new_user_rt)
     dp.include_router(admin_handlers.admin_rt)
     dp.include_router(known_users_handlers.user_rt)
