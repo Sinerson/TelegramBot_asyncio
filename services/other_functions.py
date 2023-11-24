@@ -1,4 +1,7 @@
+from typing import Tuple, List, Any
+
 import pandas as pd
+import openpyxl
 from icecream import ic
 
 from db.fake_marketing_actions import PRISE_ACTION
@@ -88,9 +91,17 @@ def get_prise(dice_value: int) -> str:
 
 def get_prise_new(dice_value: int) -> str:
     """ Для работы с Google Spreadsheet через pandas"""
-    df = pd.read_csv(ExternalLinks.marketing_doc_link)
+    # df = pd.read_csv(ExternalLinks.marketing_doc_link)
+    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Акции")
     df_dict: dict = dict(zip(df.ACTION_ID, df.ACTION_NAME))
     return df_dict[dice_value]
+
+
+def get_question_for_poll() -> tuple[list[Any], list[Any]]:
+    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Опросы")
+    df_question = list(df['QUESTION'].dropna())
+    df_answer_variants = list(df['ANSWER_VARIANTS'].dropna().drop_duplicates())
+    return df_question, df_answer_variants
 
 
 def get_all_users_from_db() -> list[dict]:

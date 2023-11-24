@@ -15,7 +15,12 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'return_to_FSM': 'Вы сейчас должны ввести корректные данные или прервать выполенние через /cancel !',
                               'unknown_callback': 'Неизвестный callback',
                               # admin_kb / known_users_kb
+                              # https://unicode.org/emoji/charts/full-emoji-list.html
                               'make_a_spam': '\u2709 Рассылка пользователям',
+                              'make_poll': '\U0001f4ca Создать опрос',
+                              'del_admin': '\U0001f92c Удалить админа',
+                              'del_manager': '\u23F3 Удалить менеджера',
+                              'make_quize': '\U0001f951 Создать викторину',
                               'drop_the_dice': '\U0001f3b2 Бросить кость удачи',
                               'add_manager': '\U0001f4bc Добавить менеджера',
                               'add_admin': '\U0001f9db Добавить админа',

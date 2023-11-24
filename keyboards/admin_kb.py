@@ -9,6 +9,8 @@ from lexicon.lexicon_ru import LEXICON_RU
 # Создаем список списков с кнопками для основного меню
 buttons: list[list[KeyboardButton]] = [
     [KeyboardButton(text=LEXICON_RU['make_a_spam']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
+    [KeyboardButton(text=LEXICON_RU['make_poll']), KeyboardButton(text=LEXICON_RU['make_quize'])],
+    [KeyboardButton(text=LEXICON_RU['del_manager']), KeyboardButton(text=LEXICON_RU['del_admin'])],
     [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
     [KeyboardButton(text=LEXICON_RU['my_balance']), KeyboardButton(text=LEXICON_RU['my_services'])],
     [KeyboardButton(text=LEXICON_RU['inet_password']), KeyboardButton(text=LEXICON_RU['personal_area_password'])],

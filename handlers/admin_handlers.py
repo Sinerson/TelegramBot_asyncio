@@ -1,5 +1,10 @@
 from asyncio import sleep
+
+from aiogram.methods import SendPoll
 from icecream import ic
+from main import dp
+import pandas
+import openpyxl
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -15,11 +20,13 @@ from services.classes import FSMFillForm
 from services.other_functions import get_abonents_from_db, get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager, \
-    user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users
+    user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users, \
+    get_question_for_poll
 
 admin_rt = Router()
 
 
+# region Command Start
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   Command(commands='start'),
@@ -32,6 +39,9 @@ async def _answer_if_admins_update(message: Message):
     await message.answer(text=LEXICON_RU['admin_menu'], reply_markup=menu_keyboard)
 
 
+# endregion
+
+# region Abonent balance
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT,
@@ -66,8 +76,13 @@ async def _balance_answer(callback: CallbackQuery):
         await callback.answer()
 
 
-@admin_rt.message(IsAdmin(admin_ids), IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower(), StateFilter(default_state))
+# endregion
+
+# region Dice
+@admin_rt.message(IsAdmin(admin_ids),
+                  # IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['drop_the_dice'].lower(),
+                  StateFilter(default_state))
 async def _send_dice(message: Message):
     """ Отсылка игральной кости и получение значения которое выпало"""
     _dice = await message.answer_dice()
@@ -79,7 +94,7 @@ async def _send_dice(message: Message):
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids),
-                         IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         # IsKnownUsers(user_ids, admin_ids, manager_ids),
                          F.data.startswith("DICE"),
                          StateFilter(default_state)
                          )
@@ -90,7 +105,8 @@ async def _dice_callback(callback: CallbackQuery):
         kb_without_dice = without_dice_kb()
         prise_action = get_prise_new(int(" ".join(callback_data[-1:])))
         #
-        # TODO: нужна функция для добавления свойства на абонента. Свойство с комментарием в виде выбранного варианта выигрыша
+        # TODO: нужна функция для добавления свойства на абонента.
+        #  Свойство с комментарием в виде выбранного варианта выигрыша
         #
         await callback.message.edit_text(
             text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
@@ -104,6 +120,40 @@ async def _dice_callback(callback: CallbackQuery):
         await callback.answer()
 
 
+# endregion
+
+# region Poll
+@admin_rt.message(IsAdmin(admin_ids),
+                  F.text.lower() == LEXICON_RU['make_poll'].lower(),
+                  StateFilter(default_state))
+async def _send_poll(message: Message):
+    """ Отправка викторины, созданной через Pandas DataFrame Google Spreadsheets"""
+    # подготовим данные
+    _poll: tuple = get_question_for_poll()
+    _question = _poll[0]
+    _answers = _poll[1]
+    result: Message = await bot(SendPoll(chat_id=message.chat.id,
+                                         question=_question[0],
+                                         options=_answers,
+                                         is_anonymous=False,
+                                         disable_notification=True,
+                                         type='regular',
+                                         protect_content=True
+                                         ))
+    ic(result.poll.id)
+    ic(result.poll.total_voter_count)
+
+
+@admin_rt.poll_answer()
+async def _get_poll_answer(message: Message):
+    ic(message)
+    ic(message.user.id)
+    ic(message.user.first_name)
+    ic(message.poll_id)
+    ic(message.option_ids)
+# endregion
+
+# region Add Admin
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT,
@@ -158,6 +208,9 @@ async def _admin_add_process(message: Message, state: FSMContext):
         await state.clear()
 
 
+# endregion
+
+# region Add Manager
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT,
@@ -212,6 +265,9 @@ async def _manager_add_requst(message: Message, state: FSMContext):
         await state.clear()
 
 
+# endregion
+
+# region Send message to user
 @admin_rt.message(IsAdmin(admin_ids),
                   # IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['make_a_spam'].lower(),
@@ -252,6 +308,9 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     await state.clear()
 
 
+# endregion
+
+# region Client Services
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['my_services'].lower(),
@@ -288,6 +347,9 @@ async def _client_services_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
+# endregion
+
+# region Promised Payments
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.text.lower() == LEXICON_RU['promised_payment'].lower(),
@@ -330,6 +392,10 @@ async def _promised_payment_answer(callback: CallbackQuery):
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
+
+# endregion
+
+# region Command Cancel for any states
 
 # Этот хэндлер будет срабатывать на команду "/cancel" в состоянии ожидания ввода сообщения для рассылки,
 # и отключать машину состояний
@@ -374,3 +440,4 @@ async def _process_command_state_cancellation(message: Message, state: FSMContex
     await message.answer(text='Вы прервали ввод данных! Можете начать сначала.\n\n')
     # Сбрасываем состояние и очищаем данные, полученные внутри состояний
     await state.clear()
+# endregion

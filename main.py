@@ -8,11 +8,14 @@ from handlers import new_user_handlers, admin_handlers, other_handlers, known_us
 from settings import BotSecrets
 
 # Инициализируем Redis
-redis = Redis(host='localhost')
+redis = Redis(host='localhost', port=6379, db=0)
 
 # Инициализируем хранилище (создаем экземпляр класса MemoryStorage)
-storage = MemoryStorage()
-# storage = RedisStorage(redis=redis)
+# storage = MemoryStorage()
+# 1 вариант подключения
+# storage = RedisStorage.from_url('redis://localhost:6379/0')
+# 2 вариант подключения
+storage = RedisStorage(redis=redis)
 
 bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
 
