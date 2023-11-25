@@ -165,6 +165,8 @@ async def _send_poll_quiz(message: Message):
                                          ))
     ic(result.poll.id)
     ic(result.poll.total_voter_count)
+
+
 # endregion
 
 # region Add Admin
@@ -221,6 +223,10 @@ async def _admin_add_process(message: Message, state: FSMContext):
         await message.answer(f"Пользователь не обращался к боту и его нет в БД.")
         await state.clear()
 
+
+# endregion
+
+# region Del Admin
 
 # endregion
 

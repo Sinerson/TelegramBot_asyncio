@@ -1,6 +1,6 @@
 FROM python:3.11
 MAINTAINER Bogdan Tabolin <tbp@sv-tel.ru>
-LABEL multi.label1="value1" multi.label2="value2" other="value3"
+#LABEL multi.label1="value1" multi.label2="value2" other="value3"
 ADD entrypoint.sh /tmp
 RUN chmod +x /tmp/entrypoint.sh
 RUN chmod 766 /etc/passwd
