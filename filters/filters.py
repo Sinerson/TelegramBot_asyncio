@@ -1,5 +1,8 @@
 from aiogram.filters import BaseFilter
-from handlers.new_user_handlers import Message
+from icecream import ic
+
+# from handlers.new_user_handlers import Message
+from aiogram.types import Message, PollAnswer
 from services.admin_users import get_admins, get_manager
 from services.known_users import get_known_users
 import asyncio
@@ -48,7 +51,6 @@ class IsKnownUsers(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         """ При вызове экземпляра класса сразу проверяем ид вызывающего пользователя по списку известных
         пользователей в базе и возвращаем True|False """
-        # return message.from_user.id in self.user_id + admin_ids + manager_ids
         return message.from_user.id in get_known_users() + get_admins() + get_manager()
 
 

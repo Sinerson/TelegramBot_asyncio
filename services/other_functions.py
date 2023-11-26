@@ -1,7 +1,7 @@
 from typing import Tuple, List, Any
 
 import pandas as pd
-import openpyxl
+from openpyxl import Workbook
 from icecream import ic
 
 from db.fake_marketing_actions import PRISE_ACTION
@@ -99,18 +99,31 @@ def get_prise_new(dice_value: int) -> str:
 
 
 def get_question_for_poll() -> tuple[list[Any], list[Any]]:
-    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Опросы")
+    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Опросы", engine="openpyxl")
     df_question = list(df['QUESTION'].dropna())
     df_answer_variants = list(df['ANSWER_VARIANTS'].dropna().drop_duplicates())
     return df_question, df_answer_variants
 
 
 def get_question_for_quiz() -> tuple[list[Any], list[Any], list[Any]]:
-    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Опросы")
+    df = pd.read_excel(ExternalLinks.marketing_doc_link, sheet_name="Опросы", engine="openpyxl")
     df_question = list(df['QUESTION'].dropna())
     df_answer_variants = list(df['ANSWER_VARIANTS'].dropna().drop_duplicates())
     df_correct_answer = list(df['CORRECT_ANSWER'].dropna().drop_duplicates())
     return df_question, df_answer_variants, df_correct_answer
+
+
+def write_to_excel(filename: str, data: dict) -> Any:
+    # Определим максимальный индекс строки, уже сущуствующий в файле
+    try:
+        wb = Workbook()
+        ws = wb.active
+        ws.append(data)
+        wb.save(filename)
+        return (f"Write data to '{filename}' done!")
+    except Exception as e:
+        ic(e)
+        return e
 
 
 def get_all_users_from_db() -> list[dict]:

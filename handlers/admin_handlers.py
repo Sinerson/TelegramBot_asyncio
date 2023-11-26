@@ -1,5 +1,5 @@
 from asyncio import sleep
-
+from db.redis import RedisConnector
 from aiogram.methods import SendPoll
 from icecream import ic
 from main import dp
@@ -25,6 +25,7 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
 
 admin_rt = Router()
 
+connect = RedisConnector().create_connection(database=1)
 
 # region Command Start
 @admin_rt.message(IsAdmin(admin_ids),
@@ -126,8 +127,9 @@ async def _dice_callback(callback: CallbackQuery):
 @admin_rt.message(IsAdmin(admin_ids),
                   F.text.lower() == LEXICON_RU['make_poll'].lower(),
                   StateFilter(default_state))
-async def _send_poll_regular(message: Message):
-    """ Отправка опроса, созданной через Pandas DataFrame Google Spreadsheets"""
+async def _send_poll_regular(message: Message) -> None:
+    """ Отправка опроса, созданной через Pandas DataFrame Google Spreadsheets
+        и запись номера опроса в Redis """
     # подготовим данные
     _poll: tuple = get_question_for_poll()
     _question = _poll[0]
@@ -140,15 +142,14 @@ async def _send_poll_regular(message: Message):
                                          type='regular',
                                          protect_content=True
                                          ))
-    ic(result.poll.id)
-    ic(result.poll.total_voter_count)
+    connect.set(name=result.poll.id, value=_poll[0][0])
 
 
 @admin_rt.message(IsAdmin(admin_ids),
                   F.text.lower() == LEXICON_RU['make_quiz'].lower(),
                   StateFilter(default_state))
 async def _send_poll_quiz(message: Message):
-    """ Отправка викторины, созданной через Pandas DataFrame Google Spreadsheets"""
+    """ Отправка викторины, созданной через Pandas """
     # подготовим данные
     _poll: tuple = get_question_for_quiz()
     _question = _poll[0]
