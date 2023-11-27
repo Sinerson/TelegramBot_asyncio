@@ -32,8 +32,8 @@ async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
         # 2 вариант найти все ключи, в которых находится искомое значение это перебор. сложность О(N)
         # _keys = conn.scan(poll_answer.user.id)
         # for el in _keys[1:]:
-        #     ic(el[0])
-
+        #     for e in el:
+        #         ic(e)
         cnt = 0
         # пробежим по всем ключам, и удалим значение из набора ,если оно где-то встречается
         while cnt <= cnt_question:
