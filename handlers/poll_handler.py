@@ -20,8 +20,7 @@ async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
                   "poll_id": poll_answer.poll_id,
                   "option_ids": poll_answer.option_ids[0]
                   }
-        set_result = conn.sadd(f"polls:{poll_answer.poll_id}:{poll_answer.option_ids[0]}", poll_answer.user.id)
-
+        result_of_adding = conn.sadd(f"polls:{poll_answer.poll_id}:{poll_answer.option_ids[0]}", poll_answer.user.id)
         # poll_name = RedisConnector().create_connection(database=1).get(poll_answer.poll_id)
         # poll_data = RedisConnector().create_connection(database=2).hgetall(poll_answer.user.id)
         # await export_to_excel(data=poll_data, file_name=poll_name)
