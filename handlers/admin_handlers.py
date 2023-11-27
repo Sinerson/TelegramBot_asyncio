@@ -139,10 +139,12 @@ async def _send_poll_regular(message: Message) -> None:
                                          options=_answers,
                                          is_anonymous=False,
                                          disable_notification=True,
-                                         type='regular',
-                                         protect_content=True
+                                         type='regular', # Тип: голосование
+                                         protect_content=True #  Запрет на пересылку в другие чаты
                                          ))
+    # Запишем с Redis
     connect.set(name=result.poll.id, value=_poll[0][0])
+
 
 
 @admin_rt.message(IsAdmin(admin_ids),
