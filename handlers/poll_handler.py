@@ -11,6 +11,8 @@ poll_rt = Router()
 # Хэндлер для апдейтов на ответы в голосовании
 @poll_rt.poll_answer()
 async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
+    # найдем количество ключей в которых может быть абонент, количество ключей это собственно количество вариантов ответа
+    cnt_question = len(get_question_for_poll()[1])
     # Проверим что за апдейт пришел:
     # ....голосование за вариант:
     if len(poll_answer.option_ids) > 0:
@@ -27,8 +29,6 @@ async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
     # ....или отмена варианта
     else:
         conn = RedisConnector().create_connection(database=2)
-        # для удаления результат голосования найдем количество ключей в которых может быть абонент
-        cnt_question = len(get_question_for_poll()[1])
         cnt = 0
         # пробежим по всем ключам, и удалим значение из набора ,если оно где-то встречается
         while cnt <= cnt_question:
