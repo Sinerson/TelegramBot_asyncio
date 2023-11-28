@@ -1,4 +1,7 @@
 from asyncio import sleep
+
+import pandas as pd
+
 from db.redis import RedisConnector
 from aiogram.methods import SendPoll
 from icecream import ic
@@ -46,7 +49,10 @@ async def _answer_if_admins_update(message: Message):
                   StateFilter(default_state)
                   )
 async def poll_stats(message: Message):
-    bot.send_document(message.from_user.id)
+    # TODO: Тут нужно вызвать функцию, которая вернет список опросов, и затем через callback отдать номер poll_id
+    r = await get_count_of_members_by_poll_variant(poll_answer.poll_id)
+    df = pd.DataFrame
+    bot.send_document(message.from_user.id, open('exported_files/report.xlsx', 'rb'))
 
 
 # endregion

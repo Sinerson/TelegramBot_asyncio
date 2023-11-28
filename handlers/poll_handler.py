@@ -23,7 +23,7 @@ async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
         #           }
         conn.sadd(f"polls:{poll_answer.poll_id}:{poll_answer.option_ids[0]}", poll_answer.user.id)
         # Количество голосов для того или иного опроса
-        r = await get_count_of_members_by_poll_variant(poll_answer.poll_id)
+
     # ....или отмена варианта
     else:
         conn = RedisConnector().create_connection(database=2)
