@@ -1,5 +1,7 @@
 from typing import Tuple, List, Any
 
+from pandas import DataFrame
+from redis import Redis
 import pandas as pd
 from openpyxl import Workbook
 from icecream import ic
@@ -17,7 +19,8 @@ from settings import ExternalLinks
 
 def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_code: int) -> bool:
     try:
-        DbConnection.execute_query(f"exec MEDIATE..spAddNewUserTelegramBot {user_id},{chat_id},'{phonenumber}',{contract_code}")
+        DbConnection.execute_query(
+            f"exec MEDIATE..spAddNewUserTelegramBot {user_id},{chat_id},'{phonenumber}',{contract_code}")
         return True
     except Exception as e:
         ic(e)
@@ -113,17 +116,16 @@ def get_question_for_quiz() -> tuple[list[Any], list[Any], list[Any]]:
     return df_question, df_answer_variants, df_correct_answer
 
 
-def write_to_excel(filename: str, data: dict) -> Any:
-    # Определим максимальный индекс строки, уже сущуствующий в файле
-    try:
-        wb = Workbook()
-        ws = wb.active
-        ws.append(data)
-        wb.save(filename)
-        return (f"Write data to '{filename}' done!")
-    except Exception as e:
-        ic(e)
-        return e
+# def write_to_excel(filename: str, data: dict) -> Any:
+#     try:
+#         wb = Workbook()
+#         ws = wb.active
+#         ws.append(data)
+#         wb.save(filename)
+#         return (f"Write data to '{filename}' done!")
+#     except Exception as e:
+#         ic(e)
+#         return e
 
 
 def get_all_users_from_db() -> list[dict]:
@@ -226,3 +228,18 @@ def insert_client_properties(client_code: int, prop_code: int, commentary: str =
     else:
         result = DbConnection.execute_query(add_client_properties_wo_commentary, client_code, prop_code)
     return result
+
+
+async def get_count_of_members_by_poll_variant(poll_id: str) -> tuple:
+    conn_polls = Redis(host='localhost', port=6379, db=1, decode_responses=True, charset='utf-8')
+    conn_poll_answers = Redis(host='localhost', port=6379, db=2, decode_responses=True, charset='utf-8')
+    poll_name = conn_polls.get(poll_id)
+    poll_answers = {}.fromkeys(get_question_for_poll()[1])
+    poll_answers_count = len(poll_answers)
+    cnt_values_in_answers = {}
+    cnt = 0
+    while cnt <= poll_answers_count - 1:
+        for answer in poll_answers:
+            cnt_values_in_answers[answer] = conn_poll_answers.scard(f'polls:{poll_id}:{cnt}')
+            cnt += 1
+    return cnt_values_in_answers, poll_name

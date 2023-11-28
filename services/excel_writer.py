@@ -14,3 +14,5 @@ async def export_to_excel(data: dict, file_name: str):
     wb.save(f"{file_name}.xlsx")
 
 # df = pd.DataFrame({'points': [25, 12, 15, 14, 19],'assists': [5, 7, 7, 9, 12],'rebounds': [11, 8, 10, 6, 6]})
+#
+# df.to_excel("report.xlsx", sheet_name='Лист1', index=False, header=True)

@@ -27,6 +27,7 @@ admin_rt = Router()
 
 connect = RedisConnector().create_connection(database=1)
 
+
 # region Command Start
 @admin_rt.message(IsAdmin(admin_ids),
                   IsKnownUsers(user_ids, admin_ids, manager_ids),
@@ -38,6 +39,14 @@ async def _answer_if_admins_update(message: Message):
     """ Хэндлер для команды start от пользователей в группе администраторы """
     user_unbanned_bot_processing(message.from_user.id)
     await message.answer(text=LEXICON_RU['admin_menu'], reply_markup=menu_keyboard)
+
+
+@admin_rt.message(IsAdmin(admin_ids),
+                  Command(commands='poll_stat'),
+                  StateFilter(default_state)
+                  )
+async def poll_stats(message: Message):
+    bot.send_document(message.from_user.id)
 
 
 # endregion
@@ -139,12 +148,11 @@ async def _send_poll_regular(message: Message) -> None:
                                          options=_answers,
                                          is_anonymous=False,
                                          disable_notification=True,
-                                         type='regular', # Тип: голосование
-                                         protect_content=True #  Запрет на пересылку в другие чаты
+                                         type='regular',  # Тип: голосование
+                                         protect_content=True  # Запрет на пересылку в другие чаты
                                          ))
     # Запишем с Redis
     connect.set(name=result.poll.id, value=_poll[0][0])
-
 
 
 @admin_rt.message(IsAdmin(admin_ids),
