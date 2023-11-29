@@ -211,10 +211,12 @@ async def _button_poll_result_processing(callback: CallbackQuery):
     writer.close()
     # и отправим его
     await callback.message.edit_text(text="Отчет для выбранного опроса", parse_mode='MarkdownV2')
-    await bot.send_document(callback.from_user.id, document=FSInputFile(path=f"exported_files//{r[1]}.xlsx"))#, caption="Отчет")
+    await bot.send_document(callback.from_user.id,
+                            document=FSInputFile(path=f"exported_files//{r[1]}.xlsx"))  # , caption="Отчет")
     await callback.answer()
     # Удалим созданный файл, т.к. он больше не нужен
     os.remove(f"exported_files/{r[1]}.xlsx")
+
 
 # endregion
 
@@ -358,19 +360,19 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     целях безопасности и избежания спама. Для исключения бана со стороны Telegram,
     в "боевом" режиме установлена задержка 10 сообщений в секунду """
     user_list = get_list_unbanned_known_users()
-    user_cnt = len(user_list)
+    # ic(user_list)
+    # user_cnt = len(user_list)
     cnt = 0
     for user in user_list:
-        while cnt < 1:
-            # ic(user) {'user_id': '1000713266'}
-            await bot.send_message(chat_id=message.from_user.id,
-                                   text=f"{message.md_text}\n\n"
-                                        f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
-                                   reply_markup=stop_spam_kb(message.from_user.id),
-                                   parse_mode='MarkdownV2',
-                                   disable_notification=False)
-            await sleep(0.01)
-            cnt += 1
+        # while cnt < len(admin_ids):
+        await bot.send_message(chat_id=int(user['user_id']),
+                               text=f"{message.md_text}\n\n"
+                                    f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
+                               reply_markup=stop_spam_kb(message.from_user.id),
+                               parse_mode='MarkdownV2',
+                               disable_notification=False)
+        await sleep(0.01)
+        cnt += 1
     await message.answer(text=f"Рассылка закончена, сообщение отправлено {cnt} пользователям\.",
                          parse_mode='MarkdownV2',
                          disable_notification=False)

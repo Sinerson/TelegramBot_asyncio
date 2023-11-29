@@ -10,6 +10,7 @@ load_dotenv()
 class BotSecrets:
     """ Класс содержит данные для использования бота """
     bot_token: str = os.getenv("TOKEN_DEV")
+    # bot_token: str = os.getenv("TOKEN_PROD")
     # admin_id: str = os.getenv("ADMIN_USERS_LIST")
     # manager_id: str = os.getenv("MANAGER_ID_LIST")
     # user_id: str = os.getenv("USERS_LIST")
@@ -28,9 +29,11 @@ class DbSecrets:
     cn_lifetime: str = os.getenv("CONN_LIFETIME")
     idle: str = os.getenv("IDLE")
     autocommit: str = os.getenv("AUTOCOMMIT")
-    hostname: str = os.getenv("CLIENT_HOST_NAME_DEV")
+    # hostname: str = os.getenv("CLIENT_HOST_NAME_DEV")
+    hostname: str = os.getenv("CLIENT_HOST_NAME_PROD")
     proc_name: str = os.getenv("CLIENT_HOST_PROC")
-    app_name: str = os.getenv("APPLICATION_NAME_DEV")
+    # app_name: str = os.getenv("APPLICATION_NAME_DEV")
+    app_name: str = os.getenv("APPLICATION_NAME_PROD")
 
 
 @dataclass
