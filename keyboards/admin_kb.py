@@ -3,13 +3,14 @@ import copy
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import KeyboardButton, ReplyKeyboardMarkup
+from icecream import ic
 
 from lexicon.lexicon_ru import LEXICON_RU
 
 # Создаем список списков с кнопками для основного меню
 buttons: list[list[KeyboardButton]] = [
     [KeyboardButton(text=LEXICON_RU['make_a_spam']), KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
-    [KeyboardButton(text=LEXICON_RU['make_poll']), KeyboardButton(text=LEXICON_RU['make_quiz'])],
+    [KeyboardButton(text=LEXICON_RU['make_poll']), KeyboardButton(text=LEXICON_RU['get_poll_result'])],
     [KeyboardButton(text=LEXICON_RU['del_manager']), KeyboardButton(text=LEXICON_RU['del_admin'])],
     [KeyboardButton(text=LEXICON_RU['add_manager']), KeyboardButton(text=LEXICON_RU['add_admin'])],
     [KeyboardButton(text=LEXICON_RU['my_balance']), KeyboardButton(text=LEXICON_RU['my_services'])],
@@ -62,3 +63,11 @@ def stop_spam_kb(user_id: int) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=LEXICON_RU['stop_spam'], callback_data=f"STOP_SPAM {user_id}")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def get_poll_list(polls: dict) -> InlineKeyboardMarkup:
+    button_list = []
+    for el in polls:
+        button = [InlineKeyboardButton(text=f"{polls[el]}", callback_data=f'P_STAT {el}')]
+        button_list.append(button)
+    return InlineKeyboardMarkup(row_width=1, inline_keyboard=button_list)

@@ -33,6 +33,9 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'personal_area_password' : '\U0001F5DD Пароль от ЛК',
                               'send_me_message_to_send' : 'Отправьте мне сообщение для рассылки. Можете отправить отформатированыый текст. Внимание! Картинки пока не поддерживаются!',
                               'stop_spam': 'Отписаться от уведомлений',
+                              'get_poll_result': '\U0001f5c3 Отчеты по опросам',
+                              'poll_id': 'ID опроса',
+                              'poll_name': 'Название опроса:',
                               # admin_handlers
                               'admin_menu': '<b>Вы администратор! Меню команд:</b>',
                               'contract': 'л/с',
@@ -60,6 +63,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'send_me_new_manager_id': 'Отправьте мне id пользователя telegram или контакт из своей записной книжки.',
                               'cancel_action': 'Для отмены нажмите /cancel',
                               'not_a_telegram_user': 'Невозможно добавить! Пользователь не использует Telegram.',
-                              'choose_abonent' : '<b>Выберите абонента</b>'
+                              'choose_abonent' : '<b>Выберите абонента</b>',
+                              'select_a_poll': 'Выберите голосование для получения отчета'
 
                               }

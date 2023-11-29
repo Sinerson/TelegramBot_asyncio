@@ -2,8 +2,8 @@ from icecream import ic
 from aiogram import Router
 from aiogram.types import PollAnswer
 from db.redis import RedisConnector
-from services.excel_writer import export_to_excel
-from services.other_functions import get_question_for_poll, get_count_of_members_by_poll_variant
+# from services.excel_writer import export_to_excel
+from services.other_functions import get_question_for_poll
 
 poll_rt = Router()
 
@@ -11,7 +11,6 @@ poll_rt = Router()
 # Хэндлер для апдейтов на ответы в голосовании
 @poll_rt.poll_answer()
 async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
-
     # Проверим что за апдейт пришел:
     # ....голосование за вариант:
     if len(poll_answer.option_ids) > 0:
@@ -22,7 +21,7 @@ async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
         #           "option_ids": poll_answer.option_ids[0]
         #           }
         conn.sadd(f"polls:{poll_answer.poll_id}:{poll_answer.option_ids[0]}", poll_answer.user.id)
-        # Количество голосов для того или иного опроса
+        conn.close()
 
     # ....или отмена варианта
     else:
@@ -40,3 +39,4 @@ async def poll_answer_add_processing(poll_answer: PollAnswer) -> None:
         while cnt <= cnt_question:
             conn.srem(f"polls:{poll_answer.poll_id}:{cnt}", poll_answer.user.id)
             cnt += 1
+        conn.close()

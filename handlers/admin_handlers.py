@@ -1,6 +1,7 @@
 from asyncio import sleep
 
 import pandas as pd
+import os
 
 from db.redis import RedisConnector
 from aiogram.methods import SendPoll
@@ -12,11 +13,11 @@ from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, ContentType, CallbackQuery
+from aiogram.types import Message, ContentType, CallbackQuery, FSInputFile
 
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_with_contract_client_type_code, \
-    yes_no_keyboard, without_dice_kb, stop_spam_kb
+    yes_no_keyboard, without_dice_kb, stop_spam_kb, get_poll_list
 from lexicon.lexicon_ru import LEXICON_RU
 from main import bot
 from services.classes import FSMFillForm
@@ -24,7 +25,8 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager, \
     user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users, \
-    get_question_for_poll, get_question_for_quiz
+    get_question_for_poll, get_question_for_quiz, get_all_polls, poll_id_from_callback, \
+    get_count_of_members_by_poll_variant
 
 admin_rt = Router()
 
@@ -42,17 +44,6 @@ async def _answer_if_admins_update(message: Message):
     """ Хэндлер для команды start от пользователей в группе администраторы """
     user_unbanned_bot_processing(message.from_user.id)
     await message.answer(text=LEXICON_RU['admin_menu'], reply_markup=menu_keyboard)
-
-
-@admin_rt.message(IsAdmin(admin_ids),
-                  Command(commands='poll_stat'),
-                  StateFilter(default_state)
-                  )
-async def poll_stats(message: Message):
-    # TODO: Тут нужно вызвать функцию, которая вернет список опросов, и затем через callback отдать номер poll_id
-    r = await get_count_of_members_by_poll_variant(poll_answer.poll_id)
-    df = pd.DataFrame
-    bot.send_document(message.from_user.id, open('exported_files/report.xlsx', 'rb'))
 
 
 # endregion
@@ -165,7 +156,7 @@ async def _send_poll_regular(message: Message) -> None:
                   F.text.lower() == LEXICON_RU['make_quiz'].lower(),
                   StateFilter(default_state))
 async def _send_poll_quiz(message: Message):
-    """ Отправка викторины, созданной через Pandas """
+    """ Отправка викторины """
     # подготовим данные
     _poll: tuple = get_question_for_quiz()
     _question = _poll[0]
@@ -183,6 +174,47 @@ async def _send_poll_quiz(message: Message):
     ic(result.poll.id)
     ic(result.poll.total_voter_count)
 
+
+# endregion
+
+# region Poll Result
+@admin_rt.message(IsAdmin(admin_ids),
+                  F.text.lower() == LEXICON_RU['get_poll_result'].lower(),
+                  StateFilter(default_state))
+async def _button_poll_result_reques(message: Message):
+    """ Обработка нажатия на кнопку \"Получить результаты голосования \" """
+    await message.answer(text=LEXICON_RU['select_a_poll'], reply_markup=get_poll_list(await get_all_polls()))
+
+
+@admin_rt.callback_query(IsAdmin(admin_ids),
+                         F.data.startswith("P_STAT"),
+                         StateFilter(default_state))
+async def _button_poll_result_processing(callback: CallbackQuery):
+    """ Формирование отчета по опросу(голосованию) """
+    # подготовим данные
+    poll_id = poll_id_from_callback(callback_data=callback.data)
+    r = await get_count_of_members_by_poll_variant(poll_id)
+    # df = pd.DataFrame(r[0].items())#, columns=['Вариант','Кол-во голосов'])
+    df = pd.DataFrame(r[0].items(), columns=['Вариант', 'Кол-во голосов'])
+    # сформируем файл отчет
+    writer = pd.ExcelWriter(f"exported_files//{r[1]}.xlsx")
+    df.to_excel(excel_writer=writer,
+                sheet_name="Итоги по опросу",
+                index=False,
+                header=True,
+                na_rep='NaN'
+                )
+    for column in df:
+        column_width = max(df[column].astype(str).map(len).max(), len(column))
+        col_idx = df.columns.get_loc(column)
+        writer.sheets['Итоги по опросу'].set_column(col_idx, col_idx, column_width)
+    writer.close()
+    # и отправим его
+    await callback.message.edit_text(text="Отчет для выбранного опроса", parse_mode='MarkdownV2')
+    await bot.send_document(callback.from_user.id, document=FSInputFile(path=f"exported_files//{r[1]}.xlsx"))#, caption="Отчет")
+    await callback.answer()
+    # Удалим созданный файл, т.к. он больше не нужен
+    os.remove(f"exported_files/{r[1]}.xlsx")
 
 # endregion
 

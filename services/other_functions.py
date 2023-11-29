@@ -242,4 +242,22 @@ async def get_count_of_members_by_poll_variant(poll_id: str) -> tuple:
         for answer in poll_answers:
             cnt_values_in_answers[answer] = conn_poll_answers.scard(f'polls:{poll_id}:{cnt}')
             cnt += 1
+    conn_polls.close()
+    conn_poll_answers.close()
     return cnt_values_in_answers, poll_name
+
+
+async def get_all_polls():
+    conn_polls = Redis(host='localhost', port=6379, db=1, decode_responses=True, charset='utf-8')
+    polls: dict = {}.fromkeys(conn_polls.keys())
+    for key in polls:
+        polls[key] = conn_polls.get(key)
+    return polls
+
+
+def poll_id_from_callback(callback_data) -> any:
+    """ Получаем из callback data номер опроса и отдаем его назад """
+    for word in callback_data.split():
+        normalized_contract_code = word.replace('.', '').replace(',', '').replace(' ', '').strip()
+        if normalized_contract_code.isdigit():
+            return normalized_contract_code
