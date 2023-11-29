@@ -1,6 +1,5 @@
 FROM python:3.11
 MAINTAINER Bogdan Tabolin <tbp@sv-tel.ru>
-#LABEL multi.label1="value1" multi.label2="value2" other="value3"
 ADD entrypoint.sh /tmp
 RUN chmod +x /tmp/entrypoint.sh
 RUN chmod 766 /etc/passwd
@@ -8,7 +7,8 @@ RUN chmod 766 /etc/passwd
 WORKDIR /opt/telegram_bot
 
 COPY . /opt/telegram_bot
-COPY redis.conf .
+RUN mv /etc/redis/redis.conf /etc/redis/redis.conf.old
+COPY redis.conf /etc/redis
 RUN apt-get install gcc
 RUN apt-get install make
 ENV HOME_TDS /usr/src
@@ -32,9 +32,6 @@ RUN apt-get -y install redis
 RUN apt-get install -y unixodbc unixodbc-dev
 RUN odbcinst -i -d 'Adaptive Server Enterprise' -f odbcinst.ini
 WORKDIR /opt/telegram_bot
-#ADD odbcinst.ini /etc/odbcinst.ini
-#RUN apt install unixodbc -y
-#RUN apt-get clean -y
 
 RUN pip install --upgrade pip
 RUN pip install aiofiles==23.2.1
@@ -76,6 +73,4 @@ RUN pip install tzdata==2023.3
 RUN pip install XlsxWriter==3.1.9
 RUN pip install yarl==1.9.2
 
-#ENTRYPOINT /tmp/entrypoint.sh
-CMD ["redis-server", "/opt/telegram_bot/redis.conf"]
-#CMD ["python", "main.py"]
+ENTRYPOINT /tmp/entrypoint.sh
