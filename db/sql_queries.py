@@ -62,6 +62,8 @@ updateUser = """update SV..TBP_TELEGRAM_BOT
                     contract_code = cast(? as int)
 					where user_id = ? and chat_id = ?"""
 
+update_unknown_user = """insert into SV..TBP_TELEGRAM_BOT(user_id, chat_id, phonenumber, known_user) values (?, ?, ?, 0)"""
+
 delPhone = """update SV..TBP_TELEGRAM_BOT
 					set grant_phone = '0'
 					where phonenumber = ?"""

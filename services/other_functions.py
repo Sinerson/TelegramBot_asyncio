@@ -12,7 +12,7 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     getInetAccountPassword_query, getPersonalAreaPassword_query, \
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
-    add_client_properties_wo_commentary, getClientCodeByContractCode
+    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user
 from db.sybase import DbConnection
 from settings import ExternalLinks
 
@@ -261,3 +261,8 @@ def poll_id_from_callback(callback_data) -> any:
         normalized_contract_code = word.replace('.', '').replace(',', '').replace(' ', '').strip()
         if normalized_contract_code.isdigit():
             return normalized_contract_code
+
+
+async def add_phone_for_unknown_user(user_id: str, chat_id: str, phonenumber: str):
+    """ Функция сохраняет номер телефона пользователя, но не являющегося абонентом"""
+    DbConnection.execute_query(update_unknown_user, user_id, chat_id, phonenumber)

@@ -9,7 +9,7 @@ from keyboards.new_user_kb import new_user_keyboard, make_keyboard_for_newbie
 from keyboards.known_user_keyboard import user_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import add_new_known_user, get_abonents_from_db, \
-    contract_client_type_code_from_callback
+    contract_client_type_code_from_callback, add_phone_for_unknown_user
 
 new_user_rt = Router()
 
@@ -41,6 +41,7 @@ async def adding_new_user(message: Message):
         count = len(abonent_from_db)  # Получим количество абонентов в выборке
         if not count:  # Если в выборке никого нет, сообщим пользователю
             await message.answer(LEXICON_RU["phone_not_found"])
+            await add_phone_for_unknown_user(str(message.from_user.id), str(message.chat.id), message.contact.phone_number)
         elif count == 1:  # Если у нас в выборку кто-то попал, тогда
             # keyboard = make_keyboard_for_newbie(abonent_from_db)
             # await message.answer(text=LEXICON_RU['click_the_button_under_message'], reply_markup=keyboard)

@@ -29,11 +29,16 @@ class DbSecrets:
     cn_lifetime: str = os.getenv("CONN_LIFETIME")
     idle: str = os.getenv("IDLE")
     autocommit: str = os.getenv("AUTOCOMMIT")
-    # hostname: str = os.getenv("CLIENT_HOST_NAME_DEV")
-    hostname: str = os.getenv("CLIENT_HOST_NAME_PROD")
+    hostname: str = os.getenv("CLIENT_HOST_NAME_DEV")
+    # hostname: str = os.getenv("CLIENT_HOST_NAME_PROD")
     proc_name: str = os.getenv("CLIENT_HOST_PROC")
-    # app_name: str = os.getenv("APPLICATION_NAME_DEV")
-    app_name: str = os.getenv("APPLICATION_NAME_PROD")
+    app_name: str = os.getenv("APPLICATION_NAME_DEV")
+    # app_name: str = os.getenv("APPLICATION_NAME_PROD")
+    redis_host: str = os.getenv("REDIS_HOST")
+    redis_port: int = os.getenv("REDIS_PORT")
+    redis_db: int = os.getenv("REDIS_DB")
+    redis_decode: bool = os.getenv("REDIS_DECODE")
+    redis_charset: str = os.getenv("REDIS_CHARSET")
 
 
 @dataclass

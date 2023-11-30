@@ -7,8 +7,7 @@ RUN chmod 766 /etc/passwd
 WORKDIR /opt/telegram_bot
 
 COPY . /opt/telegram_bot
-RUN mv /etc/redis/redis.conf /etc/redis/redis.conf.old
-COPY redis.conf /etc/redis
+
 RUN apt-get install gcc
 RUN apt-get install make
 ENV HOME_TDS /usr/src
@@ -29,6 +28,8 @@ COPY ./odbcinst.ini ./odbc.ini
 COPY freetds.conf .
 RUN apt-get update
 RUN apt-get -y install redis
+RUN mv /etc/redis/redis.conf /etc/redis/redis.conf.old
+COPY redis.conf /etc/redis
 RUN apt-get install -y unixodbc unixodbc-dev
 RUN odbcinst -i -d 'Adaptive Server Enterprise' -f odbcinst.ini
 WORKDIR /opt/telegram_bot

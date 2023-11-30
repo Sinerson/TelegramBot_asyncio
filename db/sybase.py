@@ -52,8 +52,11 @@ class DbConnection(object):
             cursor.execute(query, params)
         else:
             cursor.execute(query)
-        for row in cursor.fetchall():
-            columns = [column[0] for column in cursor.description]
-            result.append(dict(zip(columns, row)))
-        cursor.close()
-        return result
+        try:
+            for row in cursor.fetchall():
+                columns = [column[0] for column in cursor.description]
+                result.append(dict(zip(columns, row)))
+            cursor.close()
+            return result
+        except pyodbc.ProgrammingError as e:
+            return e
