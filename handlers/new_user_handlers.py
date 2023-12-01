@@ -9,7 +9,8 @@ from keyboards.new_user_kb import new_user_keyboard, make_keyboard_for_newbie
 from keyboards.known_user_keyboard import user_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import add_new_known_user, get_abonents_from_db, \
-    contract_client_type_code_from_callback, add_phone_for_unknown_user, check_user_is_exists
+    contract_client_type_code_from_callback, add_phone_for_unknown_user, check_user_is_exists,\
+    convert_unknown_user_to_known
 
 new_user_rt = Router()
 
@@ -64,7 +65,20 @@ async def adding_new_user(message: Message):
                                          parse_mode='MarkdownV2')
             #       если есть, обновляем запись:
             else:
-                ic("Тут кто-то есть")
+                result = await convert_unknown_user_to_known(message.contact.phone_number,
+                                                       abonent_from_db[0]['CONTRACT_CODE'],
+                                                       message.from_user.id,
+                                                       message.chat.id
+                                                       )
+                if result is False:
+                    await message.answer(text="Произошла ошибка при попытке добавить вас в базу данных, попробуйте еще раз.")
+                else:
+                    await message.answer(text=f"Идентифицировали Вас по нашему биллингу, как :\n"
+                                              f"__{abonent_from_db[0]['NAME']}__\n"
+                                              f"лицевой счет №__{abonent_from_db[0]['CONTRACT']}__\n"
+                                              f"Вы добавлены в БД\. Воспользуйтесь меню ниже",
+                                         reply_markup=user_keyboard,
+                                         parse_mode='MarkdownV2')
         else:  # Вариант с выбором абонента
             keyboard = make_keyboard_for_newbie(abonent_from_db, phone)
             await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)

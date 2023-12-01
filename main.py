@@ -6,10 +6,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers, ban_unban_handler, \
                      poll_handler
-from settings import BotSecrets
+from settings import BotSecrets, DbSecrets
 
 # Инициализируем Redis
-redis = Redis(host='localhost', port=6379, db=0)
+redis = Redis(host=DbSecrets.redis_host, port=DbSecrets.redis_port, db=0)
 
 # Инициализируем хранилище (создаем экземпляр класса MemoryStorage)
 # storage = MemoryStorage()

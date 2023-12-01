@@ -64,6 +64,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'cancel_action': 'Для отмены нажмите /cancel',
                               'not_a_telegram_user': 'Невозможно добавить! Пользователь не использует Telegram.',
                               'choose_abonent' : '<b>Выберите абонента</b>',
-                              'select_a_poll': 'Выберите голосование для получения отчета'
+                              'select_a_poll': 'Выберите голосование для получения отчета',
+                              'polls_not_found': 'Еще не создано ни одного опроса'
 
                               }

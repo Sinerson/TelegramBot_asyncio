@@ -12,9 +12,9 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     getInetAccountPassword_query, getPersonalAreaPassword_query, \
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
-    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists
+    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser
 from db.sybase import DbConnection
-from settings import ExternalLinks
+from settings import ExternalLinks, DbSecrets
 
 
 def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_code: int) -> bool:
@@ -129,6 +129,7 @@ def get_question_for_quiz() -> tuple[list[Any], list[Any], list[Any]]:
 
 
 def get_all_users_from_db() -> list[dict]:
+    """ Получение всех пользователей из БД """
     result = DbConnection.execute_query(get_all_users_query)
     return result
 
@@ -140,6 +141,7 @@ def set_promised_payment(client_code: int) -> list:
 
 
 def get_promised_pay_date(client_code: int) -> str:
+    """ Установка доверительного платежа """
     result = DbConnection.execute_query(PromisedPayDate, client_code)
     f = lambda date: [res["DATE_CHANGE"] for res in date]
     return f(result)[0].strftime("%Y.%m.%d %H:%M")
@@ -231,8 +233,18 @@ def insert_client_properties(client_code: int, prop_code: int, commentary: str =
 
 
 async def get_count_of_members_by_poll_variant(poll_id: str) -> tuple:
-    conn_polls = Redis(host='localhost', port=6379, db=1, decode_responses=True, charset='utf-8')
-    conn_poll_answers = Redis(host='localhost', port=6379, db=2, decode_responses=True, charset='utf-8')
+    conn_polls = Redis(host=DbSecrets.redis_host,
+                       port=DbSecrets.redis_port,
+                       db=1,
+                       decode_responses=DbSecrets.redis_decode,
+                       charset=DbSecrets.redis_charset
+                       )
+    conn_poll_answers = Redis(host=DbSecrets.redis_host,
+                              port=DbSecrets.redis_port,
+                              db=2,
+                              decode_responses=DbSecrets.redis_decode,
+                              charset=DbSecrets.redis_charset
+                              )
     poll_name = conn_polls.get(poll_id)
     poll_answers = {}.fromkeys(get_question_for_poll()[1])
     poll_answers_count = len(poll_answers)
@@ -248,7 +260,12 @@ async def get_count_of_members_by_poll_variant(poll_id: str) -> tuple:
 
 
 async def get_all_polls():
-    conn_polls = Redis(host='localhost', port=6379, db=1, decode_responses=True, charset='utf-8')
+    conn_polls = Redis(host=DbSecrets.redis_host,
+                       port=DbSecrets.redis_port,
+                       db=1,
+                       decode_responses=DbSecrets.redis_decode,
+                       charset=DbSecrets.redis_charset
+                       )
     polls: dict = {}.fromkeys(conn_polls.keys())
     for key in polls:
         polls[key] = conn_polls.get(key)
@@ -272,3 +289,10 @@ async def check_user_is_exists(user_id: str) -> list:
     """ Проверим существование записи для user_id """
     result = DbConnection.execute_query(checkUserExists, user_id)
     return list(result)
+
+
+async def convert_unknown_user_to_known(phonenumber: str, contract_code: int, user_id: int, chat_id: int) -> list:
+    """ Обновление записи в БД для пользователя, который ранее обращался к боту, но его телефон не был найден в
+    биллинге"""
+    result = DbConnection.execute_query(updateUser, phonenumber, contract_code, user_id, chat_id)
+    return result

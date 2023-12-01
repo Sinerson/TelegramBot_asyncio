@@ -183,7 +183,11 @@ async def _send_poll_quiz(message: Message):
                   StateFilter(default_state))
 async def _button_poll_result_reques(message: Message):
     """ Обработка нажатия на кнопку \"Получить результаты голосования \" """
-    await message.answer(text=LEXICON_RU['select_a_poll'], reply_markup=get_poll_list(await get_all_polls()))
+    polls = await get_all_polls()
+    if not polls:
+        await message.answer(text=LEXICON_RU['polls_not_found'])
+    else:
+        await message.answer(text=LEXICON_RU['select_a_poll'], reply_markup=get_poll_list(polls))
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids),
@@ -194,21 +198,19 @@ async def _button_poll_result_processing(callback: CallbackQuery):
     # подготовим данные
     poll_id = poll_id_from_callback(callback_data=callback.data)
     r = await get_count_of_members_by_poll_variant(poll_id)
-    # df = pd.DataFrame(r[0].items())#, columns=['Вариант','Кол-во голосов'])
     df = pd.DataFrame(r[0].items(), columns=['Вариант', 'Кол-во голосов'])
     # сформируем файл отчет
-    writer = pd.ExcelWriter(f"exported_files//{r[1]}.xlsx")
-    df.to_excel(excel_writer=writer,
-                sheet_name="Итоги по опросу",
-                index=False,
-                header=True,
-                na_rep='NaN'
-                )
-    for column in df:
-        column_width = max(df[column].astype(str).map(len).max(), len(column))
-        col_idx = df.columns.get_loc(column)
-        writer.sheets['Итоги по опросу'].set_column(col_idx, col_idx, column_width)
-    writer.close()
+    with pd.ExcelWriter(f"exported_files//{r[1]}.xlsx") as writer:
+        df.to_excel(excel_writer=writer,
+                    sheet_name="Итоги по опросу",
+                    index=False,
+                    header=True,
+                    na_rep='NaN'
+                    )
+        for column in df:
+            column_width = max(df[column].astype(str).map(len).max(), len(column))
+            col_idx = df.columns.get_loc(column)
+            writer.sheets['Итоги по опросу'].set_column(col_idx, col_idx, column_width)
     # и отправим его
     await callback.message.edit_text(text="Отчет для выбранного опроса", parse_mode='MarkdownV2')
     await bot.send_document(callback.from_user.id,
