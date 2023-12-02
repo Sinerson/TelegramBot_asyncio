@@ -14,7 +14,7 @@ from services.other_functions import get_balance_by_contract_code, contract_code
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
-    insert_client_properties, get_client_code_by_user_id
+    insert_client_properties, get_client_code_by_user_id, add_payments_to_redis
 
 user_rt = Router()
 
@@ -38,6 +38,7 @@ async def cmd_start(message: Message):
                  F.text.lower() == LEXICON_RU['my_balance'].lower(),
                  StateFilter(default_state))
 async def known_client_balance_request(message: Message):
+    await add_payments_to_redis(5)
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
         keyboard = keyboard_with_contract_client_type_code(_abonents, 'BALANCE')

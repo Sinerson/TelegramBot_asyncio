@@ -50,7 +50,6 @@ async def _answer_if_admins_update(message: Message):
 
 # region Abonent balance
 @admin_rt.message(IsAdmin(admin_ids),
-                  IsKnownUsers(user_ids, admin_ids, manager_ids),
                   F.content_type == ContentType.CONTACT,
                   StateFilter(default_state))
 async def _balance_request_contact_processing(message: Message):
@@ -70,7 +69,6 @@ async def _balance_request_contact_processing(message: Message):
 
 
 @admin_rt.callback_query(IsAdmin(admin_ids),
-                         IsKnownUsers(user_ids, admin_ids, manager_ids),
                          F.data.startswith("BALANCE"),
                          StateFilter(default_state))
 async def _balance_answer(callback: CallbackQuery):

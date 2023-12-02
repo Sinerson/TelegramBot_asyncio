@@ -1,3 +1,4 @@
+import asyncio
 from typing import Tuple, List, Any
 
 from pandas import DataFrame
@@ -12,7 +13,8 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     getInetAccountPassword_query, getPersonalAreaPassword_query, \
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
-    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser
+    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser, \
+    last_payment_query
 from db.sybase import DbConnection
 from settings import ExternalLinks, DbSecrets
 
@@ -296,3 +298,18 @@ async def convert_unknown_user_to_known(phonenumber: str, contract_code: int, us
     биллинге"""
     result = DbConnection.execute_query(updateUser, phonenumber, contract_code, user_id, chat_id)
     return result
+
+
+async def add_payments_to_redis(wait_for):
+    """ Вносит записи о платежах в Redis """
+    while True:
+        await asyncio.sleep(wait_for)
+        conn_pays_add = Redis(host=DbSecrets.redis_host,
+                              port=DbSecrets.redis_port,
+                              db=3,
+                              encoding='utf-8',
+                              charset=DbSecrets.redis_charset,
+                              decode_responses=DbSecrets.redis_decode)
+        result = DbConnection.execute_query(last_payment_query)
+        for dict in result:
+            await conn_pays_add.lpush(dict['USER_ID'], str(dict['PAY_MONEY']))

@@ -121,14 +121,15 @@ getPayments = \
 					group by    MONTH
 					order by    datepart(mm,MONTH)
 '''
-getLastPayment = \
-	'''
-					select B.user_id, sum(CP.PAY_MONEY) as PAY_MONEY
-					from INT_PAYM..CONTRACT_PAYS CP
-					join SV..TBP_TELEGRAM_BOT B on CP.CONTRACT_CODE = B.contract_code
-					where CP.PAY_DATE >= dateadd(ss,-120, getdate()) and CP.USED = 1
-					group by B.user_id
-'''
+last_payment_query = """
+select B.user_id as USER_ID, sum(CP.PAY_MONEY) as PAY_MONEY, CP.TYPE_CODE
+from INT_PAYM..CONTRACT_PAYS CP
+join SV..TBP_TELEGRAM_BOT B on CP.CONTRACT_CODE = B.contract_code
+where CP.PAY_DATE >= dateadd(mi,-10, getdate()) and
+      CP.USED = 1 and
+      CP.TYPE_CODE not in (162, 161, 160, 159, 152, 153, 136, 137, 125, 120,  15, 14, 4, 3, 2, 1)
+group by B.user_id, CP.TYPE_CODE
+"""
 setSendStatus = \
 	"""
 					update SV..TBP_TELEGRAM_BOT

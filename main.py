@@ -6,6 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers, ban_unban_handler, \
                      poll_handler
+from services.other_functions import add_payments_to_redis
 from settings import BotSecrets, DbSecrets
 
 # Инициализируем Redis
@@ -34,6 +35,10 @@ async def start() -> None:
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
+        # Планировщик
+        loop = asyncio.get_event_loop()
+        #     отправки уведомления пользователю
+        loop.create_task(add_payments_to_redis(10))
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
