@@ -141,7 +141,7 @@ where CP.PAY_DATE >= dateadd(mi,-1, getdate()) and
       CP.TYPE_CODE not in (162, 161, 160, 159, 152, 153, 136, 137, 125, 120,  15, 14, 4, 3, 2, 1)
 group by B.user_id, CP.TYPE_CODE, convert(smalldatetime, CP.PAY_DATE), PT.TYPE_NAME
 """
-setSendStatus = \
+set_payment_notice_status = \
 	"""
 					update SV..TBP_TELEGRAM_BOT
 					set send_status = (?), send_time = (?), paid_money = (?)
@@ -332,4 +332,10 @@ if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
     begin
         select 0 as RESULT
     end
+"""
+
+pay_time_query ="""
+select send_time
+from SV..TBP_TELEGRAM_BOT
+where cast(user_id as bigint) = ?
 """

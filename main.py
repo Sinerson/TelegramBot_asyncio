@@ -6,7 +6,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers, ban_unban_handler, \
                      poll_handler
-from services.other_functions import add_payments_to_redis, send_payment_notice
+from services.other_functions import add_payments_to_redis
+from services.send_payment_notice import send_payment_notice
 from settings import BotSecrets, DbSecrets
 
 # Инициализируем Redis
