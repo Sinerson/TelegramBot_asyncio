@@ -1,7 +1,6 @@
 import asyncio
 from typing import Tuple, List, Any
 
-from pandas import DataFrame
 from redis import Redis
 import pandas as pd
 from openpyxl import Workbook
@@ -311,5 +310,29 @@ async def add_payments_to_redis(wait_for):
                               charset=DbSecrets.redis_charset,
                               decode_responses=DbSecrets.redis_decode)
         result = DbConnection.execute_query(last_payment_query)
-        for dict in result:
-            await conn_pays_add.lpush(dict['USER_ID'], str(dict['PAY_MONEY']))
+        if result:
+            for dict in result:
+                # Перед внесением платежа, проверим, чтобы не было дубликатов
+                if conn_pays_add.exists(dict['USER_ID']) == 1:
+                # если есть - пасуем
+                    pass
+                else:
+                # если нет - вносим запись
+                    conn_pays_add.lpush(dict['USER_ID'], str(dict['PAY_MONEY']))
+                    ic(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб.")
+
+
+async def send_payment_notice(delay_timer):
+    """ Функция отправки уведомления о поступившем платеже """
+    while True:
+        await asyncio.sleep(delay_timer)
+        conn_pays_get = Redis(host=DbSecrets.redis_host,
+                              port=DbSecrets.redis_port,
+                              db=3,
+                              encoding='utf-8',
+                              charset=DbSecrets.redis_charset,
+                              decode_responses=DbSecrets.redis_decode)
+        keys = conn_pays_get.keys()
+        for el in keys:
+            pay_sum = conn_pays_get.lpop(el)
+            ic(f"Постипили денежные средства в размере {round(float(pay_sum),2)} руб.")

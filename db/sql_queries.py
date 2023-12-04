@@ -1,5 +1,5 @@
 # SQL queries
-get_abonent_by_phonenumber_query = '''select DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, rtrim(CONTRACT) as CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
+get_abonent_by_phonenumber_query = '''select OD.DEVICE, OD.CLIENT_CODE, CS.CONTRACT_CODE, rtrim(CS.CONTRACT) as CONTRACT, coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME) as NAME,
        S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
            + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX as ADDRESS, CL.TYPE_CODE
 from (select * from INTEGRAL..OTHER_DEVICES where TYPE_CODE = 17 and rtrim(DEVICE) like '%' + ? ) OD
@@ -10,7 +10,7 @@ left join INTEGRAL..FIRMS F on CL.FIRM_CODE = F.FIRM_CODE
 left join INTEGRAL..ADDRESS A on OD.ADDRESS_CODE = A.ADDRESS_CODE
 left join INTEGRAL..STREETS S on A.STREET_CODE = S.STREET_CODE
 left join INTEGRAL..TOWNS T on S.TOWN_CODE = T.TOWN_CODE
-group by DEVICE, OD.CLIENT_CODE, CONTRACT_CODE, rtrim(CONTRACT), coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME),
+group by OD.DEVICE, OD.CLIENT_CODE, CS.CONTRACT_CODE, rtrim(CS.CONTRACT), coalesce(P.PEOPLE_NAME, F.JUR_FIRM_NAME),
          S.STREET_PREFIX + rtrim(S.STREET_NAME) + ', ' + cast(A.HOUSE as varchar(10)) + A.HOUSE_POSTFIX
            + ' - ' + cast(OD.FLAT as varchar(10)) + OD.FLAT_POSTFIX, CL.TYPE_CODE'''
 
@@ -69,7 +69,7 @@ delPhone = """update SV..TBP_TELEGRAM_BOT
 					set grant_phone = '0'
 					where phonenumber = ?"""
 
-delUser = """delete from SV.dbo.TBP_TELEGRAM_BOT where chat_id = ?"""
+delUser = """delete from SV..TBP_TELEGRAM_BOT where chat_id = ?"""
 
 getContractCode = \
 	"""
@@ -77,7 +77,7 @@ getContractCode = \
 					from INTEGRAL..OTHER_DEVICES OD
 					join INTEGRAL..CONTRACT_CLIENTS CL on CL.CLIENT_CODE = OD.CLIENT_CODE
 					join INTEGRAL..CONTRACTS CS on CS.CONTRACT_CODE = CL.CONTRACT_CODE
-					where DEVICE like '%'+right(cast(? as varchar), 10)+'%'
+					where OD.DEVICE like '%'+right(cast(? as varchar), 10)+'%'
 """
 
 getBalance_query = \
@@ -122,13 +122,24 @@ getPayments = \
 					order by    datepart(mm,MONTH)
 '''
 last_payment_query = """
-select B.user_id as USER_ID, sum(CP.PAY_MONEY) as PAY_MONEY, CP.TYPE_CODE
+declare @CurMonth datetime, @CurDate datetime
+select @CurDate = getdate()
+select @CurMonth = M.MONTH
+from INT_PAYM..MONTH M
+where @CurDate >= M.MONTH and M.MONTH_NEXT >= M.MONTH
+select B.user_id as USER_ID,
+       sum(CP.PAY_MONEY) as PAY_MONEY,
+       CP.TYPE_CODE,
+       convert(smalldatetime, CP.PAY_DATE) as PY_DATE,
+       PT.TYPE_NAME
 from INT_PAYM..CONTRACT_PAYS CP
+join INT_PAYM..PAY_TYPES PT on CP.MONTH = PT.MONTH and CP.TYPE_CODE = PT.TYPE_CODE and PT.MONTH = @CurMonth
 join SV..TBP_TELEGRAM_BOT B on CP.CONTRACT_CODE = B.contract_code
-where CP.PAY_DATE >= dateadd(mi,-10, getdate()) and
+where CP.PAY_DATE >= dateadd(mi,-1, getdate()) and
+      CP.MONTH = @CurMonth and
       CP.USED = 1 and
       CP.TYPE_CODE not in (162, 161, 160, 159, 152, 153, 136, 137, 125, 120,  15, 14, 4, 3, 2, 1)
-group by B.user_id, CP.TYPE_CODE
+group by B.user_id, CP.TYPE_CODE, convert(smalldatetime, CP.PAY_DATE), PT.TYPE_NAME
 """
 setSendStatus = \
 	"""
@@ -202,7 +213,7 @@ getClientCodeByContractCode = \
 					select CL.CLIENT_CODE, CL.TYPE_CODE
 					from INTEGRAL..CONTRACT_CLIENTS CCL
 					join INTEGRAL..CLIENTS CL on CCL.CLIENT_CODE = CL.CLIENT_CODE
-					where CONTRACT_CODE = ?
+					where CCL.CONTRACT_CODE = ?
 """
 
 PromisedPayDate = \
@@ -214,10 +225,10 @@ PromisedPayDate = \
 
 getInetAccountPassword_query = \
 """
-					select rtrim(LOGIN) as LOGIN, MEDIATE.dbo.ContractPasswordDecode(rtrim(PASSWORD)) as PASSWORD
+					select rtrim(OD.LOGIN) as LOGIN, MEDIATE.dbo.ContractPasswordDecode(rtrim(OD.PASSWORD)) as PASSWORD
 					from INTEGRAL..OTHER_DEVICES OD
 					join INTEGRAL..CONTRACT_CLIENTS CCL on OD.CLIENT_CODE = CCL.CLIENT_CODE
-					where CONTRACT_CODE = ? and OD.TYPE_CODE = 14
+					where CCL.CONTRACT_CODE = ? and OD.TYPE_CODE = 14
 """
 
 getPersonalAreaPassword_query = \
@@ -277,10 +288,10 @@ select phonenumber from SV..TBP_TELEGRAM_BOT where cast(user_id as bigint) = ?
 """
 
 get_client_code_by_contract_code = '''
-select CL.CLIENT_CODE, CONTRACT_CODE, TYPE_CODE
+select CL.CLIENT_CODE, CC.CONTRACT_CODE, CL.TYPE_CODE
 from INTEGRAL..CONTRACT_CLIENTS CC
 join INTEGRAL..CLIENTS CL on CC.CLIENT_CODE = CL.CLIENT_CODE
-where CONTRACT_CODE in ( ? )
+where CC.CONTRACT_CODE in ( ? )
 '''
 # TODO: переделать на хранимку
 add_client_properties_w_commentary = """

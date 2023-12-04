@@ -38,7 +38,6 @@ async def cmd_start(message: Message):
                  F.text.lower() == LEXICON_RU['my_balance'].lower(),
                  StateFilter(default_state))
 async def known_client_balance_request(message: Message):
-    await add_payments_to_redis(5)
     _abonents = phone_number_by_userid(message.from_user.id)
     if len(_abonents) > 1:
         keyboard = keyboard_with_contract_client_type_code(_abonents, 'BALANCE')
