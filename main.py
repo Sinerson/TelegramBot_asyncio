@@ -37,8 +37,9 @@ async def start() -> None:
         await bot.delete_webhook(drop_pending_updates=True)
         # Планировщик
         loop = asyncio.get_event_loop()
-        #     отправки уведомления пользователю
-        loop.create_task(add_payments_to_redis(30))
+        #     добавление оплат в redis
+        loop.create_task(add_payments_to_redis(31))
+        #     отправка уведомления пользователю
         loop.create_task(send_payment_notice(10))
         await dp.start_polling(bot)
     finally:

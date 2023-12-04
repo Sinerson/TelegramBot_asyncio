@@ -18,6 +18,7 @@ from services.other_functions import get_balance_by_contract_code, contract_code
 
 user_rt = Router()
 
+
 # region Commnd Start
 # Хэндлер на команду /start для простых пользователей
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
@@ -26,7 +27,7 @@ user_rt = Router()
                  )
 async def cmd_start(message: Message):
     user_unbanned_bot_processing(message.from_user.id)
-    await message.answer(text="Для взаимодействия с ботом, воспользуйтесь появившимся меню из кнопок",
+    await message.answer(text=LEXICON_RU['for_use_bot_push_button'],
                          reply_markup=user_keyboard)
 
 
@@ -100,7 +101,7 @@ async def services_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
-#endregion
+# endregion
 
 # region Promised Payment
 # Хэндлер для запроса доверительного платежа
@@ -147,7 +148,7 @@ async def promised_payment_answer(callback: CallbackQuery):
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
 
-#endregion
+# endregion
 
 # region Dice
 # Хэндлер на запрос броска кубика
@@ -179,10 +180,11 @@ async def dice_callback(callback: CallbackQuery):
         # TODO: Пока функционал навешивания свойства на абонента под вопросом, поэтому 2 строки ниже закомментил
         # client_code = get_client_code_by_user_id(callback.from_user.id)
         # insert_client_properties(client_code, 1138, prise_action)
-        await callback.message.edit_text(text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
-                                         parse_mode='HTML',
-                                         disable_web_page_preview=True
-                                         )
+        await callback.message.edit_text(
+            text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
+            parse_mode='HTML',
+            disable_web_page_preview=True
+            )
         await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)
         await callback.answer()
     elif 'no' in callback_data:
@@ -236,7 +238,7 @@ async def known_client_personal_area_password(message: Message):
         await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
-#endregion
+# endregion
 
 # region LK password
 # Обработка callback для пароля от ЛК
@@ -246,7 +248,7 @@ async def known_client_personal_area_password(message: Message):
                         )
 async def personal_area_password_answer(callback: CallbackQuery):
     callback_parse = list(contract_client_type_code_from_callback(callback.data))
-    result = personal_area_password(callback_parse[1]) # Вытащим по индексу CLIENT_CODE
+    result = personal_area_password(callback_parse[1])  # Вытащим по индексу CLIENT_CODE
     if not result:
         await callback.message.edit_text(text="Учетные данные не обнаружены, обратитесь в тех.поддержку.")
     else:
@@ -255,23 +257,25 @@ async def personal_area_password_answer(callback: CallbackQuery):
             cnt = len(result)
             while cnt > 0:
                 for el in result:
-                    await callback.message.answer(text=f"*Имя пользователя:* `{el['PIN']}`\n*Пароль:* `{el['PIN_PASSWORD']}`",
-                                                  parse_mode='MarkdownV2'
-                                                  )
+                    await callback.message.answer(
+                        text=f"*Имя пользователя:* `{el['PIN']}`\n*Пароль:* `{el['PIN_PASSWORD']}`",
+                        parse_mode='MarkdownV2'
+                        )
                     cnt -= 1
-            await callback.message.answer(text=f"Перейти в личный кабинет можно по <a href='https://bill.sv-tel.ru/'>ссылке</a>",
-                                          parse_mode='HTML',
-                                          disable_web_page_preview=True)
+            await callback.message.answer(
+                text=f"Перейти в личный кабинет можно по <a href='https://bill.sv-tel.ru/'>ссылке</a>",
+                parse_mode='HTML',
+                disable_web_page_preview=True)
         else:
             await callback.message.edit_text(text=f"*Имя пользователя:* `{result[0]['PIN']}`\n"
                                                   f"*Пароль:* `{result[0]['PIN_PASSWORD']}`\n\n"
                                                   f"Перейти в личный кабинет можно по"
                                                   f" [ссылке](https://bill.sv-tel.ru)",
-                                                  parse_mode='MarkdownV2', disable_web_page_preview=True)
+                                             parse_mode='MarkdownV2', disable_web_page_preview=True)
     await callback.answer()
 
 
-#endregion
+# endregion
 
 # region Stop get events
 # Хэндлер обработки коллбэка прекращения подписки на рассылку (сама кнопка генерится в admin_handler.py)
@@ -283,15 +287,13 @@ async def _unsubscribe_from_spam_result(callback: CallbackQuery):
     user_id = callback.from_user.id
     result = notify_decline(user_id)
     if result is True:
-        await callback.message.edit_text(text="Вы отписались от получения уведомлений")
+        await callback.message.edit_text(text=LEXICON_RU['unsubscribe_done'])
     else:
-        await callback.message.edit_text(text="У вас нет подписки на рассылку. Если вы все же получили сообщение,"
-                                           " значит оно относится к категории обязательных. Обещаем не слать"
-                                           " такие сообщения слишком часто.")
+        await callback.message.edit_text(text=LEXICON_RU['service_notice'])
     await callback.answer()
 
 
-#endregion
+# endregion
 
 # region Support tickets
 # Хэндлер для запроса заявок пользователя
@@ -318,15 +320,15 @@ async def tech_claims_answer(callback: CallbackQuery):
     abonents_data: list = list(contract_client_type_code_from_callback(callback.data))
     tech_claims = get_tech_claims(abonents_data[0])
     if not tech_claims:
-        await callback.message.edit_text(text="Заявок за последнюю неделю не обнаружено")
+        await callback.message.edit_text(text=LEXICON_RU['support_ticket_not_found'])
     else:
         await callback.message.edit_text(
-            text=f"Список заявок в техническую поддержку за последние 7 дней\n",parse_mode='MarkdownV2')
+            text=f"{LEXICON_RU['last_7days_tickets']}\n", parse_mode='MarkdownV2')
         for claim in tech_claims:
             await callback.message.answer(text=f"Заявка №<b>{claim['CLAIM_NUM']}</b>\n"
                                                f"Текущий статус: <b>{claim['STATUS_NAME']}</b>\n"
-                                               # f"Дата создания: *{claim['APPL_DATE_CREATE']}*\n"
-                                               # f"Назначена дата выполнения: *{claim['APPL_DATE_RUN']}*\n"
+            # f"Дата создания: *{claim['APPL_DATE_CREATE']}*\n"
+            # f"Назначена дата выполнения: *{claim['APPL_DATE_RUN']}*\n"
                                                f"ФИО: <b>{claim['CLIENT_NAME']}</b>\n"
                                                f"Адрес: <b>{claim['ADDRESS_NAME']}</b>\n"
                                                f"Заявлено: <b>{claim['ERROR_NAME']}</b>\n"
@@ -334,7 +336,7 @@ async def tech_claims_answer(callback: CallbackQuery):
                                           parse_mode='HTML')
 
 
-#endregion
+# endregion
 
 # region Commnd Help
 # Хэндлер для команды /help
@@ -343,4 +345,4 @@ async def tech_claims_answer(callback: CallbackQuery):
                  )
 async def cmd_help(message: Message):
     await message.answer("Раздел помощи. Пока пустой.")
-#endregion
+# endregion
