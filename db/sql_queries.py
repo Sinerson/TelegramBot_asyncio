@@ -130,7 +130,7 @@ where @CurDate >= M.MONTH and M.MONTH_NEXT >= M.MONTH
 select B.user_id as USER_ID,
        sum(CP.PAY_MONEY) as PAY_MONEY,
        CP.TYPE_CODE,
-       convert(smalldatetime, CP.PAY_DATE) as PY_DATE,
+       convert(smalldatetime, CP.PAY_DATE) as PAY_DATE,
        PT.TYPE_NAME
 from INT_PAYM..CONTRACT_PAYS CP
 join INT_PAYM..PAY_TYPES PT on CP.MONTH = PT.MONTH and CP.TYPE_CODE = PT.TYPE_CODE and PT.MONTH = @CurMonth
@@ -144,9 +144,9 @@ group by B.user_id, CP.TYPE_CODE, convert(smalldatetime, CP.PAY_DATE), PT.TYPE_N
 set_payment_notice_status = \
 	"""
 					update SV..TBP_TELEGRAM_BOT
-					set send_status = (?), send_time = (?), paid_money = (?)
+					set send_status = 1, send_time = getdate(), paid_money = ?
 					from SV..TBP_TELEGRAM_BOT
-					where user_id = (?)
+					where cast(user_id as bigint) = ?
 """
 getTechClaims_query = \
 	"""
@@ -335,7 +335,7 @@ if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
 """
 
 pay_time_query ="""
-select send_time
+select send_time, paid_money
 from SV..TBP_TELEGRAM_BOT
 where cast(user_id as bigint) = ?
 """

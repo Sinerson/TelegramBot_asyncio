@@ -303,6 +303,7 @@ async def add_payments_to_redis(wait_for):
     """ Вносит записи о платежах в Redis """
     while True:
         await asyncio.sleep(wait_for)
+        print("Процесс поиска и добавления оплат запущен")
         conn_pays_add = Redis(host=DbSecrets.redis_host,
                               port=DbSecrets.redis_port,
                               db=3,
@@ -311,6 +312,7 @@ async def add_payments_to_redis(wait_for):
                               decode_responses=DbSecrets.redis_decode)
         result = DbConnection.execute_query(last_payment_query)
         if result:
+            print(f"Количество найденых оплат: {len(result)}")
             for dict in result:
                 # Перед внесением платежа, проверим, чтобы не было дубликатов
                 if conn_pays_add.exists(dict['USER_ID']) == 1:
@@ -319,4 +321,4 @@ async def add_payments_to_redis(wait_for):
                 else:
                 # если нет - вносим запись
                     conn_pays_add.lpush(dict['USER_ID'], str(dict['PAY_MONEY']))
-                    ic(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб.")
+                    # ic(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб.")

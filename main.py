@@ -39,7 +39,7 @@ async def start() -> None:
         # Планировщик
         loop = asyncio.get_event_loop()
         #     добавление оплат в redis
-        loop.create_task(add_payments_to_redis(31))
+        loop.create_task(add_payments_to_redis(10))
         #     отправка уведомления пользователю
         loop.create_task(send_payment_notice(10))
         await dp.start_polling(bot)
