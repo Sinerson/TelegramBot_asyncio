@@ -88,6 +88,6 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                                                 'такие сообщения слишком часто.',
                               'unsubscribe_done': 'Вы отписались от получения уведомлений',
                               # Send payment notice
-                              'get_payment': 'Постипила оплата на сумму'
+                              'get_payment': 'Поступила оплата на сумму:'
 
                               }

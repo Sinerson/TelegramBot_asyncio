@@ -373,7 +373,7 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
                                disable_notification=False)
         await sleep(0.01)
         cnt += 1
-    await message.answer(text=f"Рассылка закончена, сообщение отправлено {cnt} пользователям\.",
+    await message.answer(text=f"Рассылка закончена. Отправлено сообщений : {cnt}",
                          parse_mode='MarkdownV2',
                          disable_notification=False)
     await state.clear()
