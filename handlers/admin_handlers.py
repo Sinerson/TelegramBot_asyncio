@@ -1,5 +1,6 @@
 from asyncio import sleep
 
+from aiogram.exceptions import TelegramForbiddenError
 import pandas as pd
 import os
 
@@ -26,7 +27,7 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
     get_prise_new, set_promised_payment, get_promised_pay_date, add_new_bot_admin, add_new_bot_manager, \
     user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users, \
     get_question_for_poll, get_question_for_quiz, get_all_polls, poll_id_from_callback, \
-    get_count_of_members_by_poll_variant
+    get_count_of_members_by_poll_variant, user_banned_bot_processing
 
 admin_rt = Router()
 
@@ -364,15 +365,18 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     # user_cnt = len(user_list)
     cnt = 0
     for user in user_list:
-        # while cnt < len(admin_ids):
-        await bot.send_message(chat_id=int(user['user_id']),
-                               text=f"{message.md_text}\n\n"
-                                    f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
-                               reply_markup=stop_spam_kb(message.from_user.id),
-                               parse_mode='MarkdownV2',
-                               disable_notification=False)
-        await sleep(0.01)
-        cnt += 1
+        while cnt < len(admin_ids):
+            try:
+                await bot.send_message(chat_id=124902528,#int(user['user_id']),
+                                       text=f"{message.md_text}\n\n"
+                                            f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
+                                       reply_markup=stop_spam_kb(message.from_user.id),
+                                       parse_mode='MarkdownV2',
+                                       disable_notification=False)
+                await sleep(0.01)
+                cnt += 1
+            except TelegramForbiddenError:
+                user_banned_bot_processing(user['user_id'])
     await message.answer(text=f"Рассылка закончена\. Отправлено сообщений : {cnt}",
                          parse_mode='MarkdownV2',
                          disable_notification=False)

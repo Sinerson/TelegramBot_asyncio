@@ -320,9 +320,28 @@ async def add_payments_to_redis(wait_for):
             for dict in result:
                 # Перед внесением платежа, проверим, чтобы не было дубликатов
                 if conn_pays_add.exists(dict['USER_ID']) == 1:
-                # если есть - пасуем
+                    # если есть - пасуем
                     pass
                 else:
-                # если нет - вносим запись
+                    # если нет - вносим запись
                     conn_pays_add.lpush(dict['USER_ID'], str(dict['PAY_MONEY']))
                     print(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб.")
+
+
+async def check_ban_by_user(wait_for):
+    while True:
+        await asyncio.sleep(wait_for)
+        from datetime import datetime
+        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс проверки пользователей запущен")
+        from aiogram import Bot
+        from aiogram.methods.send_chat_action import SendChatAction
+        from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
+        bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
+        users = get_list_unbanned_known_users()
+        for user in users:
+            try:
+                await bot(SendChatAction(chat_id=user['user_id'], action='typing'))
+            except TelegramForbiddenError:
+                user_banned_bot_processing(user)
+            except TelegramBadRequest:
+                print(f"Для пользователя {user['user_id']} нет чата")
