@@ -67,9 +67,12 @@ def get_client_services_list(contract_code: int, client_code: int, client_type_c
     """ Возвращает услуги абонента в виде списка словарей,
         при подаче кода контракта, кода клиента и типа клиента в виде int
     """
-    result = DbConnection.execute_query(
-        f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
-    return result
+    if contract_code == 50323 and client_code == 50341 and client_type_code == 8:
+        return [{'TARIFF_NAME': 'Для получения перечня услуг на л/с 500 обратитесь в отдел ОИТ', 'TARIFF_COST': 0}]
+    else:
+        result = DbConnection.execute_query(
+            f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
+        return result
 
 
 def phone_number_by_userid(user_id: int) -> list:

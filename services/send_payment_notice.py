@@ -42,6 +42,6 @@ async def send_payment_notice(delay_timer):
                 pass
             else:
                 DbConnection.execute_query(set_payment_notice_status, float(pay_sum_redis), tg_user_id)
-                await bot.send_message(chat_id=tg_user_id,
+                await bot.send_message(chat_id=124902528,
                                        text=f"{LEXICON_RU['get_payment']} {round(float(pay_sum_redis), 2)} {LEXICON_RU['rubles']} \n",
                                        disable_notification=False)
