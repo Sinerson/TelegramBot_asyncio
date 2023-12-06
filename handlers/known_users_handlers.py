@@ -89,12 +89,15 @@ async def client_services(message: Message):
 async def services_answer(callback: CallbackQuery):
     abonents_data = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
+        ic(abonents_data)
         services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
         services_list = []
         cnt = 1
         for el in services:
-            services_list.append(
-                f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
+            if el['TARIFF_COST'] is None:
+                services_list.append(f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {'уточняйте е/м платеж'} {LEXICON_RU['rubles']}")
+            else:
+                services_list.append(f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
             cnt += 1
         services_string = "\n".join(str(el) for el in services_list)
         await callback.message.edit_text(text=services_string, parse_mode='HTML')

@@ -413,8 +413,10 @@ async def _client_services_answer(callback: CallbackQuery):
         services_list = []
         cnt = 1
         for el in services:
-            services_list.append(
-                f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
+            if el['TARIFF_COST'] is None:
+                services_list.append(f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {'уточняйте е/м платеж'}")
+            else:
+                services_list.append(f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
             cnt += 1
         services_string = "\n".join(str(el) for el in services_list)
         await callback.message.edit_text(text=services_string, parse_mode='HTML')
