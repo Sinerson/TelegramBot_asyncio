@@ -1,9 +1,8 @@
 import asyncio
-from typing import Tuple, List, Any
+from typing import Any
 
 from redis import Redis
 import pandas as pd
-from openpyxl import Workbook
 from icecream import ic
 
 from db.fake_marketing_actions import PRISE_ACTION
@@ -12,8 +11,7 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     getInetAccountPassword_query, getPersonalAreaPassword_query, \
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
-    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser, \
-    last_payment_query
+    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser
 from db.sybase import DbConnection
 from settings import ExternalLinks, DbSecrets, BotSecrets
 
@@ -302,32 +300,6 @@ async def convert_unknown_user_to_known(phonenumber: str, contract_code: int, us
     return result
 
 
-async def add_payments_to_redis(wait_for):
-    """ Вносит записи о платежах в Redis """
-    while True:
-        await asyncio.sleep(wait_for)
-        from datetime import datetime
-        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс поиска и добавления оплат запущен")
-        conn_pays_add = Redis(host=DbSecrets.redis_host,
-                              port=DbSecrets.redis_port,
-                              db=3,
-                              encoding='utf-8',
-                              charset=DbSecrets.redis_charset,
-                              decode_responses=DbSecrets.redis_decode)
-        result = DbConnection.execute_query(last_payment_query)
-        if result:
-            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Количество найденых оплат: {len(result)}")
-            for dict in result:
-                # Перед внесением платежа, проверим, чтобы не было дубликатов
-                if conn_pays_add.exists(dict['USER_ID']) == 1:
-                    # если есть - пасуем
-                    pass
-                else:
-                    # если нет - вносим запись
-                    conn_pays_add.lpush(dict['USER_ID'], str(dict['PAY_MONEY']))
-                    print(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб.")
-
-
 async def check_ban_by_user(wait_for):
     while True:
         await asyncio.sleep(wait_for)
@@ -342,6 +314,6 @@ async def check_ban_by_user(wait_for):
             try:
                 await bot(SendChatAction(chat_id=user['user_id'], action='typing'))
             except TelegramForbiddenError:
-                user_banned_bot_processing(user)
+                user_banned_bot_processing(user['user_id'])
             except TelegramBadRequest:
                 print(f"Для пользователя {user['user_id']} нет чата")

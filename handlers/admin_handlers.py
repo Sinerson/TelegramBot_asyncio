@@ -367,7 +367,7 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     for user in user_list:
         while cnt < len(admin_ids):
             try:
-                await bot.send_message(chat_id=124902528,#int(user['user_id']),
+                await bot.send_message(chat_id=int(user['user_id']),
                                        text=f"{message.md_text}\n\n"
                                             f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
                                        reply_markup=stop_spam_kb(message.from_user.id),

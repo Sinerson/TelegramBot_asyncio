@@ -14,7 +14,8 @@ from services.other_functions import get_balance_by_contract_code, contract_code
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
-    insert_client_properties, get_client_code_by_user_id, add_payments_to_redis
+    insert_client_properties, get_client_code_by_user_id
+from services.payments_processing_to_redis import add_payments_to_redis
 
 user_rt = Router()
 

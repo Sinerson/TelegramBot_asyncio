@@ -1,7 +1,8 @@
 import asyncio
+import logging
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramForbiddenError
+from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 from icecream import ic
 from redis import Redis
 
@@ -9,8 +10,8 @@ from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import user_banned_bot_processing
 from settings import BotSecrets, DbSecrets
 from db.sybase import DbConnection
-from db.sql_queries import pay_time_query, set_payment_notice_status
-from datetime import datetime
+from db.sql_queries import set_payment_notice_status
+from datetime import datetime, timedelta
 
 bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
 
@@ -27,29 +28,24 @@ async def send_payment_notice(delay_timer):
                               charset=DbSecrets.redis_charset,
                               decode_responses=DbSecrets.redis_decode)
         for el in conn_pays_get.keys():
-            now_datetime = datetime.now()
-            ic(now_datetime)
-            payment = DbConnection.execute_query(pay_time_query, int(el))[0]
-            if payment['send_time'] is None:
-                print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Нет данных для отправки")
-            else:
-                ic(payment)
-                delta = now_datetime - payment['send_time']
-                ic(delta)
-                tg_user_id = int(el)
-                ic(tg_user_id)
-                pay_sum_redis = float(conn_pays_get.lpop(el))
-                ic(pay_sum_redis)
-                pay_sum_sybase = float(payment['paid_money'])
-                ic(pay_sum_sybase)
-                if delta.seconds <= 60 and pay_sum_sybase == pay_sum_redis:
-                    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Прошло менее 60 секунд и суммы равны. Отправку не делаем")
+            if len(el.split(':')) > 1:
+                tg_user_id = int(el.split(':')[0])
+                pay_date = (f"{el.split(':')[1]}-"
+                            f"{el.split(':')[2]}-"
+                            f"{el.split(':')[3]} "
+                            f"{el.split(':')[4]}:"
+                            f"{el.split(':')[5]}:"
+                            f"{el.split(':')[6]}")
+                pay_sum = conn_pays_get.lpop(el)
+                try:
+                    result = DbConnection.execute_query(set_payment_notice_status, pay_date, float(pay_sum), tg_user_id)
+                    ic(result)
+                    await bot.send_message(chat_id=tg_user_id,
+                                           text=f"{LEXICON_RU['get_payment']} {round(float(pay_sum), 2)} {LEXICON_RU['rubles']} \n",
+                                           disable_notification=False)
+                except TelegramForbiddenError:
+                    user_banned_bot_processing(tg_user_id)
+                except TelegramBadRequest:
                     pass
-                else:
-                    try:
-                        DbConnection.execute_query(set_payment_notice_status, float(pay_sum_redis), tg_user_id)
-                        await bot.send_message(chat_id=124902528, # tg_user_id,
-                                               text=f"{LEXICON_RU['get_payment']} {round(float(pay_sum_redis), 2)} {LEXICON_RU['rubles']} \n",
-                                               disable_notification=False)
-                    except TelegramForbiddenError:
-                        user_banned_bot_processing(tg_user_id)
+            else:
+                pass

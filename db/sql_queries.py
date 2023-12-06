@@ -135,7 +135,7 @@ select B.user_id as USER_ID,
 from INT_PAYM..CONTRACT_PAYS CP
 join INT_PAYM..PAY_TYPES PT on CP.MONTH = PT.MONTH and CP.TYPE_CODE = PT.TYPE_CODE and PT.MONTH = @CurMonth
 join SV..TBP_TELEGRAM_BOT B on CP.CONTRACT_CODE = B.contract_code
-where CP.PAY_DATE >= dateadd(mi,-1, getdate()) and
+where CP.PAY_DATE >= dateadd(hh,-3, getdate()) and
       CP.MONTH = @CurMonth and
       CP.USED = 1 and
       CP.TYPE_CODE not in (162, 161, 160, 159, 152, 153, 136, 137, 125, 120,  15, 14, 4, 3, 2, 1)
@@ -143,10 +143,13 @@ group by B.user_id, CP.TYPE_CODE, convert(smalldatetime, CP.PAY_DATE), PT.TYPE_N
 """
 set_payment_notice_status = \
 	"""
+					begin
 					update SV..TBP_TELEGRAM_BOT
-					set send_status = 1, send_time = getdate(), paid_money = ?
+					set send_status = 1, send_time = ?, paid_money = ?
 					from SV..TBP_TELEGRAM_BOT
 					where cast(user_id as bigint) = ?
+					end
+					select 1 as UPDATE_RESULT
 """
 getTechClaims_query = \
 	"""
@@ -337,5 +340,5 @@ if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
 pay_time_query ="""
 select send_time, paid_money
 from SV..TBP_TELEGRAM_BOT
-where cast(user_id as bigint) = ?
+where convert(bigint, user_id) = ?
 """

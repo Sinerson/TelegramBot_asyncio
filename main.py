@@ -6,7 +6,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers, ban_unban_handler, \
                      poll_handler
-from services.other_functions import add_payments_to_redis, check_ban_by_user
+from services.other_functions import check_ban_by_user
+from services.payments_processing_to_redis import add_payments_to_redis
 from services.send_payment_notice import send_payment_notice
 from settings import BotSecrets, DbSecrets
 
@@ -43,7 +44,7 @@ async def start() -> None:
         #     отправка уведомления пользователю
         loop.create_task(send_payment_notice(10))
         # Проверка у кого из пользователей бот забанен
-        loop.create_task(check_ban_by_user(30))
+        loop.create_task(check_ban_by_user(3600))
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
