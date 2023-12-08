@@ -45,9 +45,3 @@ class DbSecrets:
 class ExternalLinks:
     """ Класс содержит одну переменную, со ссылкой на документ Google Spreadsheet """
     marketing_doc_link: str = os.getenv("MARKETING_ACTION_LINK")
-
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s"
-)
