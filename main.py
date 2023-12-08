@@ -12,8 +12,8 @@ from services.payments_processing_to_redis import add_payments_to_redis
 from services.send_payment_notice import send_payment_notice
 from settings import BotSecrets, DbSecrets
 
-logging.basicConfig(level=logging.INFO,
-                    filename="log\\INFO_log.log",
+logging.basicConfig(level=logging.ERROR,
+                    filename="log\\ERROR_log.log",
                     filemode="a",
                     format="%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s"
                     )
@@ -34,9 +34,9 @@ dp = Dispatcher(storage=storage)
 
 
 async def start() -> None:
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск бота.")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск бота.")
     # Регистрируем роутеры в диспетчере
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Регистрация диспетчеров")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Регистрация диспетчеров")
     dp.include_router(ban_unban_handler.ban_rt)
     dp.include_router(poll_handler.poll_rt)
     dp.include_router(new_user_handlers.new_user_rt)
@@ -44,34 +44,29 @@ async def start() -> None:
     dp.include_router(known_users_handlers.user_rt)
     dp.include_router(other_handlers.other_rt)
 
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Пропуск всех накопленных апдейтов")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Пропуск всех накопленных апдейтов")
     await bot.delete_webhook(drop_pending_updates=True)
-    print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Создание планировщика")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Создание планировщика")
     # Планировщик
     loop = asyncio.get_event_loop()
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи добавления платежей")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи добавления платежей")
     #     добавление оплат в redis
     loop.create_task(add_payments_to_redis(20))
     #     отправка уведомления пользователю
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи отправки уведомления о платежах")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи отправки уведомления о платежах")
     loop.create_task(send_payment_notice(30))
     # Проверка у кого из пользователей бот забанен
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
     loop.create_task(check_ban_by_user(10800))
-    try:
-        logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск основного тела бота")
-        await dp.start_polling(bot)
-    except Exception as e:
-        logging.info(e)
-    finally:
-        logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
+    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск основного тела бота")
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
     try:
         asyncio.run(start(), debug=True)
     except KeyboardInterrupt:
-        logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Исключение прервания с клавиатуры")
+        logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Исключение прервания с клавиатуры")
         bot.session.close()
     except RuntimeError:
-        logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
+        logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")

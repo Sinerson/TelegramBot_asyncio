@@ -1,3 +1,4 @@
+import logging
 from asyncio import sleep
 from icecream import ic
 from aiogram import Router, F
@@ -89,7 +90,7 @@ async def client_services(message: Message):
 async def services_answer(callback: CallbackQuery):
     abonents_data = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
-        ic(abonents_data)
+        logging.error(abonents_data)
         services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
         services_list = []
         cnt = 1

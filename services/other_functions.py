@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any
 
 from redis import Redis
@@ -86,7 +87,6 @@ def contract_code_by_phone_for_new_users(phonenumber: str) -> list[dict]:
         Ипользуется для поиска и добавления в БД новых абонентов, у которых телефон уже зарегистрирован
     """
     result = DbConnection.execute_query(getContractCode, phonenumber)
-    ic(result)
     # return result[0]['CONTRACT_CODE']
 
 
@@ -304,7 +304,7 @@ async def check_ban_by_user(wait_for):
     while True:
         await asyncio.sleep(wait_for)
         from datetime import datetime
-        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс проверки пользователей запущен")
+        logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс проверки пользователей запущен")
         from aiogram import Bot
         from aiogram.methods.send_chat_action import SendChatAction
         from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
@@ -316,4 +316,4 @@ async def check_ban_by_user(wait_for):
             except TelegramForbiddenError:
                 user_banned_bot_processing(user['user_id'])
             except TelegramBadRequest:
-                print(f"Для пользователя {user['user_id']} нет чата")
+                logging.error(f"Для пользователя {user['user_id']} нет чата")

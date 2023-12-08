@@ -170,8 +170,6 @@ async def _send_poll_quiz(message: Message):
                                          type='quiz',
                                          protect_content=True
                                          ))
-    ic(result.poll.id)
-    ic(result.poll.total_voter_count)
 
 
 # endregion

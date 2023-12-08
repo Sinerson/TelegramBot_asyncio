@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from icecream import ic
 from redis import Redis
@@ -14,7 +15,7 @@ async def add_payments_to_redis(wait_for):
     while True:
         await asyncio.sleep(wait_for)
         from datetime import datetime
-        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс поиска и добавления оплат запущен")
+        logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс поиска и добавления оплат запущен")
         conn_pays_add = Redis(host=DbSecrets.redis_host,
                               port=DbSecrets.redis_port,
                               db=3,
@@ -38,6 +39,6 @@ async def add_payments_to_redis(wait_for):
                     else:
                         # Иначе, добавляем в redis для отправки
                         conn_pays_add.lpush(f"{dict['USER_ID']}:{dict['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",str(dict['PAY_MONEY']))
-                        print(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб., дата платежа: {dict['PAY_DATE']} ")
+                        logging.error(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб., дата платежа: {dict['PAY_DATE']} ")
                 else:
                     pass
