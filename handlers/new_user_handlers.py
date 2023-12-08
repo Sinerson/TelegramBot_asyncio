@@ -1,3 +1,6 @@
+import logging
+
+import pyodbc
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.state import default_state
@@ -42,7 +45,11 @@ async def adding_new_user(message: Message):
         count = len(abonent_from_db)  # Получим количество абонентов в выборке
         if not count:  # Если в выборке никого нет, сообщим пользователю
             await message.answer(LEXICON_RU["phone_not_found"])
-            await add_phone_for_unknown_user(str(message.from_user.id), str(message.chat.id), message.contact.phone_number)
+            try:
+                await add_phone_for_unknown_user(str(message.from_user.id), str(message.chat.id), message.contact.phone_number)
+            except pyodbc.IntegrityError:
+                logging.error(f"Для пользователя {str(message.from_user.id)} с телефоном {str(phone)} уже есть запись"
+                              f" в БД, но номер телефона не найден в биллинге")
         elif count == 1:  # Если у нас в выборку кто-то попал, тогда
             # keyboard = make_keyboard_for_newbie(abonent_from_db)
             # await message.answer(text=LEXICON_RU['click_the_button_under_message'], reply_markup=keyboard)
