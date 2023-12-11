@@ -10,7 +10,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'contact_data_get': '<b>получены контактые данные:</b>',
                               # other_handlers
                               'you_send_a_photo': '<b>Вы прислали фото</b>',
-                              'you_send_voice_text_or_video': '<b>Вы прислали войс, видео или текст</b>',
+                              'you_send_voice_text_or_video': '<b>Вы прислали войс, видео или текст. Нажмите /start</b>',
                               'you_send_a_location': '<b>Вы прислали геопозицию</b>',
                               'bot_not_understanding': '<b>Извините, это сообщение пока не может быть распознано '
                                                        'ботом. Используйте кнопки меню</b>',
