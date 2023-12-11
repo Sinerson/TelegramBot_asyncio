@@ -15,7 +15,7 @@ async def add_payments_to_redis(wait_for):
     while True:
         await asyncio.sleep(wait_for)
         from datetime import datetime
-        logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс поиска и добавления оплат запущен")
+        # logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс поиска и добавления оплат запущен")
         conn_pays_add = Redis(host=DbSecrets.redis_host,
                               port=DbSecrets.redis_port,
                               db=3,

@@ -10,13 +10,14 @@ from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard
 from keyboards.known_user_keyboard import user_keyboard
 from keyboards.known_user_keyboard import without_dice_kb_known_users
+from keyboards.new_user_kb import new_user_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
     insert_client_properties, get_client_code_by_user_id
-from services.payments_processing_to_redis import add_payments_to_redis
+
 
 user_rt = Router()
 
@@ -74,12 +75,16 @@ async def balance_answer(callback: CallbackQuery):
                  )
 async def client_services(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
-    if len(_abonents) > 1:
-        keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
-        await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+    if not _abonents:
+        logging.error(f"для пользователя user_id: {message.from_user.id} не найден номер телефона в таблице")
+        await message.answer(text="Не найден номер телефона. Нажмите кнопку для отправки", reply_markup=new_user_keyboard)
     else:
-        keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
-        await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+        if len(_abonents) > 1:
+            keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
+            await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+        else:
+            keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
+            await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
 
 
 # Обработка callback для запроса услуг
@@ -90,7 +95,6 @@ async def client_services(message: Message):
 async def services_answer(callback: CallbackQuery):
     abonents_data = list(contract_client_type_code_from_callback(callback.data))
     if abonents_data:
-        logging.error(abonents_data)
         services = get_client_services_list(abonents_data[0], abonents_data[1], abonents_data[2])
         services_list = []
         cnt = 1

@@ -20,7 +20,7 @@ async def send_payment_notice(delay_timer):
     """ Функция отправки уведомления о поступившем платеже """
     while True:
         await asyncio.sleep(delay_timer)
-        logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс отправки запущен")
+        # logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс отправки запущен")
         conn_pays_get = Redis(host=DbSecrets.redis_host,
                               port=DbSecrets.redis_port,
                               db=3,
