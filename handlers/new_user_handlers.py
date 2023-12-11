@@ -44,7 +44,7 @@ async def adding_new_user(message: Message):
         abonent_from_db = get_abonents_from_db(phone)  # Ищем абонентов с совпадающим номером в БД
         count = len(abonent_from_db)  # Получим количество абонентов в выборке
         if not count:  # Если в выборке никого нет, сообщим пользователю
-            await message.answer(LEXICON_RU["phone_not_found"])
+            await message.answer(LEXICON_RU["phone_not_found"], parse_mode='MarkdownV2')
             try:
                 await add_phone_for_unknown_user(str(message.from_user.id), str(message.chat.id), message.contact.phone_number)
             except pyodbc.IntegrityError:
