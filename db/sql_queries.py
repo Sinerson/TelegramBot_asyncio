@@ -259,7 +259,7 @@ select user_id from SV..TBP_TELEGRAM_BOT where known_user = 1
 """
 
 get_all_unbanned_users_query = """
-select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0
+select user_id from SV..TBP_TELEGRAM_BOT where bot_blocked = 0 and known_user = 1
 """
 
 get_all_known_unbanned_users_query = """

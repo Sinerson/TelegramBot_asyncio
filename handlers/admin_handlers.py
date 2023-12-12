@@ -136,19 +136,21 @@ async def _send_poll_regular(message: Message) -> None:
     """ Отправка опроса, созданной через Pandas DataFrame Google Spreadsheets
         и запись номера опроса в Redis """
     # подготовим данные
+    _users = get_list_unbanned_known_users()
     _poll: tuple = get_question_for_poll()
     _question = _poll[0]
     _answers = _poll[1]
-    result: Message = await bot(SendPoll(chat_id=message.chat.id,
-                                         question=_question[0],
-                                         options=_answers,
-                                         is_anonymous=False,
-                                         disable_notification=True,
-                                         type='regular',  # Тип: голосование
-                                         protect_content=True  # Запрет на пересылку в другие чаты
-                                         ))
+    for el in _users:
+        result: Message = await bot(SendPoll(chat_id=124902528,
+                                             question=_question[0],
+                                             options=_answers,
+                                             is_anonymous=False,
+                                             disable_notification=True,
+                                             type='regular',  # Тип: голосование
+                                             protect_content=True  # Запрет на пересылку в другие чаты
+                                             ))
     # Запишем с Redis
-    connect.set(name=result.poll.id, value=_poll[0][0])
+        connect.set(name=result.poll.id, value=_poll[0][0])
 
 
 @admin_rt.message(IsAdmin(admin_ids),
