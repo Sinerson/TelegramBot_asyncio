@@ -153,7 +153,8 @@ async def _send_poll_regular(message: Message) -> None:
     connect.set(name=result.poll.id, value=_poll[0][0])
     # сделаем пересылку
     for el in _users:
-        await bot.forward_message(from_chat_id=result.chat.id, chat_id=int(el['user_id']), message_id=result.message_id)
+        await bot.forward_message(from_chat_id=result.chat.id, chat_id=int(el['user_id']), message_id=result.message_id,
+                                  protect_content=True)
 
 
 @admin_rt.message(IsAdmin(admin_ids),
