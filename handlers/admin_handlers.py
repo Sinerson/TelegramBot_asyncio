@@ -150,7 +150,7 @@ async def _send_poll_regular(message: Message) -> None:
                                          protect_content=False  # Запрет на пересылку в другие чаты
                                          ))
     # Запишем с Redis
-    # connect.set(name=result.poll.id, value=_poll[0][0])
+    connect.set(name=result.poll.id, value=_poll[0][0])
     # сделаем пересылку
     for el in _users:
         await bot.forward_message(from_chat_id=result.chat.id, chat_id=int(el['user_id']), message_id=result.message_id)
