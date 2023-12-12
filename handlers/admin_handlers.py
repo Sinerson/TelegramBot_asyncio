@@ -140,17 +140,20 @@ async def _send_poll_regular(message: Message) -> None:
     _poll: tuple = get_question_for_poll()
     _question = _poll[0]
     _answers = _poll[1]
-    for el in _users:
-        result: Message = await bot(SendPoll(chat_id=124902528,
-                                             question=_question[0],
-                                             options=_answers,
-                                             is_anonymous=False,
-                                             disable_notification=True,
-                                             type='regular',  # Тип: голосование
-                                             protect_content=True  # Запрет на пересылку в другие чаты
-                                             ))
+    # Создадим непосредственно опрос, для того чтобы переслать это сообщение в другие чаты
+    result: Message = await bot(SendPoll(chat_id=124902528,
+                                         question=_question[0],
+                                         options=_answers,
+                                         is_anonymous=False,
+                                         disable_notification=True,
+                                         type='regular',  # Тип: голосование
+                                         protect_content=False  # Запрет на пересылку в другие чаты
+                                         ))
     # Запишем с Redis
-        connect.set(name=result.poll.id, value=_poll[0][0])
+    # connect.set(name=result.poll.id, value=_poll[0][0])
+    # сделаем пересылку
+    for el in _users:
+        await bot.forward_message(from_chat_id=result.chat.id, chat_id=int(el['user_id']), message_id=result.message_id)
 
 
 @admin_rt.message(IsAdmin(admin_ids),
