@@ -361,15 +361,15 @@ async def _send_message_to_users_request(message: Message, state: FSMContext):
                   ~Command(commands='cancel')
                   )
 async def _send_message_to_user_processing(message: Message, state: FSMContext):
-    """ Функция рассылки сообщений пользователям. Сейчас заглушена, и рассылка осуществляется через эхо- сообщение в
-    целях безопасности и избежания спама. Для исключения бана со стороны Telegram,
+    """ Функция рассылки сообщений пользователям. Для исключения бана со стороны Telegram,
     в "боевом" режиме установлена задержка 10 сообщений в секунду """
     user_list = get_list_unbanned_known_users()
     # ic(user_list)
-    # user_cnt = len(user_list)
+    user_cnt = len(user_list)
+    # ic(user_cnt)
     cnt = 0
     for user in user_list:
-        while cnt < len(admin_ids):
+        while cnt < len(user_list):
             try:
                 await bot.send_message(chat_id=int(user['user_id']),
                                        text=f"{message.md_text}\n\n"

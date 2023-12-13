@@ -12,7 +12,7 @@ from services.payments_processing_to_redis import add_payments_to_redis
 from services.send_payment_notice import send_payment_notice
 from settings import BotSecrets, DbSecrets
 
-logging.basicConfig(level=logging.ERROR,
+logging.basicConfig(level=logging.DEBUG,
                     filename="log\\ERROR_log.log",
                     filemode="a",
                     format="%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s"
