@@ -1,3 +1,4 @@
+import logging
 from asyncio import sleep
 
 from aiogram.exceptions import TelegramForbiddenError
@@ -365,22 +366,22 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     в "боевом" режиме установлена задержка 10 сообщений в секунду """
     user_list = get_list_unbanned_known_users()
     # ic(user_list)
-    user_cnt = len(user_list)
+    # user_cnt = len(user_list)
     # ic(user_cnt)
     cnt = 0
     for user in user_list:
-        while cnt < len(user_list):
-            try:
-                await bot.send_message(chat_id=int(user['user_id']),
-                                       text=f"{message.md_text}\n\n"
-                                            f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
-                                       reply_markup=stop_spam_kb(message.from_user.id),
-                                       parse_mode='MarkdownV2',
-                                       disable_notification=False)
-                await sleep(0.01)
-                cnt += 1
-            except TelegramForbiddenError:
-                user_banned_bot_processing(user['user_id'])
+        try:
+            await bot.send_message(chat_id=int(user['user_id']),
+                                   text=f"{message.md_text}\n\n"
+                                        f"`Для отказа от получения уведомлений, нажмите кнопку под сообщением`",
+                                   reply_markup=stop_spam_kb(message.from_user.id),
+                                   parse_mode='MarkdownV2',
+                                   disable_notification=False)
+            await sleep(0.01)
+            cnt += 1
+        except TelegramForbiddenError:
+            logging.error(f"Какие-то проблемы при попытке отправить сообщение пользователю {user['user_id']}")
+            user_banned_bot_processing(user['user_id'])
     await message.answer(text=f"Рассылка закончена\. Отправлено сообщений : {cnt}",
                          parse_mode='MarkdownV2',
                          disable_notification=False)
