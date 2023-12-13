@@ -67,6 +67,6 @@ if __name__ == '__main__':
         asyncio.run(start())#, debug=True)
     except KeyboardInterrupt:
         logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Исключение прервания с клавиатуры")
-        bot.session.close()
+        await bot.session.close()
     except RuntimeError:
         logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
