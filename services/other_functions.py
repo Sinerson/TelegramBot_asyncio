@@ -77,7 +77,7 @@ def get_client_services_list(contract_code: int, client_code: int, client_type_c
 def phone_number_by_userid(user_id: int) -> list:
     """ Возвращает номер телефона для существующих в БД пользователей по user_id"""
     result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
-    logging.error(f"переданный user_id: {user_id}, результат запроса к базе: {result}")
+    logging.info(f"переданный user_id: {user_id}, результат запроса к базе: {result}")
     phonenumber = result[0]['phonenumber'][-10:]
     result2 = DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
     return result2
@@ -297,7 +297,7 @@ async def check_user_is_exists(user_id: str) -> list:
 async def convert_unknown_user_to_known(phonenumber: str, contract_code: int, user_id: int, chat_id: int) -> list:
     """ Обновление записи в БД для пользователя, который ранее обращался к боту, но его телефон не был найден в
     биллинге"""
-    logging.error(f"phonenumber: {phonenumber}, contract_code: {contract_code}, user_id: {user_id}, chat_id: {chat_id}")
+    logging.info(f"phonenumber: {phonenumber}, contract_code: {contract_code}, user_id: {user_id}, chat_id: {chat_id}")
     result = DbConnection.execute_query(updateUser, phonenumber, contract_code, user_id, chat_id)
     return result
 
@@ -306,7 +306,7 @@ async def check_ban_by_user(wait_for):
     while True:
         await asyncio.sleep(wait_for)
         from datetime import datetime
-        logging.error(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс проверки пользователей запущен")
+        logging.info(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Процесс проверки пользователей запущен")
         from aiogram import Bot
         from aiogram.methods.send_chat_action import SendChatAction
         from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest

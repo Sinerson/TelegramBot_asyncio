@@ -34,9 +34,9 @@ dp = Dispatcher(storage=storage)
 
 
 async def start() -> None:
-    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск бота.")
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск бота.")
     # Регистрируем роутеры в диспетчере
-    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Регистрация диспетчеров")
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Регистрация диспетчеров")
     dp.include_router(ban_unban_handler.ban_rt)
     dp.include_router(poll_handler.poll_rt)
     dp.include_router(new_user_handlers.new_user_rt)
@@ -44,21 +44,21 @@ async def start() -> None:
     dp.include_router(known_users_handlers.user_rt)
     dp.include_router(other_handlers.other_rt)
 
-    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Пропуск всех накопленных апдейтов")
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Пропуск всех накопленных апдейтов")
     await bot.delete_webhook(drop_pending_updates=True)
-    logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Создание планировщика")
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Создание планировщика")
     # Планировщик
-    # loop = asyncio.get_event_loop()
-    # logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи добавления платежей")
+    loop = asyncio.get_event_loop()
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи добавления платежей")
     #     добавление оплат в redis
-    # loop.create_task(add_payments_to_redis(35))
+    loop.create_task(add_payments_to_redis(35))
     #     отправка уведомления пользователю
-    # logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи отправки уведомления о платежах")
-    # loop.create_task(send_payment_notice(20))
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи отправки уведомления о платежах")
+    loop.create_task(send_payment_notice(20))
     # Проверка у кого из пользователей бот забанен
-    # logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
-    # loop.create_task(check_ban_by_user(10800))
-    # logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск основного тела бота")
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
+    loop.create_task(check_ban_by_user(10800))
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск основного тела бота")
     await dp.start_polling(bot)
 
 
@@ -69,4 +69,4 @@ if __name__ == '__main__':
         logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Исключение прервания с клавиатуры")
         bot.session.close()
     except RuntimeError:
-        logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
+        logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
