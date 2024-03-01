@@ -59,9 +59,26 @@ async def known_client_balance_request(message: Message):
 async def balance_answer(callback: CallbackQuery):
     balance = get_balance_by_contract_code(contract_code_from_callback(callback.data))
     for el in balance:
+        total_balance = round(float(el['TTL_EO_MONEY']) + float(el['PROPNACH_MONEY']), 2)
+        services_balance = round(float(el['OSNUSL_MONEY']), 2)
+        installment_balance = round(float(el['SELL_MONEY']), 2)
+        if installment_balance:
+            message_text = (
+                f"{LEXICON_RU['balance_is']}\n"
+                f"общий: {total_balance} {LEXICON_RU['rubles']}\n"
+                f"услуги: {services_balance} {LEXICON_RU['rubles']}\n"
+                f"рассрочка: {installment_balance} {LEXICON_RU['rubles']}"
+            )
+        else:
+            message_text = (
+                f"{LEXICON_RU['balance_is']}\n"
+                f"общий: {total_balance} {LEXICON_RU['rubles']}\n"
+                f"услуги: {services_balance} {LEXICON_RU['rubles']}\n"
+            )
         await callback.message.edit_text(
-            text=f"{LEXICON_RU['balance_is']} {round(int(el['EO_MONEY']), 2)} {LEXICON_RU['rubles']}",
-            parse_mode='HTML')
+            text=message_text,
+            parse_mode='HTML'
+        )
         await callback.answer()
 
 

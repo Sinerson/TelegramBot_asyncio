@@ -82,21 +82,52 @@ getContractCode = \
 """
 
 getBalance_query = \
-	"""
-					declare     @CurDate datetime,
-                                @CurMonth datetime
-                    select      @CurDate = getdate()
-                    select      @CurMonth = M.MONTH
-                        from    INT_PAYM..MONTH M
-                    where       @CurDate >= M.MONTH and
-                                MONTH_NEXT > M.MONTH
-                    select      sum(EO_MONEY) as EO_MONEY
-                        from    INT_PAYM..CONTRACT_STATE
-                    where       MONTH = dateadd(mm,0,@CurMonth) and
-                                CONTRACT_CODE = (?)
-                    group by    CONTRACT_CODE
 """
-
+declare     @CurDate datetime,
+            @CurMonth datetime
+select      @CurDate = getdate()
+select      @CurMonth = M.MONTH
+from        INT_PAYM..MONTH M
+where       @CurDate >= M.MONTH and
+            MONTH_NEXT > M.MONTH
+select rtrim(CS.CONTRACT) as CONTRACT, CS.CONTRACT_CODE, isnull(TEM.TTL_EO_MONEY,0) as TTL_EO_MONEY,
+       isnull(OUEM.OSNUSL_MONEY,0) as OSNUSL_MONEY,
+       isnull(NCEO.PROPNACH_MONEY,0) as PROPNACH_MONEY,
+       isnull(SELL.SELL_MONEY,0) as SELL_MONEY
+from INTEGRAL..CONTRACTS CS
+join (
+-- сальдо текущее общее
+    select      CONTRACT_CODE,sum(EO_MONEY) as TTL_EO_MONEY
+    from        INT_PAYM..CONTRACT_STATE
+    where       MONTH = @CurMonth
+    group by    CONTRACT_CODE
+    ) TEM on CS.CONTRACT_CODE = TEM.CONTRACT_CODE
+join (
+-- сальдо по 21 обороту
+    select CONTRACT_CODE, sum(EO_MONEY) as OSNUSL_MONEY
+    from INT_PAYM..CONTRACT_STATE
+    where MONTH = @CurMonth and STATE_TYPE_CODE != 18
+    group by CONTRACT_CODE
+    ) OUEM on CS.CONTRACT_CODE = OUEM.CONTRACT_CODE
+left join (
+-- пропущенные начисления
+    select CONTRACT_CODE, sum(MONEY) as PROPNACH_MONEY
+    from INT_PAYM..CONTRACT_NOT_CALC
+    where CALC_USE_FLAG = 0 and MONTH = @CurMonth
+    group by CONTRACT_CODE
+    ) NCEO on CS.CONTRACT_CODE = NCEO.CONTRACT_CODE
+left join (
+-- оборот рассрочки
+    select ST.CONTRACT_CODE, sum(EO_MONEY) as SELL_MONEY
+    from INT_PAYM..CONTRACT_STATE ST
+             join INTEGRAL..CONTRACTS CS on ST.CONTRACT_CODE = CS.CONTRACT_CODE
+    where MONTH = @CurMonth
+      and STATE_TYPE_CODE = 18
+    group by ST.CONTRACT_CODE
+    ) SELL on CS.CONTRACT_CODE = SELL.CONTRACT_CODE
+where CS.CONTRACT_CODE = (?)
+group by CS.CONTRACT, CS.CONTRACT_CODE, TEM.TTL_EO_MONEY, OUEM.OSNUSL_MONEY, NCEO.PROPNACH_MONEY, SELL.SELL_MONEY
+"""
 getPayments = \
 	'''
 					declare     @CurDate datetime,

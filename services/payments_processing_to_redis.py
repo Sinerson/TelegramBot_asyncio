@@ -38,7 +38,8 @@ async def add_payments_to_redis(wait_for):
                         pass
                     else:
                         # Иначе, добавляем в redis для отправки
-                        conn_pays_add.lpush(f"{dict['USER_ID']}:{dict['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",str(dict['PAY_MONEY']))
+                        conn_pays_add.lpush(f"{dict['USER_ID']}:{dict['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",
+                                                  str(dict['PAY_MONEY']))
                         logging.error(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб., дата платежа: {dict['PAY_DATE']} ")
                 else:
                     pass

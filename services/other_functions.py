@@ -57,7 +57,7 @@ def get_abonents_from_db(phone: str) -> list[dict]:
 
 
 # Запросим баланс для указанного контракт кода
-def get_balance_by_contract_code(contract_code: str) -> list:
+def get_balance_by_contract_code(contract_code: str) -> list[dict]:
     result = DbConnection.execute_query(getBalance_query, int(contract_code))
     return result
 
