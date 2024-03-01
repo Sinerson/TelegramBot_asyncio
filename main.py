@@ -2,6 +2,7 @@ import asyncio
 import datetime
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.redis import Redis, RedisStorage
 # from aiogram.fsm.storage.memory import MemoryStorage
 import logging
@@ -28,7 +29,7 @@ redis = Redis(host=DbSecrets.redis_host, port=DbSecrets.redis_port, db=0)
 # 2 вариант подключения
 storage = RedisStorage(redis=redis)
 
-bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
+bot = Bot(token=BotSecrets.bot_token, default=DefaultBotProperties(parse_mode="HTML"))
 
 dp = Dispatcher(storage=storage)
 
