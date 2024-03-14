@@ -63,11 +63,20 @@ async def start() -> None:
     await dp.start_polling(bot)
 
 
+async def stop() -> None:
+    await bot.session.close()
+    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
+
+
 if __name__ == '__main__':
+    policy = asyncio.WindowsSelectorEventLoopPolicy()
     try:
+        asyncio.set_event_loop_policy(policy)
         asyncio.run(start())#, debug=True)
     except KeyboardInterrupt:
         logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Исключение прервания с клавиатуры")
-        bot.session.close()
+        asyncio.run(stop())
     except RuntimeError:
         logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
+    except OSError:
+        logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Возникла OSError")
