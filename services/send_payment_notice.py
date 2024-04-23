@@ -39,11 +39,11 @@ async def send_payment_notice(delay_timer):
                 pay_sum = conn_pays_get.lpop(el)
                 try:
                     result = DbConnection.execute_query(set_payment_notice_status, pay_date, float(pay_sum), tg_user_id)
-                    logging.error(f"Результат обновления даты последнего платежа для пользователя {tg_user_id}: {result}")
+                    logging.info(f"Результат обновления даты последнего платежа для пользователя {tg_user_id}: {'Успех' if result[0]['UPDATE_RESULT']==1 else 'Неудача'}")
                     await bot.send_message(chat_id=tg_user_id,
-                                           text=f"{LEXICON_RU['get_payment']} {round(float(pay_sum), 2)} {LEXICON_RU['rubles']} \n",
+                                           text=f"{LEXICON_RU['get_payment']} {round(float(pay_sum), 2)} {LEXICON_RU['rubles']} для {tg_user_id}\n",
                                            disable_notification=False)
-                    logging.error(f"Отправлено уведомление о платеже на сумму: {round(float(pay_sum), 2)} пользователю {tg_user_id}")
+                    logging.info(f"Отправлено уведомление о платеже на сумму: {round(float(pay_sum), 2)} пользователю {tg_user_id}")
                 except TelegramForbiddenError:
                     user_banned_bot_processing(tg_user_id)
                 except TelegramBadRequest:

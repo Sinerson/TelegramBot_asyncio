@@ -370,7 +370,7 @@ if NOT EXISTS(select 1 from INTEGRAL..CLIENTS where CLIENT_CODE = @ClientCode)
 """
 
 pay_time_query ="""
-select send_time, paid_money
+select isnull(send_time, '1900-01-01 00:00:00') as send_time, isnull(paid_money, 0) as paid_money
 from SV..TBP_TELEGRAM_BOT
 where convert(bigint, user_id) = ?
 """
