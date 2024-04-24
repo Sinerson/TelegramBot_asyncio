@@ -399,7 +399,7 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
         except TelegramForbiddenError:
             logging.error(f"Какие-то проблемы при попытке отправить сообщение пользователю {user['user_id']}")
             user_banned_bot_processing(user['user_id'])
-    await message.answer(text=f"Рассылка закончена\. Отправлено сообщений : {cnt}",
+    await message.answer(text=f"Рассылка закончена. Отправлено сообщений : {cnt}",
                          parse_mode='MarkdownV2',
                          disable_notification=False)
     await state.clear()

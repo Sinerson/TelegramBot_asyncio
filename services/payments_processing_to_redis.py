@@ -34,14 +34,16 @@ async def add_payments_to_redis(wait_for):
                 if pay_time_for_user_id and new_pay_date:
                     # Если уже существует такой ключ - пропускаем
                     if conn_pays_add.exists(f"{dict['USER_ID']}:{dict['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}"):
+                        # logging.error("Key is present, pass")
                         pass
                     # Если выборка из базы старее чем уже отправленные - пропускаем:
                     elif new_pay_date <= pay_time_for_user_id:
+                        # logging.error("Payment is old, pass")
                         pass
                     else:
                         # Иначе, добавляем в redis для отправки
-                        await conn_pays_add.lpush(f"{dict['USER_ID']}:{dict['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",
+                        conn_pays_add.lpush(f"{dict['USER_ID']}:{dict['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",
                                                   str(dict['PAY_MONEY']))
-                        logging.info(f"Добавили в базу для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб., дата платежа: {dict['PAY_DATE']} ")
+                        logging.info(f"Поставили в очередь на отправку уведомления для user_id: {dict['USER_ID']} сумму {dict['PAY_MONEY']} руб., дата платежа: {dict['PAY_DATE']} ")
                 else:
                     pass

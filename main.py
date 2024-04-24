@@ -4,6 +4,7 @@ import datetime
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.redis import Redis, RedisStorage
+from aiogram.client.session.aiohttp import AiohttpSession
 # from aiogram.fsm.storage.memory import MemoryStorage
 import logging
 from handlers import new_user_handlers, admin_handlers, other_handlers, known_users_handlers, ban_unban_handler, \
@@ -14,7 +15,7 @@ from services.send_payment_notice import send_payment_notice
 from settings import BotSecrets, DbSecrets
 
 logging.basicConfig(level=logging.DEBUG,
-                    filename="log\\Log.txt",
+                    filename="log\\DEBUG_log.log",
                     filemode="a",
                     format="%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s"
                     )
@@ -57,8 +58,8 @@ async def start() -> None:
     logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи отправки уведомления о платежах")
     loop.create_task(send_payment_notice(20))
     # Проверка у кого из пользователей бот забанен
-    logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
-    loop.create_task(check_ban_by_user(10800))
+    # logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
+    # loop.create_task(check_ban_by_user(10800))
     logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск основного тела бота")
     await dp.start_polling(bot)
 
@@ -66,6 +67,8 @@ async def start() -> None:
 async def stop() -> None:
     await bot.session.close()
     logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
+    session = AiohttpSession()
+    await session.close()
 
 
 if __name__ == '__main__':
