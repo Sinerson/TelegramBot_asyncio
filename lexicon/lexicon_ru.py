@@ -10,7 +10,8 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               'contact_data_get': '<b>получены контактые данные:</b>',
                               # other_handlers
                               'you_send_a_photo': '<b>Вы прислали фото</b>',
-                              'you_send_voice_text_or_video': '<b>Вы прислали войс, видео или текст. Нажмите /start</b>',
+                              'you_send_voice_or_video': '<b>Вы прислали войс, видео или текст. Нажмите /start</b>',
+                              'you_send_text': '<b>Вы прислали текст. Нажмите /start</b>',
                               'you_send_a_location': '<b>Вы прислали геопозицию</b>',
                               'bot_not_understanding': '<b>Извините, это сообщение пока не может быть распознано '
                                                        'ботом. Используйте кнопки меню</b>',
@@ -88,6 +89,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                                                 'такие сообщения слишком часто.',
                               'unsubscribe_done': 'Вы отписались от получения уведомлений',
                               # Send payment notice
-                              'get_payment': 'Поступила оплата на сумму:'
+                              'get_payment': 'Поступила оплата на сумму:',
+                              'take_part_in_the_survey': 'Пройти опрос'
 
                               }

@@ -16,6 +16,7 @@ buttons: list[list[KeyboardButton]] = [
     , [KeyboardButton(text=LEXICON_RU['my_balance']), KeyboardButton(text=LEXICON_RU['my_services'])]
     , [KeyboardButton(text=LEXICON_RU['inet_password']), KeyboardButton(text=LEXICON_RU['personal_area_password'])]
     , [KeyboardButton(text=LEXICON_RU['promised_payment']), KeyboardButton(text=LEXICON_RU['my_support_tickets'])]
+    , [KeyboardButton(text=LEXICON_RU['take_part_in_the_survey'])]
 ]
 
 menu_keyboard = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
