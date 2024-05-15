@@ -23,7 +23,7 @@ def add_new_known_user(user_id: int, chat_id: int, phonenumber: str, contract_co
             f"exec MEDIATE..spAddNewUserTelegramBot {user_id},{chat_id},'{phonenumber}',{contract_code}")
         return True
     except Exception as e:
-        ic(e)
+        # ic(e)
         return False
 
 

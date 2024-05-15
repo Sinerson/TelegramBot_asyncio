@@ -374,3 +374,48 @@ select isnull(send_time, '1900-01-01 00:00:00') as send_time, isnull(paid_money,
 from SV..TBP_TELEGRAM_BOT
 where convert(bigint, user_id) = ?
 """
+
+get_surveys_list = """
+select SURVEY_ID, SURVEY_NAME, MAX_GRADE
+from SV..TBP_TELEGRAM_SURVEYS
+"""
+
+insert_survey_grade = """
+begin tran
+INSERT INTO SV..TBP_TELEGRAM_SURVEYS_GRADE(SURVEY_ID, USER_ID, GRADE, DATE)
+VALUES (?, ?, ?, GETDATE())
+IF @@ROWCOUNT > 0
+    BEGIN
+        commit tran
+        SELECT 1 AS result
+    end
+ELSE
+    BEGIN
+        rollback tran
+        SELECT 0 AS result
+    END
+"""
+
+check_access_survey_for_user = """
+select S.SURVEY_ID, S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME,S.MAX_GRADE
+from SV..TBP_TELEGRAM_SURVEYS S
+left join SV..TBP_TELEGRAM_SURVEYS_GRADE G on S.SURVEY_ID = G.SURVEY_ID
+where NOT EXISTS(select USER_ID from SV..TBP_TELEGRAM_SURVEYS_GRADE G1 where G.SURVEY_ID = G1.SURVEY_ID and G1.USER_ID = ?)
+if @@rowcount = 0
+	begin
+		select null
+	end
+"""
+
+survey_long_name = """
+select SURVEY_LONG_NAME
+from SV..TBP_TELEGRAM_SURVEYS
+where SURVEY_ID = ?
+"""
+
+all_voted_surveys_for_user = """
+select S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME, G.GRADE, cast(G.DATE as smalldatetime) as DATE
+from SV..TBP_TELEGRAM_SURVEYS S
+join SV..TBP_TELEGRAM_SURVEYS_GRADE G on S.SURVEY_ID = G.SURVEY_ID
+where G.USER_ID = ?
+"""

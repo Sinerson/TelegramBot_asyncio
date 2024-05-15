@@ -1,5 +1,6 @@
 import logging
 from asyncio import sleep
+import pyodbc
 from icecream import ic
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
@@ -8,8 +9,7 @@ from aiogram.types import Message, CallbackQuery
 
 from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard
-from keyboards.known_user_keyboard import user_keyboard
-from keyboards.known_user_keyboard import without_dice_kb_known_users
+from keyboards.known_user_keyboard import user_keyboard, without_dice_kb_known_users, survey_list_kb, survey_grade_choose
 from keyboards.new_user_kb import new_user_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import get_balance_by_contract_code, contract_code_from_callback, \
@@ -17,6 +17,7 @@ from services.other_functions import get_balance_by_contract_code, contract_code
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
     insert_client_properties, get_client_code_by_user_id
+from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description
 
 
 user_rt = Router()
@@ -371,4 +372,51 @@ async def tech_claims_answer(callback: CallbackQuery):
                  )
 async def cmd_help(message: Message):
     await message.answer("Раздел помощи. Пока пустой.")
+# endregion
+
+
+# region Опросы
+@user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['take_part_in_the_survey'].lower(),
+                  StateFilter(default_state)
+                  )
+async def _client_survey_request(message: Message):
+    survey_list = get_available_surveys(message.from_user.id)
+    if len(survey_list) == 0:
+        await message.answer(text=LEXICON_RU['survey_list_empty'])
+    else:
+        keyboard = survey_list_kb(survey_list)
+        await message.answer(text=LEXICON_RU['available_surveys'], reply_markup=keyboard)
+
+
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("SURVEY_CHOOSE"),
+                         StateFilter(default_state)
+                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+async def _client_survey_choose(callback: CallbackQuery):
+    survey_id = int(callback.data.split()[1])
+    # проверим доступность опроса для пользователя
+
+    grade_keyboard = survey_grade_choose(survey_id=survey_id)
+    survey_description = get_survey_description(survey_id=survey_id)
+
+    await callback.message.edit_text(text=f"<b>{survey_description[0]['SURVEY_LONG_NAME']}</b>\n\n{LEXICON_RU['grade_the_survey']}", parse_mode='HTML', reply_markup=grade_keyboard)
+
+
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("SURVEY_GRADE"),
+                         StateFilter(default_state)
+                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+async def _client_set_survey_grade(callback: CallbackQuery):
+    survey_id = int(callback.data.split()[1])
+    survey_grade = int(callback.data.split()[2])
+    user_id = callback.from_user.id
+    try:
+        result = insert_grade(survey_id=survey_id, user_id=user_id, grade=survey_grade)
+        ic(result)
+    except pyodbc.IntegrityError:
+        await callback.answer(text=LEXICON_RU['you_already_voted_in_survey'], show_alert=True)
+    await callback.message.edit_text(text=LEXICON_RU['thank_you_for_vote'])
+    await callback.answer(text=LEXICON_RU['you_vote_was_counted'], show_alert=True)
+
 # endregion

@@ -1,6 +1,7 @@
 import logging
 from asyncio import sleep
 
+import pyodbc
 from aiogram.exceptions import TelegramForbiddenError
 import pandas as pd
 import os
@@ -19,7 +20,7 @@ from aiogram.types import Message, ContentType, CallbackQuery, FSInputFile
 
 from filters.filters import IsAdmin, IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import menu_keyboard, make_keyboard, keyboard_with_contract_client_type_code, \
-    yes_no_keyboard, without_dice_kb, stop_spam_kb, get_poll_list
+    yes_no_keyboard, without_dice_kb, stop_spam_kb, get_poll_list, survey_list_kb, survey_grade_choose
 from lexicon.lexicon_ru import LEXICON_RU
 from main import bot
 from services.classes import FSMFillForm
@@ -29,6 +30,7 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
     user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users, \
     get_question_for_poll, get_question_for_quiz, get_all_polls, poll_id_from_callback, \
     get_count_of_members_by_poll_variant, user_banned_bot_processing
+from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description
 
 admin_rt = Router()
 
@@ -382,9 +384,6 @@ async def _send_message_to_user_processing(message: Message, state: FSMContext):
     """ Функция рассылки сообщений пользователям. Для исключения бана со стороны Telegram,
     в "боевом" режиме установлена задержка 10 сообщений в секунду """
     user_list = get_list_unbanned_known_users()
-    # ic(user_list)
-    # user_cnt = len(user_list)
-    # ic(user_cnt)
     cnt = 0
     for user in user_list:
         try:
@@ -539,4 +538,53 @@ async def _process_command_state_cancellation(message: Message, state: FSMContex
     await message.answer(text='Вы прервали ввод данных! Можете начать сначала.\n\n')
     # Сбрасываем состояние и очищаем данные, полученные внутри состояний
     await state.clear()
+# endregion
+
+
+# region Опросы
+@admin_rt.message(IsAdmin(admin_ids),
+                  IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  F.text.lower() == LEXICON_RU['take_part_in_the_survey'].lower(),
+                  StateFilter(default_state)
+                  )
+async def _client_survey_request(message: Message):
+    survey_list = get_available_surveys(message.from_user.id)
+    if len(survey_list) == 0:
+        await message.answer(text=LEXICON_RU['survey_list_empty'])
+    else:
+        keyboard = survey_list_kb(survey_list)
+        await message.answer(text=LEXICON_RU['available_surveys'], reply_markup=keyboard)
+
+
+@admin_rt.callback_query(IsAdmin(admin_ids),
+                         IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("SURVEY_CHOOSE"),
+                         StateFilter(default_state)
+                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+async def _client_survey_choose(callback: CallbackQuery):
+    survey_id = int(callback.data.split()[1])
+    # проверим доступность опроса для пользователя
+
+    grade_keyboard = survey_grade_choose(survey_id=survey_id)
+    survey_description = get_survey_description(survey_id=survey_id)
+
+    await callback.message.edit_text(text=f"<b>{survey_description[0]['SURVEY_LONG_NAME']}</b>\n\n{LEXICON_RU['grade_the_survey']}", parse_mode='HTML', reply_markup=grade_keyboard)
+
+
+@admin_rt.callback_query(IsAdmin(admin_ids),
+                         IsKnownUsers(user_ids, admin_ids, manager_ids),
+                         F.data.startswith("SURVEY_GRADE"),
+                         StateFilter(default_state)
+                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+async def _client_set_survey_grade(callback: CallbackQuery):
+    survey_id = int(callback.data.split()[1])
+    survey_grade = int(callback.data.split()[2])
+    user_id = callback.from_user.id
+    try:
+        result = insert_grade(survey_id=survey_id, user_id=user_id, grade=survey_grade)
+    except pyodbc.IntegrityError:
+        await callback.answer(text=LEXICON_RU['you_already_voted_in_survey'], show_alert=True)
+    await callback.message.edit_text(text=LEXICON_RU['thank_you_for_vote'])
+    await callback.answer(text=LEXICON_RU['you_vote_was_counted'], show_alert=True)
+
 # endregion
