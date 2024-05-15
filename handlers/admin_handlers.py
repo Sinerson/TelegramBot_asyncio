@@ -30,7 +30,8 @@ from services.other_functions import get_abonents_from_db, get_balance_by_contra
     user_unbanned_bot_processing, get_list_unbanned_users, notify_decline, get_list_unbanned_known_users, \
     get_question_for_poll, get_question_for_quiz, get_all_polls, poll_id_from_callback, \
     get_count_of_members_by_poll_variant, user_banned_bot_processing
-from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description
+from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description,\
+    get_all_surveys_voted_by_user
 
 admin_rt = Router()
 
@@ -551,6 +552,10 @@ async def _client_survey_request(message: Message):
     survey_list = get_available_surveys(message.from_user.id)
     if len(survey_list) == 0:
         await message.answer(text=LEXICON_RU['survey_list_empty'])
+        voted_surveys = get_all_surveys_voted_by_user(message.from_user.id)
+        await message.answer(text="Ниже перечислены опросы, в которых вы принимали участие.\n", parse_mode='HTML')
+        for survey in voted_surveys:
+            await message.answer(text=f"<b>Опрос:</b> {survey['SURVEY_SHORT_NAME']}, <b>Наименование:</b> {survey['SURVEY_LONG_NAME']}, <b>Оценка/вариант:</b> {survey['GRADE']}, <b>Дата участия:</b> {survey['DATE']}\n", parse_mode='HTML')
     else:
         keyboard = survey_list_kb(survey_list)
         await message.answer(text=LEXICON_RU['available_surveys'], reply_markup=keyboard)

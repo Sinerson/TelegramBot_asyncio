@@ -17,7 +17,7 @@ from services.other_functions import get_balance_by_contract_code, contract_code
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
     insert_client_properties, get_client_code_by_user_id
-from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description
+from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description, get_all_surveys_voted_by_user
 
 
 user_rt = Router()
@@ -384,6 +384,12 @@ async def _client_survey_request(message: Message):
     survey_list = get_available_surveys(message.from_user.id)
     if len(survey_list) == 0:
         await message.answer(text=LEXICON_RU['survey_list_empty'])
+        voted_surveys = get_all_surveys_voted_by_user(message.from_user.id)
+        await message.answer(text="Ниже перечислены опросы, в которых вы принимали участие.\n", parse_mode='HTML')
+        for survey in voted_surveys:
+            await message.answer(
+                text=f"<b>Опрос:</b> {survey['SURVEY_SHORT_NAME']}, <b>Наименование:</b> {survey['SURVEY_LONG_NAME']}, <b>Оценка/вариант:</b> {survey['GRADE']}, <b>Дата участия:</b> {survey['DATE']}\n",
+                parse_mode='HTML')
     else:
         keyboard = survey_list_kb(survey_list)
         await message.answer(text=LEXICON_RU['available_surveys'], reply_markup=keyboard)

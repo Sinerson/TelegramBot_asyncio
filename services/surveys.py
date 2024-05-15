@@ -26,6 +26,7 @@ def get_all_surveys_voted_by_user(user_id: int):
     result = DbConnection.execute_query(all_voted_surveys_for_user, user_id)
     return result
 
+
 def get_survey_description(survey_id: int) -> list:
     result = DbConnection.execute_query(survey_long_name, survey_id)
     return result
