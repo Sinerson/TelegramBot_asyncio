@@ -382,13 +382,20 @@ async def cmd_help(message: Message):
                   )
 async def _client_survey_request(message: Message):
     survey_list = get_available_surveys(message.from_user.id)
+    all_surveys = get_all_surveys()
+    if len(all_surveys) == 0 or all_surveys is None:
+        await message.answer(text="Доступные опросы не найдены")
+        return None
     if len(survey_list) == 0:
         await message.answer(text=LEXICON_RU['survey_list_empty'])
         voted_surveys = get_all_surveys_voted_by_user(message.from_user.id)
         await message.answer(text="Ниже перечислены опросы, в которых вы принимали участие.\n", parse_mode='HTML')
         for survey in voted_surveys:
             await message.answer(
-                text=f"<b>Опрос:</b> {survey['SURVEY_SHORT_NAME']}, <b>Наименование:</b> {survey['SURVEY_LONG_NAME']}, <b>Оценка/вариант:</b> {survey['GRADE']}, <b>Дата участия:</b> {survey['DATE']}\n",
+                text=f"<b>Опрос:</b> {survey['SURVEY_SHORT_NAME']}\n"
+                     f" <b>Наименование:</b> {survey['SURVEY_LONG_NAME']}\n"
+                     f" <b>Оценка/вариант:</b> {survey['GRADE']}\n"
+                     f" <b>Дата участия:</b> {survey['DATE']}\n",
                 parse_mode='HTML')
     else:
         keyboard = survey_list_kb(survey_list)

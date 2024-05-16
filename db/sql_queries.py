@@ -376,7 +376,7 @@ where convert(bigint, user_id) = ?
 """
 
 get_surveys_list = """
-select SURVEY_ID, SURVEY_NAME, MAX_GRADE
+select SURVEY_ID, SURVEY_SHORT_NAME, SURVEY_LONG_NAME, MAX_GRADE
 from SV..TBP_TELEGRAM_SURVEYS
 """
 
