@@ -426,7 +426,7 @@ async def _client_set_survey_grade(callback: CallbackQuery):
     user_id = callback.from_user.id
     try:
         result = insert_grade(survey_id=survey_id, user_id=user_id, grade=survey_grade)
-        ic(result)
+        # ic(result)
     except pyodbc.IntegrityError:
         await callback.answer(text=LEXICON_RU['you_already_voted_in_survey'], show_alert=True)
     await callback.message.edit_text(text=LEXICON_RU['thank_you_for_vote'])

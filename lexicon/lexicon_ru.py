@@ -91,7 +91,7 @@ LEXICON_RU: dict[str: str] = {'yes': 'Да',
                               # Send payment notice
                               'get_payment': 'Поступила оплата на сумму:',
                               # Surveys
-                              'take_part_in_the_survey': 'Пройти опрос',
+                              'take_part_in_the_survey': '\U0001f4d6 Пройти опрос',
                               'available_surveys': 'Доступные опросы:',
                               'thank_you_for_vote': 'Благодарим за участие в опросе.\nВы также можете пройти еще один опрос снова нажав на кнопку \"Пройти опрос \"',
                               'you_already_voted_in_survey': 'Вы уже принимали участие в этом опросе',
