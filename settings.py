@@ -9,8 +9,8 @@ load_dotenv()
 @dataclass
 class BotSecrets:
     """ Класс содержит данные для использования бота """
-    bot_token: str = os.getenv("TOKEN_DEV")
-    # bot_token: str = os.getenv("TOKEN_PROD")
+    # bot_token: str = os.getenv("TOKEN_DEV")
+    bot_token: str = os.getenv("TOKEN_PROD")
     # admin_id: str = os.getenv("ADMIN_USERS_LIST")
     # manager_id: str = os.getenv("MANAGER_ID_LIST")
     # user_id: str = os.getenv("USERS_LIST")
