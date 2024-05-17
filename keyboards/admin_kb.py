@@ -77,7 +77,8 @@ def get_poll_list(polls: dict) -> InlineKeyboardMarkup:
 def survey_list_kb(surveys: list) -> InlineKeyboardMarkup:
     surveys_list = []
     for el in surveys:
-        survey_button = [InlineKeyboardButton(text=f"{el['SURVEY_SHORT_NAME']}", callback_data=f"SURVEY_CHOOSE {el['SURVEY_ID']}")]
+        survey_button = [
+            InlineKeyboardButton(text=f"{el['SURVEY_SHORT_NAME']}", callback_data=f"SURVEY_CHOOSE {el['SURVEY_ID']} {el['TYPE_ID']}")]
         surveys_list.append(survey_button)
     return InlineKeyboardMarkup(row_width=1, inline_keyboard=surveys_list)
 

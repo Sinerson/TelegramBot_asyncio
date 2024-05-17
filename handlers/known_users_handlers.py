@@ -4,6 +4,7 @@ import pyodbc
 from icecream import ic
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
+from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 
@@ -17,7 +18,9 @@ from services.other_functions import get_balance_by_contract_code, contract_code
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
     insert_client_properties, get_client_code_by_user_id
-from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description, get_all_surveys_voted_by_user
+from services.classes import FSMFillForm
+from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description,\
+    get_all_surveys_voted_by_user, insert_grade_as_commentary
 
 
 user_rt = Router()
@@ -394,7 +397,7 @@ async def _client_survey_request(message: Message):
             await message.answer(
                 text=f"<b>Опрос:</b> {survey['SURVEY_SHORT_NAME']}\n"
                      f" <b>Наименование:</b> {survey['SURVEY_LONG_NAME']}\n"
-                     f" <b>Оценка/вариант:</b> {survey['GRADE']}\n"
+                     f" <b>Ответ:</b> {survey['GRADE']}\n"
                      f" <b>Дата участия:</b> {survey['DATE']}\n",
                 parse_mode='HTML')
     else:
@@ -406,15 +409,25 @@ async def _client_survey_request(message: Message):
                          F.data.startswith("SURVEY_CHOOSE"),
                          StateFilter(default_state)
                          )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
-async def _client_survey_choose(callback: CallbackQuery):
+async def _client_survey_choose(callback: CallbackQuery, state: FSMContext):
     survey_id = int(callback.data.split()[1])
+    survey_type = int(callback.data.split()[2])
     # проверим доступность опроса для пользователя
 
     grade_keyboard = survey_grade_choose(survey_id=survey_id)
     survey_description = get_survey_description(survey_id=survey_id)
+    if survey_type == 1:
+        await callback.message.edit_text(text=f"<b>{survey_description[0]['SURVEY_LONG_NAME']}</b>\n\n{LEXICON_RU['grade_the_survey']}",
+                                     parse_mode='HTML',
+                                     reply_markup=grade_keyboard
+                                     )
+    elif survey_type == 2:
+        await callback.message.edit_text(text="Введите пожалуйста свой ответ\n")
+        await state.set_state(FSMFillForm.fill_text_grade)
+        FSMFillForm.fill_survey_id = survey_id
 
-    await callback.message.edit_text(text=f"<b>{survey_description[0]['SURVEY_LONG_NAME']}</b>\n\n{LEXICON_RU['grade_the_survey']}", parse_mode='HTML', reply_markup=grade_keyboard)
-
+    else:
+        await callback.answer(text="Получен некорректный тип опроса\n")
 
 @user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
                          F.data.startswith("SURVEY_GRADE"),
@@ -426,10 +439,22 @@ async def _client_set_survey_grade(callback: CallbackQuery):
     user_id = callback.from_user.id
     try:
         result = insert_grade(survey_id=survey_id, user_id=user_id, grade=survey_grade)
-        # ic(result)
     except pyodbc.IntegrityError:
         await callback.answer(text=LEXICON_RU['you_already_voted_in_survey'], show_alert=True)
     await callback.message.edit_text(text=LEXICON_RU['thank_you_for_vote'])
     await callback.answer(text=LEXICON_RU['you_vote_was_counted'], show_alert=True)
+
+
+@user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                  StateFilter(FSMFillForm.fill_text_grade)
+                  )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+async def _client_set_text_survey_grade(message: Message, state: FSMContext):
+    try:
+        result = insert_grade_as_commentary(FSMFillForm.fill_survey_id, message.from_user.id, message.text)
+        await state.clear()
+        await message.answer(text="Благодарим за участие. Каждое мнение важно для нас.")
+    except Exception as e:
+        await message.answer(text=f"Повторите ввод")
+
 
 # endregion

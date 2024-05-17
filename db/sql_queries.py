@@ -377,12 +377,12 @@ where convert(bigint, user_id) = ?
 
 get_surveys_list = """
 select SURVEY_ID, SURVEY_SHORT_NAME, SURVEY_LONG_NAME, MAX_GRADE
-from SV..TBP_TELEGRAM_SURVEYS
+from SV..TBP_TELEGRAM_SURVEYS_TEST
 """
 
 insert_survey_grade = """
 begin tran
-INSERT INTO SV..TBP_TELEGRAM_SURVEYS_GRADE(SURVEY_ID, USER_ID, GRADE, DATE)
+INSERT INTO SV..TBP_TELEGRAM_SURVEYS_GRADE_TEST(SURVEY_ID, USER_ID, GRADE, DATE)
 VALUES (?, ?, ?, GETDATE())
 IF @@ROWCOUNT > 0
     BEGIN
@@ -396,26 +396,69 @@ ELSE
     END
 """
 
+insert_survey_grade_as_commentary = """
+begin tran
+INSERT INTO SV..TBP_TELEGRAM_SURVEYS_GRADE_LIKE_COMMENTARY_TEST(SURVEY_ID, USER_ID, GRADE, DATE)
+VALUES (?, ?, ?, GETDATE())
+IF @@ROWCOUNT > 0
+    BEGIN
+        commit tran
+        SELECT 1 AS result
+    end
+ELSE
+    BEGIN
+        rollback tran
+        SELECT 0 AS result
+    END
+"""
+
+# select S.SURVEY_ID, S.TYPE_ID, S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME,S.MAX_GRADE
+# from SV..TBP_TELEGRAM_SURVEYS_TEST S
+# left join SV..TBP_TELEGRAM_SURVEYS_GRADE_TEST G on S.SURVEY_ID = G.SURVEY_ID
+# where NOT EXISTS(select USER_ID from SV..TBP_TELEGRAM_SURVEYS_GRADE_TEST G1 where G.SURVEY_ID = G1.SURVEY_ID and G1.USER_ID = ?)
+# if @@rowcount = 0
+# 	begin
+# 		select null
+# 	end
 check_access_survey_for_user = """
-select S.SURVEY_ID, S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME,S.MAX_GRADE
-from SV..TBP_TELEGRAM_SURVEYS S
-left join SV..TBP_TELEGRAM_SURVEYS_GRADE G on S.SURVEY_ID = G.SURVEY_ID
-where NOT EXISTS(select USER_ID from SV..TBP_TELEGRAM_SURVEYS_GRADE G1 where G.SURVEY_ID = G1.SURVEY_ID and G1.USER_ID = ?)
+select S.SURVEY_ID, TYPE_ID, S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME,S.MAX_GRADE
+from SV..TBP_TELEGRAM_SURVEYS_TEST S
+left join (
+    select SURVEY_ID, USER_ID, cast(GRADE as varchar(2)) as GRADE, DATE
+    from SV..TBP_TELEGRAM_SURVEYS_GRADE_TEST
+    union all
+    select SURVEY_ID, USER_ID, GRADE, DATE
+    from SV..TBP_TELEGRAM_SURVEYS_GRADE_LIKE_COMMENTARY_TEST
+    ) G on S.SURVEY_ID = G.SURVEY_ID
+where NOT EXISTS(select 1 from
+                              (
+                                select SURVEY_ID, USER_ID, cast(GRADE as varchar(2)) as GRADE, DATE
+                                from SV..TBP_TELEGRAM_SURVEYS_GRADE_TEST
+                                union all
+                                select SURVEY_ID, USER_ID, GRADE, DATE
+                                from SV..TBP_TELEGRAM_SURVEYS_GRADE_LIKE_COMMENTARY_TEST
+                              ) G1 where G.SURVEY_ID = G1.SURVEY_ID and G1.USER_ID = ?)
 if @@rowcount = 0
-	begin
-		select null
-	end
+    begin
+        select null
+    end
 """
 
 survey_long_name = """
 select SURVEY_LONG_NAME
-from SV..TBP_TELEGRAM_SURVEYS
+from SV..TBP_TELEGRAM_SURVEYS_TEST
 where SURVEY_ID = ?
 """
 
 all_voted_surveys_for_user = """
 select S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME, G.GRADE, cast(G.DATE as smalldatetime) as DATE
-from SV..TBP_TELEGRAM_SURVEYS S
-join SV..TBP_TELEGRAM_SURVEYS_GRADE G on S.SURVEY_ID = G.SURVEY_ID
+from SV..TBP_TELEGRAM_SURVEYS_TEST S
+join (
+		select SURVEY_ID, USER_ID, cast(GRADE as varchar(2)) as GRADE, DATE
+    	from SV..TBP_TELEGRAM_SURVEYS_GRADE_TEST
+    	union all
+    	select SURVEY_ID, USER_ID, GRADE, DATE
+    	from SV..TBP_TELEGRAM_SURVEYS_GRADE_LIKE_COMMENTARY_TEST
+	) G on S.SURVEY_ID = G.SURVEY_ID
 where G.USER_ID = ?
 """
