@@ -422,7 +422,7 @@ async def _client_survey_choose(callback: CallbackQuery, state: FSMContext):
                                      reply_markup=grade_keyboard
                                      )
     elif survey_type == 2:
-        await callback.message.edit_text(text="Введите пожалуйста свой ответ\n")
+        await callback.message.edit_text(text="Введите пожалуйста свой ответ\n Если передумали, нажмите /cancel")
         await state.set_state(FSMFillForm.fill_text_grade)
         FSMFillForm.fill_survey_id = survey_id
 
