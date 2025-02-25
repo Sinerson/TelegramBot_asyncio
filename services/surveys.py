@@ -12,6 +12,7 @@ def insert_grade(survey_id:int, user_id: int, grade: int):
     result = DbConnection.execute_query(insert_survey_grade, survey_id, user_id, grade)
     return result
 
+
 def insert_grade_as_commentary(survey_id: int, user_id: int, grade: str):
     result = DbConnection.execute_query(insert_survey_grade_as_commentary, survey_id, user_id, grade)
     return result

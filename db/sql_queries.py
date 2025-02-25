@@ -438,6 +438,7 @@ where NOT EXISTS(select 1 from
                                 select SURVEY_ID, USER_ID, GRADE, DATE
                                 from SV..TBP_TELEGRAM_SURVEYS_GRADE_LIKE_COMMENTARY
                               ) G1 where G.SURVEY_ID = G1.SURVEY_ID and G1.USER_ID = ?)
+group by S.SURVEY_ID, TYPE_ID, S.SURVEY_SHORT_NAME, S.SURVEY_LONG_NAME, S.MAX_GRADE                              
 if @@rowcount = 0
     begin
         select null
