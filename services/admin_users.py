@@ -1,6 +1,7 @@
 from icecream import ic
 
-from db.sybase import DbConnection
+# from db.sybase import DbConnection
+from db.sybase import DbConnectionHandler as DbConnection
 from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, get_admin_query, get_manager_query
 
 

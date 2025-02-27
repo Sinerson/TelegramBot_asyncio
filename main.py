@@ -36,6 +36,12 @@ dp = Dispatcher(storage=storage)
 
 
 async def start() -> None:
+    try:
+        await redis.ping()
+    except ConnectionError as e:
+        logging.error(f"Не удается подключиться к серверу Redis: {e}")
+        await bot.close()
+        return
     logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Запуск бота.")
     # Регистрируем роутеры в диспетчере
     logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Регистрация диспетчеров")
@@ -65,10 +71,8 @@ async def start() -> None:
 
 
 async def stop() -> None:
-    await bot.session.close()
+    await bot.close()
     logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Бот закрыт")
-    session = AiohttpSession()
-    await session.close()
 
 
 if __name__ == '__main__':

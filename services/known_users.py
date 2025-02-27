@@ -1,4 +1,5 @@
-from db.sybase import DbConnection
+# from db.sybase import DbConnection
+from db.sybase import DbConnectionHandler as DbConnection
 from db.sql_queries import get_known_user_query
 from icecream import ic
 

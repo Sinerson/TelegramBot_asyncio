@@ -13,7 +13,8 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
     add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser
-from db.sybase import DbConnection
+# from db.sybase import DbConnection
+from db.sybase import DbConnectionHandler as DbConnection
 from settings import ExternalLinks, DbSecrets, BotSecrets
 
 

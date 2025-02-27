@@ -9,7 +9,8 @@ from redis import Redis
 from lexicon.lexicon_ru import LEXICON_RU
 from services.other_functions import user_banned_bot_processing
 from settings import BotSecrets, DbSecrets
-from db.sybase import DbConnection
+# from db.sybase import DbConnection
+from db.sybase import DbConnectionHandler as DbConnection
 from db.sql_queries import set_payment_notice_status
 from datetime import datetime, timedelta
 

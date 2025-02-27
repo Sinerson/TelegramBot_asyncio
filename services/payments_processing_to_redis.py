@@ -5,7 +5,8 @@ from icecream import ic
 from redis import Redis
 
 from db.sql_queries import last_payment_query, pay_time_query
-from db.sybase import DbConnection
+# from db.sybase import DbConnection
+from db.sybase import DbConnectionHandler as DbConnection
 from settings import DbSecrets
 
 

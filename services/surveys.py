@@ -1,5 +1,6 @@
-from db.sybase import DbConnection
-from db.sql_queries import get_surveys_list, insert_survey_grade, check_access_survey_for_user, survey_long_name,\
+# from db.sybase import DbConnection
+from db.sybase import DbConnectionHandler as DbConnection
+from db.sql_queries import get_surveys_list, insert_survey_grade, check_access_survey_for_user, survey_long_name, \
     all_voted_surveys_for_user, insert_survey_grade_as_commentary
 
 
@@ -8,7 +9,7 @@ def get_all_surveys():
     return result
 
 
-def insert_grade(survey_id:int, user_id: int, grade: int):
+def insert_grade(survey_id: int, user_id: int, grade: int):
     result = DbConnection.execute_query(insert_survey_grade, survey_id, user_id, grade)
     return result
 
