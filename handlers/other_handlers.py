@@ -4,7 +4,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import StateFilter
 from lexicon.lexicon_ru import LEXICON_RU
 from aiogram.fsm.state import default_state
-from services.gpt4all_generator import generate_answer
+from services.yagpt_generator import generate_answer
+from services.classes import Abonent
 
 #
 other_rt = Router()
@@ -22,16 +23,17 @@ async def _fsm_process_send_voice_video_text(message: Message):
 
 @other_rt.message(F.content_type.in_({'text'}), StateFilter(default_state))
 async def _process_send_voice_video(message: Message):
-    result = await generate_answer(message.text)
+    user_id = message.from_user.id
+    abonent = Abonent(user_id=user_id)
+    await abonent.load_data()
+
+    result = await generate_answer(
+        user_message=message.text,
+        user_id=user_id,
+        abonent=abonent
+    )
     await message.answer(text=result)
-
-
-# @other_rt.message(F.content_type.in_({'text'}), StateFilter(default_state))
-# async def _process_send_voice_video(message: Message):
-#     user_id = message.from_user.id
-#     result = await generate_answer(message.text, user_id)  # Передаём user_id
-#     print(f"result: {result}")
-#     await message.answer(text=result)
+    abonent.is_first_message = False
 
 
 @other_rt.message(F.content_type.in_({'voice', 'video'}), StateFilter(default_state))

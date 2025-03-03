@@ -217,6 +217,21 @@ getContractCodeByUserId_query = \
 					where user_id = ?
 """
 
+getAbonNameByUserID_query = """
+select B.user_id as USER_ID, B.contract_code as CONTRACT_CODE, CL.CLIENT_CODE, CS.CONTRACT, CL.TYPE_CODE,
+       SV.dbo.SplitString(P.PEOPLE_NAME,2) as FIRST_NAME,
+       SV.dbo.SplitString(P.PEOPLE_NAME,3) as PATRONYMIC
+from INTEGRAL..CONTRACT_CLIENTS CCL
+left join INTEGRAL..CONTRACTS CS on CCL.CONTRACT_CODE = CS.CONTRACT_CODE
+join SV..TBP_TELEGRAM_BOT B on CCL.CONTRACT_CODE = B.contract_code
+join INTEGRAL..CLIENTS CL on CCL.CLIENT_CODE = CL.CLIENT_CODE and CL.TYPE_CODE = 3
+left join INTEGRAL..PEOPLES P on CL.PEOPLE_CODE = P.PEOPLE_CODE
+where B.user_id = convert(varchar(20), ?)
+group by B.user_id, B.contract_code, CL.CLIENT_CODE, CS.CONTRACT, CL.TYPE_CODE,
+         SV.dbo.SplitString(P.PEOPLE_NAME,2),
+         SV.dbo.SplitString(P.PEOPLE_NAME,3)
+"""
+
 getLastTechClaims = \
 	"""
 					select  A.APPL_ID as CLAIM_NUM,

@@ -12,7 +12,8 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     getInetAccountPassword_query, getPersonalAreaPassword_query, \
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
-    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser
+    add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser, \
+    getAbonNameByUserID_query
 # from db.sybase import DbConnection
 from db.sybase import DbConnectionHandler as DbConnection
 from settings import ExternalLinks, DbSecrets, BotSecrets
@@ -57,10 +58,21 @@ def get_abonents_from_db(phone: str) -> list[dict]:
     return result
 
 
+def get_abonent_name_by_user_id(user_id: int) -> list[dict]:
+    """ Возвращает список словарей с полями USER_ID, CONTRACT_CODE, CONTRACT, FIRST_NAME, PATRONYMIC """
+    print(f"тип user_id: {type(user_id)}")
+    result = DbConnection.execute_query(getAbonNameByUserID_query, user_id)
+    return result
+
+
 # Запросим баланс для указанного контракт кода
 def get_balance_by_contract_code(contract_code: str) -> list[dict]:
-    result = DbConnection.execute_query(getBalance_query, int(contract_code))
-    return result
+    try:
+        result = DbConnection.execute_query(getBalance_query, int(contract_code))
+        if result:
+            return result
+    except Exception as e:
+        print(f"Ошибка в получении баланса: {e}")
 
 
 def get_client_services_list(contract_code: int, client_code: int, client_type_code: int) -> list[dict]:
@@ -70,9 +82,12 @@ def get_client_services_list(contract_code: int, client_code: int, client_type_c
     if contract_code == 50323 and client_code == 50341 and client_type_code == 8:
         return [{'TARIFF_NAME': 'Для получения перечня услуг на л/с 500 обратитесь в отдел ОИТ', 'TARIFF_COST': 0}]
     else:
-        result = DbConnection.execute_query(
-            f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}')
-        return result
+        try:
+            return DbConnection.execute_query(
+                f'exec MEDIATE..spWeb_GetClientServices {contract_code}, {client_code}, {client_type_code}'
+            )
+        except Exception as e:
+            logging.error(f"Ошибка получения услуг абонента {e}")
 
 
 def phone_number_by_userid(user_id: int) -> list:
