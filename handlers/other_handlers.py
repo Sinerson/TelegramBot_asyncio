@@ -4,8 +4,9 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import StateFilter
 from lexicon.lexicon_ru import LEXICON_RU
 from aiogram.fsm.state import default_state
-# from services.gpt4all_generator import generate_answer
+from services.gpt4all_generator import generate_answer
 
+#
 other_rt = Router()
 
 
@@ -19,15 +20,23 @@ async def _fsm_process_send_voice_video_text(message: Message):
     await message.answer(text=LEXICON_RU['return_to_FSM'])
 
 
-@other_rt.message(F.content_type.in_({'voice', 'video', 'text'}), StateFilter(default_state))
+@other_rt.message(F.content_type.in_({'text'}), StateFilter(default_state))
 async def _process_send_voice_video(message: Message):
-    await message.answer(text=LEXICON_RU['you_send_voice_or_video'])
+    result = await generate_answer(message.text)
+    await message.answer(text=result)
 
 
 # @other_rt.message(F.content_type.in_({'text'}), StateFilter(default_state))
 # async def _process_send_voice_video(message: Message):
-#     result = await generate_answer(message.text)
-#     await message.answer(text=''.join(result))
+#     user_id = message.from_user.id
+#     result = await generate_answer(message.text, user_id)  # Передаём user_id
+#     print(f"result: {result}")
+#     await message.answer(text=result)
+
+
+@other_rt.message(F.content_type.in_({'voice', 'video'}), StateFilter(default_state))
+async def _process_send_voice_video(message: Message):
+    await message.answer(text=LEXICON_RU['you_send_voice_or_video'])
 
 
 @other_rt.message(F.location)

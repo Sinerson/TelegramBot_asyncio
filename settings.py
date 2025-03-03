@@ -17,6 +17,12 @@ class BotSecrets:
 
 
 @dataclass
+class GptSecrets:
+    folder_id: str = os.getenv("FOLDER_ID")
+    auth: str = os.getenv("YAGPT_TOKEN")
+
+
+@dataclass
 class DbSecrets:
     """ Класс содержит переменные для строки подключения к БД """
     driver: str = os.getenv("DRIVER")
