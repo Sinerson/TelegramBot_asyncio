@@ -10,7 +10,8 @@ redis = aioredis.Redis(host=DbSecrets.redis_host,
                        db=15,
                        encoding='utf-8',
                        # charset=DbSecrets.redis_charset,
-                       decode_responses=DbSecrets.redis_decode)
+                       decode_responses=DbSecrets.redis_decode
+                       )
 
 
 async def get_context(user_id: int) -> list:
@@ -18,22 +19,87 @@ async def get_context(user_id: int) -> list:
     return json.loads(context) if context else []
 
 
+# async def save_context(user_id: int, context: list):
+#     await redis.setex(f"yagpt:{user_id}", 3600, json.dumps(context))
+#
+#
+# def _trim_context(context: list, max_messages: int = 20) -> list:
+#     """Оставляет последние N сообщений (user+assistant пар)"""
+#     return context[-max_messages * 2:] if len(context) > max_messages * 2 else context
+#
+#
+# async def update_context(user_id: int, user_msg: str, bot_response: str):
+#     context = await get_context(user_id)
+#     context.extend([
+#         {"role": "user", "text": user_msg},
+#         {"role": "assistant", "text": bot_response}
+#     ])
+#     await save_context(user_id, context)
 async def save_context(user_id: int, context: list):
-    await redis.setex(f"yagpt:{user_id}", 3600, json.dumps(context))
+    """
+    Сохраняет контекст в Redis.
+
+    Параметры:
+        user_id (int): Идентификатор пользователя
+        context (list): Контекст диалога
+    """
+    try:
+        await redis.setex(
+            f"yagpt:{user_id}",  # Ключ
+            3600,  # TTL (1 час)
+            json.dumps(context)  # Сериализованный контекст
+        )
+    except Exception as e:
+        print(f"Ошибка сохранения контекста: {str(e)}")
+        raise
 
 
-def _trim_context(context: list, max_messages: int = 20) -> list:
-    """Оставляет последние N сообщений (user+assistant пар)"""
+def _trim_context(context: list, max_messages: int = 10) -> list:
+    """
+    Обрезает контекст, оставляя последние N пар сообщений.
+
+    Параметры:
+        context (list): Текущий контекст диалога
+        max_messages (int): Максимальное количество пар сообщений
+
+    Возвращает:
+        list: Обрезанный контекст
+    """
+    # Оставляем последние N пар (user + assistant)
     return context[-max_messages * 2:] if len(context) > max_messages * 2 else context
 
 
 async def update_context(user_id: int, user_msg: str, bot_response: str):
-    context = await get_context(user_id)
-    context.extend([
-        {"role": "user", "text": user_msg},
-        {"role": "assistant", "text": bot_response}
-    ])
-    await save_context(user_id, context)
+    """
+    Обновляет и сохраняет контекст диалога в Redis.
+
+    Параметры:
+        user_id (int): Идентификатор пользователя в Telegram
+        user_msg (str): Последнее сообщение от пользователя
+        bot_response (str): Ответ бота (без обращения по имени)
+    """
+    try:
+        # Получаем текущий контекст
+        context = await get_context(user_id)
+
+        # Добавляем новые сообщения
+        context.append({"role": "user", "text": user_msg})
+        context.append({"role": "assistant", "text": bot_response})
+
+        # Обрезаем контекст, если он превышает лимит
+        context = _trim_context(context, max_messages=10)
+
+        # Сохраняем обновленный контекст
+        await save_context(user_id, context)
+
+        # Логирование для отладки
+        print(f"Контекст обновлен для user_id={user_id}")
+        print(f"Текущий размер контекста: {len(context)} сообщений")
+
+    except Exception as e:
+        # Логируем ошибки
+        print(f"Ошибка при обновлении контекста: {str(e)}")
+        raise
 
 
 async def generate_answer(user_message: str, user_id: int, abonent: Abonent):
@@ -60,21 +126,34 @@ async def generate_answer(user_message: str, user_id: int, abonent: Abonent):
                      "Отвечай точно на вопросы об услугах и платежах\n"
                      )
 
-    message = [
+    # message = [
+    #     {"role": "system", "text": system_prompt},
+    #     *await get_context(user_id=user_id),
+    #     {"role": "user", "text": user_message}
+    # ]
+    messages = [
         {"role": "system", "text": system_prompt},
-        *await get_context(user_id=user_id),
-        {"role": "user", "text": user_message}
+        *await get_context(user_id=user_id)
     ]
 
     if abonent.is_first_message:
-        message.insert(1, {"role": "assistant", "text": abonent.get_greeting() + " Чем могу помочь?"})
+        greeting = abonent.get_greeting() + "Чем могу помочь?"
+        messages.append({"role": "assistant", "text": greeting})
+        messages.append({"role": "user", "text": user_message})
+    else:
+        messages.append({"role": "user", "text": user_message})
+    # if abonent.is_first_message:
+    #     message.insert(1, {"role": "assistant", "text": abonent.get_greeting() + " Чем могу помочь?"})
 
-    result = model.run(messages=message)
+    result = model.run(messages=messages)
 
     response = result.alternatives[0].text
-    addressed_response = f"{abonent.get_address()}, {response}"
+    # addressed_response = f"{abonent.get_named()}, {response}"
 
-    await update_context(user_id=user_id, user_msg=user_message, bot_response=addressed_response)
-    # await save_context(user_id=user_id, context=context)
+    # await update_context(user_id=user_id, user_msg=user_message, bot_response=addressed_response)
+    if not abonent.is_first_message:
+        response = f"{abonent.get_named()}, {response}"
 
-    return addressed_response
+    await update_context(user_id=user_id, user_msg=user_message, bot_response=response)
+
+    return response

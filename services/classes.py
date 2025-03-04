@@ -39,7 +39,7 @@ class Abonent:
     async def load_data(self):
         """Загрузка данных абонента из БД"""
         try:
-            print(f"\n--- Загрузка данных для user_id: {self.user_id} ---")
+            # print(f"\n--- Загрузка данных для user_id: {self.user_id} ---")
 
             # Получаем основные данные
             name_data = DbConnection.execute_query(
@@ -92,11 +92,14 @@ class Abonent:
             return f"Здравствуйте, {self.first_name} {self.patronymic}!"
         return "Здравствуйте!"
 
-    def get_address(self) -> str:
+    def get_named(self) -> str:
         """Формирование обращения по имени"""
+        # if self.first_name and self.patronymic:
+        #     return f"{self.first_name} {self.patronymic}"
+        # return "Уважаемый абонент"
         if self.first_name and self.patronymic:
             return f"{self.first_name} {self.patronymic}"
-        return "Уважаемый абонент"
+        return ""
 
     def get_services_info(self) -> str:
         """Информация об услугах и платежах"""

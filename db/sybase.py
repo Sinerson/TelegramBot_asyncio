@@ -28,7 +28,7 @@ class DBConnector(object):
             "UID": DbSecrets.user,
             "PWD": DbSecrets.password,
             "LANGUAGE": DbSecrets.lang,
-            "autocommit": DbSecrets.autocommit,
+            "AUTOCOMMIT": DbSecrets.autocommit,
         }
 
     # def create_connection(self):

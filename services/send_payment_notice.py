@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Bot
+from aiogram.client.default import DefaultBotProperties
 from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 from icecream import ic
 from redis import Redis
@@ -14,7 +15,9 @@ from db.sybase import DbConnectionHandler as DbConnection
 from db.sql_queries import set_payment_notice_status
 from datetime import datetime, timedelta
 
-bot = Bot(token=BotSecrets.bot_token, parse_mode="HTML")
+bot = Bot(token=BotSecrets.bot_token,
+          default=DefaultBotProperties(parse_mode='HTML'),
+          )
 
 
 async def send_payment_notice(delay_timer):
