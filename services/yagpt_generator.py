@@ -103,6 +103,7 @@ async def update_context(user_id: int, user_msg: str, bot_response: str):
 
 
 async def generate_answer(user_message: str, user_id: int, abonent: Abonent):
+    print(abonent.get_services_info())
     sdk = YCloudML(
         folder_id=GptSecrets.folder_id,
         auth=GptSecrets.auth,
@@ -111,26 +112,19 @@ async def generate_answer(user_message: str, user_id: int, abonent: Abonent):
     model = sdk.models.completions("yandexgpt-lite", model_version="rc")
     model = model.configure(temperature=0.5)
 
-    # context = await get_context(user_id=user_id)
-    # context.append({"role": "user", "text": user_message})
-    # context = _trim_context(context=context)
-
     system_prompt = ("Тебя зовут Агнесс.\n"
-                     "Ты - оператор техподдержки интернет провайдера ООО ""Связист""\nК тебе обращаются абоненты за помощью\n"
+                     "Ты - оператор техподдержки интернет провайдера ООО ""Связист""\n"
                      f"Данные абонента:\n{abonent.get_services_info()}\n\n"
-                     "компания в которой ты работаешь подключает услуги на территории г.Кстово и Кстовского р-на\n"
-                     "Набор услуг следующий: интернет (Ethernet и PON), цифровое кабельное ТВ, стационарный телефон, умный домофон, видеонаблюдение, ОТТ- телевидение\n"
+                     "Компания оказывает услуги на территории г.Кстово и Кстовского р-на\n"
                      "Общайся уважительно, на матерные слова не реагируй\n"
-                     "Всегда обращайся к абоненту по имени и отчеству\n"
                      "Здоровайся только в первом сообщении\n"
                      "Отвечай точно на вопросы об услугах и платежах\n"
+                     "Телефон технической поддержки: 8(83145)77777, email: helpdesk@sv-tel.ru\n"
+                     "Телефон отдела продаж: 8(81345)77711\n"
+                     "Официальный сайт компании: https://sv-tel.ru\n"
+                     "Личный кабинет абонента: https://lk.sv-tel.ru\n"
                      )
 
-    # message = [
-    #     {"role": "system", "text": system_prompt},
-    #     *await get_context(user_id=user_id),
-    #     {"role": "user", "text": user_message}
-    # ]
     messages = [
         {"role": "system", "text": system_prompt},
         *await get_context(user_id=user_id)
@@ -138,19 +132,15 @@ async def generate_answer(user_message: str, user_id: int, abonent: Abonent):
 
     if abonent.is_first_message:
         greeting = abonent.get_greeting() + "Чем могу помочь?"
-        messages.append({"role": "assistant", "text": greeting})
+        messages.insert(1, {"role": "assistant", "text": greeting})
         messages.append({"role": "user", "text": user_message})
     else:
         messages.append({"role": "user", "text": user_message})
-    # if abonent.is_first_message:
-    #     message.insert(1, {"role": "assistant", "text": abonent.get_greeting() + " Чем могу помочь?"})
 
     result = model.run(messages=messages)
 
     response = result.alternatives[0].text
-    # addressed_response = f"{abonent.get_named()}, {response}"
 
-    # await update_context(user_id=user_id, user_msg=user_message, bot_response=addressed_response)
     if not abonent.is_first_message:
         response = f"{abonent.get_named()}, {response}"
 

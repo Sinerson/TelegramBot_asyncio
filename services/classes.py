@@ -106,5 +106,6 @@ class Abonent:
         services = "\n- ".join(self.services) if self.services else "не удалось загрузить"
         return (
             f"Подключенные услуги:\n- {services}\n\n"
-            f"Абонентская плата: {self.monthly_payment:.2f} руб./мес."
+            f"Абонентская плата: {self.monthly_payment:.2f} руб./мес.\n\n"
+            f"Текущий баланс: {self.balance:.2f} руб."
         )
