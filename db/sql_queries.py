@@ -210,6 +210,107 @@ getTechClaims_query = \
 					        A.APPL_DATE_CLOSE is null
 """
 
+getHelpDeskClaims_query = """
+create table #HDCLAIMS1 (
+    CLAIM_CODE         numeric(10,0) primary key,
+    CLAIM_NO           int           null,
+    CLAIM_DATE         datetime      null,
+    CLAIM_DATE_TXT     varchar(10)   null,
+    CLAIM_TIME_TXT     varchar(5)    null,
+    CLAIM_TIME_END     datetime      null,
+    CLAIM_TYPE_CODE    numeric(5,0)  null,
+    CLAIM_TYPE_NAME    varchar(50)   null,
+    CLAIM_WORK         char(1)       null,
+    TESTFAULT_CODE     numeric(5,0)  null,
+    TESTFAULT_NAME     varchar(50)   null,
+    FAULT_CLASS_CODE   numeric(5,0)  null,
+    FAULT_CLASS_NAME   varchar(50)   null,
+    FAULT_CLASS_SHIFR  varchar(5)    null,
+    FAULT_TYPE_CODE    numeric(5,0)  null,
+    FAULT_TYPE_NAME    varchar(50)   null,
+    REPAIR_TIME_CODE   numeric(5,0)  null,
+    REPAIR_TIME_NAME   varchar(50)   null,
+    REPAIR_TIME_END    datetime      null,
+    REPAIR_DATE_TXT    varchar(10)   null,
+    REPAIR_TIME_TXT    varchar(5)    null,
+    REPAIR_NEAR_HOUR   smallint      null,
+    TIME_INTERV_CODE   numeric(5,0)  null,
+    SOURCE_CODE        numeric(5,0)  null,
+    SOURCE_NAME        varchar(50)   null,
+    SPEC_INFO          varchar(100)  null,
+    CLAIM_COMMENTARY   varchar(255)  null,
+    USER_CODE          numeric(5,0)  null,
+    USER_NAME          varchar(50)   null,
+    DATE_CHANGE        datetime      null,
+    WORK_CODE          numeric(10,0) null,
+    WORK_DATE          datetime      null,
+    REPAIR_DATE        datetime      null,
+    REPAIR_CODE        numeric(10,0) null,
+    REPAIR_NAME        varchar(50)   null,
+    REPAIR_CLASS_CODE  numeric(5,0)  null,
+    REPAIR_CLASS_NAME  varchar(50)   null,
+    REPAIR_CLASS_SHIFR varchar(5)    null,
+    REPAIR_TYPE_CODE   numeric(5,0)  null,
+    REPAIR_TYPE_NAME   varchar(50)   null,
+    REPAIR_TYPE_SHIFR  varchar(5)    null,
+    DISTRICT_CODE      numeric(5,0)  null,
+    REGION_CODE        numeric(5,0)  null,
+    REGION_NAME        varchar(50)   null,
+    ORDER_CODE         numeric(10,0) null,
+    ORDER_NO           integer       null,
+    STATE_CODE         numeric(5,0)  null,
+    FITTER_CODE        numeric(5,0)  null,
+    FITTER_NAME        varchar(50)   null,
+    TIMESLOT_ID        integer       null,
+    TIMESLOT_DATE      datetime      null,
+    TIMESLOT_HALF_DAY  char(15)      null,
+    WANT_TIME          char(25)      null,
+    NODE_CODE          numeric(5,0)  null,
+    DEVICE             varchar(35)   null,
+    DEVICE_TYPE        smallint      null,
+    DEVICE_CODE        numeric(10,0) null,
+    INET_DEVICE        varchar(32)   null,
+    LOGIN              varchar(50)   null,
+    PASSWORD           varchar(50)   null,
+    IP                 varchar(32)   null,
+    ACCOUNT_CODE       numeric(10,0) null,
+    CONTRACT_CODE      numeric(10,0) null,
+    CONTRACT           varchar(25)   null,
+    CLIENT_CODE        numeric(10,0) null,
+    CLIENT_NAME        varchar(100)  null,
+    ADDRESS_CODE       numeric(10,0) null,
+    ADDRESS            varchar(100)  null,
+    STREET_NAME        varchar(50)   null,
+    FLAT               smallint      null,
+    FLAT_POSTFIX       varchar(15)   null,
+    CONTACT_PHONE      varchar(15)   null,
+    ACCENT_STATUS_CODE numeric(5,0)  null,
+    ACCENT_PROP_CODE   numeric(5,0)  null,
+    SPEC_STATUS_CODE   numeric(5,0)  null,
+    SPEC_PROP_CODE     numeric(5,0)  null,
+    ACCENT_SIGN        char(1)       null,
+    PICT_SIGN          char(1)       null,
+    CBR_CODE           numeric(5,0)  null,
+    CBR_NAME           varchar(25)   null
+                        )
+
+-- спиcок бюро ремонта и их ID
+create table #CBRS (CBR_CODE numeric(5,0) null,MODE integer null)
+
+-- выберем службу техподдержки
+exec INTEGRAL..spHdCbrsLoad 13
+-- вызов хранимой из состава АРМ HelpDesk
+declare @nDate varchar(10), @kDate varchar(10), @Contract varchar(15)
+select @nDate = str_replace(convert(varchar(10), dateadd(wk, -1, getdate()), 111), '/', '-'),
+       @kDate = str_replace(convert(varchar(10), getdate(), 111), '/', '-'),
+       @Contract = CONTRACT from INTEGRAL..CONTRACTS where CONTRACT_CODE = ?
+
+exec INTEGRAL..spHdClaimsMake 8,0,13,1,@nDate, @kDate, -1,-1,'$', @Contract,'$','$',-1,-1,173
+
+select * from #HDCLAIMS1
+drop table #HDCLAIMS1, #CBRS
+"""
+
 getContractCodeByUserId_query = \
 	"""
 					select contract_code as CONTRACT_CODE

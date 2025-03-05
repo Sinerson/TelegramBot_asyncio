@@ -346,7 +346,7 @@ async def tech_claims_request(message: Message):
                         StateFilter(default_state)
                         )
 async def tech_claims_answer(callback: CallbackQuery):
-    """ Хэндлер для обработки callback на вывод заявок в тех.поддержку """
+    """ Хэндлер для обработки callback на вывод заявок в тех. поддержку """
     abonents_data: list = list(contract_client_type_code_from_callback(callback.data))
     tech_claims = get_tech_claims(abonents_data[0])
     if not tech_claims:
@@ -355,18 +355,33 @@ async def tech_claims_answer(callback: CallbackQuery):
         await callback.message.edit_text(
             text=f"{LEXICON_RU['last_7days_tickets']}\n", parse_mode='MarkdownV2')
         for claim in tech_claims:
-            await callback.message.answer(text=f"Заявка №<b>{claim['CLAIM_NUM']}</b>\n"
-                                               f"Текущий статус: <b>{claim['STATUS_NAME']}</b>\n"
-            # f"Дата создания: *{claim['APPL_DATE_CREATE']}*\n"
-            # f"Назначена дата выполнения: *{claim['APPL_DATE_RUN']}*\n"
-                                               f"ФИО: <b>{claim['CLIENT_NAME']}</b>\n"
-                                               f"Адрес: <b>{claim['ADDRESS_NAME']}</b>\n"
-                                               f"Заявлено: <b>{claim['ERROR_NAME']}</b>\n"
-                                               f"Доп.инфо: <b>{claim['INFO_PROBLEMS_NAME']}</b>",
-                                          parse_mode='HTML')
-
+            # await callback.message.answer(text=f"Заявка №<b>{claim['CLAIM_NUM']}</b>\n"
+            #                                    f"Текущий статус: <b>{claim['STATUS_NAME']}</b>\n"
+            # # f"Дата создания: *{claim['APPL_DATE_CREATE']}*\n"
+            # # f"Назначена дата выполнения: *{claim['APPL_DATE_RUN']}*\n"
+            #                                    f"ФИО: <b>{claim['CLIENT_NAME']}</b>\n"
+            #                                    f"Адрес: <b>{claim['ADDRESS_NAME']}</b>\n"
+            #                                    f"Заявлено: <b>{claim['ERROR_NAME']}</b>\n"
+            #                                    f"Доп.инфо: <b>{claim['INFO_PROBLEMS_NAME']}</b>",
+            #                               parse_mode='HTML')
+            # Поверим что данные получены корретные
+            try:
+                await callback.message.answer(text=f"Заявка №<b>{claim.get('CLAIM_NO')}</b>\n"
+                                                   f"Дата открытия заявки: <b>{claim.get('CLAIM_DATE_TXT')} {claim.get('CLAIM_TIME_TXT')}</b>\n"
+                                                   f"Назначена дата: <b>{claim.get('TIMESLOT_DATE')}</b>, половина дня: <b>{claim.get('TIMESLOT_HALF_DAY')}</b>\n"
+                                                   f"Адрес проведения работ: {claim.get('ADDRESS')}\n"
+                                                   f"Контактный телефон: <b>{claim.get('CONTACT_PHONE')}</b>\n"
+                                                   f"Тип заявки: <b>{claim.get('CLAIM_TYPE_NAME')}/{claim.get('FAULT_TYPE_NAME')}</b>\n"
+                                                   f"Результат заявки: <b>{claim.get('REPAIR_TYPE_NAME')}</b>\n"
+                                                   f"Комментарий исправления: <b>{claim.get('CLAIM_COMMENTARY')}/{claim.get('SPEC_INFO')}\n</b>"
+                                                   f"Исполнители: <b>{claim.get('FITTER_NAME')}</b>\n"
+                                                   f"Заявку принял оператор: {claim.get('USER_NAME')}",
+                                              parse_mode='HTML')
+            except Exception as e:
+                print(f"Ошибка отправки: {e}")
 
 # endregion
+
 
 # region Commnd Help
 # Хэндлер для команды /help

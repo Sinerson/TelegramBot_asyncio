@@ -13,7 +13,7 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
     add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser, \
-    getAbonNameByUserID_query
+    getAbonNameByUserID_query, getHelpDeskClaims_query
 # from db.sybase import DbConnection
 from db.sybase import DbConnectionHandler as DbConnection
 from settings import ExternalLinks, DbSecrets, BotSecrets
@@ -221,8 +221,14 @@ def notify_decline(user_id: int) -> bool:
 
 
 def get_tech_claims(contract_code: int) -> list[dict]:
-    result = DbConnection.execute_query(getTechClaims_query, contract_code)
+    result = DbConnection.execute_query(getHelpDeskClaims_query, contract_code)
     return result
+
+
+# Вариант получения данных из старой программы заявок ( Service Call )
+# def get_tech_claims(contract_code: int) -> list[dict]:
+#     result = DbConnection.execute_query(getTechClaims_query, contract_code)
+#     return result
 
 
 def get_contract_code_by_user_id(user_id: int) -> int:
