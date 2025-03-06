@@ -20,6 +20,8 @@ class BotSecrets:
 class GptSecrets:
     folder_id: str = os.getenv("FOLDER_ID")
     auth: str = os.getenv("YAGPT_TOKEN")
+    modelUri = os.getenv("MODEL_URI")
+    model_name = os.getenv("LITE_MODEL")
 
 
 @dataclass

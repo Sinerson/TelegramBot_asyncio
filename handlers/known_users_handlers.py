@@ -353,7 +353,7 @@ async def tech_claims_answer(callback: CallbackQuery):
         await callback.message.edit_text(text=LEXICON_RU['support_ticket_not_found'])
     else:
         await callback.message.edit_text(
-            text=f"{LEXICON_RU['last_7days_tickets']}\n", parse_mode='MarkdownV2')
+            text=f"{LEXICON_RU['last_7days_tickets']}\n", parse_mode='HTML')
         for claim in tech_claims:
             # await callback.message.answer(text=f"Заявка №<b>{claim['CLAIM_NUM']}</b>\n"
             #                                    f"Текущий статус: <b>{claim['STATUS_NAME']}</b>\n"

@@ -1,5 +1,4 @@
 import json
-
 import pyodbc
 from aiogram.fsm.state import StatesGroup, State
 from redis import asyncio as aioredis
@@ -7,6 +6,15 @@ from typing import Optional
 from db.sybase import DbConnectionHandler as DbConnection
 from db.sql_queries import getAbonNameByUserID_query
 from services.other_functions import get_client_services_list, get_balance_by_contract_code
+from settings import DbSecrets
+
+redis = aioredis.Redis(host=DbSecrets.redis_host,
+                       port=DbSecrets.redis_port,
+                       db=15,
+                       encoding='utf-8',
+                       # charset=DbSecrets.redis_charset,
+                       decode_responses=DbSecrets.redis_decode
+                       )
 
 
 # Cоздаем класс, наследуемый от StatesGroup, для группы состояний нашей FSM
@@ -42,10 +50,14 @@ class Abonent:
             # print(f"\n--- Загрузка данных для user_id: {self.user_id} ---")
 
             # Получаем основные данные
-            name_data = DbConnection.execute_query(
-                getAbonNameByUserID_query,
-                int(self.user_id)
-            )
+            try:
+                name_data = DbConnection.execute_query(
+                    getAbonNameByUserID_query,
+                    int(self.user_id)
+                )
+                # print(f"Результат запроса к биллингу: {name_data}")
+            except Exception as e:
+                print(f"Ошибка получения данных из биллинга. {e}")
             if name_data:
                 self.contract = name_data[0].get('CONTRACT')
                 self.contract_code = name_data[0].get('CONTRACT_CODE')
@@ -64,6 +76,7 @@ class Abonent:
                     )
                     self.services = [s['TARIFF_NAME'] for s in services_data if s]
                     self.monthly_payment = sum(item['TARIFF_COST'] for item in services_data)
+                    # print(f"Услуги абонента: {services_data}")
                 except Exception as e:
                     print(e)
 
@@ -74,6 +87,7 @@ class Abonent:
                         balance_data = get_balance_by_contract_code(int(self.contract_code))
                         if balance_data:
                             self.balance = sum(item['TTL_EO_MONEY'] for item in balance_data)
+                        # print(f"Баланс: {balance_data}")
                     except Exception as e:
                         print(f"Ошибка выполнения запроса: {e}")
             except Exception as e:
@@ -85,6 +99,55 @@ class Abonent:
             print(f"Conversion error: {str(e)}")
         except Exception as e:
             print(f"Ошибка в load_data(): {e}")
+        return True
+
+    async def save_data(self):
+        """
+        Сохраняет данные абонента в Redis.
+        TTL: 24 часа (86400 секунд)
+        """
+        try:
+            data = {
+                "contract_code": self.contract_code,
+                "client_code": self.client_code,
+                "client_type_code": self.client_type_code,
+                "first_name": self.first_name,
+                "patronymic": self.patronymic,
+                "services": self.services,
+                "monthly_payment": self.monthly_payment,
+                "is_first_message": self.is_first_message
+            }
+
+            # Добавляем кастомный сериализатор
+            def _custom_serializer(obj):
+                if isinstance(obj, (int, float, str, bool)):
+                    return obj
+                if isinstance(obj, list):
+                    return [_custom_serializer(item) for item in obj]
+                if hasattr(obj, '__dict__'):
+                    return {k: _custom_serializer(v) for k, v in obj.__dict__.items()}
+                return str(obj)
+
+            serialized_data = json.dumps(
+                data,
+                default=_custom_serializer,
+                ensure_ascii=False,
+                check_circular=False  # Отключаем проверку циклических ссылок
+            )
+
+            await redis.setex(
+                f"abonent:{self.user_id}",
+                86400,
+                serialized_data
+            )
+            # print(f"[SAVE] Данные абонента {self.user_id} сохранены")
+
+        except Exception as e:
+            print(f"[ERROR] Ошибка сохранения: {str(e)}")
+            # Логируем проблемные данные для отладки
+            import traceback
+            traceback.print_exc()
+            raise
 
     def get_greeting(self) -> str:
         """Формирование приветствия с именем"""
