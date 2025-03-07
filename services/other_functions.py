@@ -13,7 +13,7 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
     add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser, \
-    getAbonNameByUserID_query, getHelpDeskClaims_query
+    getHelpDeskClaims_query, getAbonNameByUserID_query
 # from db.sybase import DbConnection
 from db.sybase import DbConnectionHandler as DbConnection
 from settings import ExternalLinks, DbSecrets, BotSecrets
@@ -54,21 +54,21 @@ def get_abonents_from_db(phone: str) -> list[dict]:
     """ Функция  возвращает из БД данные по абоненту в виде списка словарей.
         На вход принимает телефонный номер в виде строки
     """
-    result = DbConnection.execute_query(get_abonent_by_phonenumber_query, phone)
+    result = DbConnection.execute_query(get_abonent_by_phonenumber_query, (phone,))
     return result
 
 
 def get_abonent_name_by_user_id(user_id: int) -> list[dict]:
     """ Возвращает список словарей с полями USER_ID, CONTRACT_CODE, CONTRACT, FIRST_NAME, PATRONYMIC """
-    print(f"тип user_id: {type(user_id)}")
-    result = DbConnection.execute_query(getAbonNameByUserID_query, user_id)
+    result = DbConnection.execute_query(getAbonNameByUserID_query, (user_id,))
+    print(f'{result=}')
     return result
 
 
 # Запросим баланс для указанного контракт кода
 def get_balance_by_contract_code(contract_code: str) -> list[dict]:
     try:
-        result = DbConnection.execute_query(getBalance_query, int(contract_code))
+        result = DbConnection.execute_query(getBalance_query, (int(contract_code),))
         if result:
             return result
     except Exception as e:
@@ -92,7 +92,7 @@ def get_client_services_list(contract_code: int, client_code: int, client_type_c
 
 def phone_number_by_userid(user_id: int) -> list:
     """ Возвращает номер телефона для существующих в БД пользователей по user_id"""
-    result = DbConnection.execute_query(get_phonenumber_by_user_id_query, user_id)
+    result = DbConnection.execute_query(get_phonenumber_by_user_id_query, (user_id,))
     logging.info(f"переданный user_id: {user_id}, результат запроса к базе: {result}")
     phonenumber = result[0]['phonenumber'][-10:]
     result2 = DbConnection.execute_query(get_abonent_by_phonenumber_query, phonenumber)
@@ -103,8 +103,8 @@ def contract_code_by_phone_for_new_users(phonenumber: str) -> list[dict]:
     """ Возвращает код контракта и номер контракта для пользоватей, не существующих в БД
         Ипользуется для поиска и добавления в БД новых абонентов, у которых телефон уже зарегистрирован
     """
-    result = DbConnection.execute_query(getContractCode, phonenumber)
-    # return result[0]['CONTRACT_CODE']
+    result = DbConnection.execute_query(getContractCode, (phonenumber,))
+    return result[0]['CONTRACT_CODE']
 
 
 def get_prise(dice_value: int) -> str:

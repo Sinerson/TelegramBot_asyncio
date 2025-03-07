@@ -76,9 +76,9 @@ async def stop() -> None:
 
 
 if __name__ == '__main__':
-    policy = asyncio.WindowsSelectorEventLoopPolicy()
+    # policy = asyncio.WindowsSelectorEventLoopPolicy()
     try:
-        asyncio.set_event_loop_policy(policy)
+        # asyncio.set_event_loop_policy(policy)
         asyncio.run(start())#, debug=True)
     except KeyboardInterrupt:
         logging.error(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Исключение прервания с клавиатуры")

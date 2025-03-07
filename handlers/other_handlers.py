@@ -25,6 +25,7 @@ async def _fsm_process_send_voice_video_text(message: Message):
 async def _process_send_voice_video(message: Message):
     global response, token_cnt, tokens_list, money
     user_id = message.from_user.id
+    print(f"{type(user_id)=}")
     abonent = Abonent(user_id=user_id)
 
     res = await abonent.load_data()

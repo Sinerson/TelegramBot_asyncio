@@ -2,8 +2,11 @@ import logging
 import os
 from dataclasses import dataclass
 from dotenv import load_dotenv
+import sys
 
 load_dotenv()
+
+platform = sys.platform
 
 
 @dataclass
@@ -27,7 +30,10 @@ class GptSecrets:
 @dataclass
 class DbSecrets:
     """ Класс содержит переменные для строки подключения к БД """
-    driver: str = os.getenv("DRIVER")
+    if platform == 'linux':
+        driver = os.getenv("LINUX_DRIVER")
+    else:
+        driver = os.getenv("WIN_DRIVER")
     server: str = os.getenv("SERVER")
     port: str = os.getenv("PORT")
     db_name: str = os.getenv("DB_NAME")
@@ -37,6 +43,8 @@ class DbSecrets:
     cn_lifetime: str = os.getenv("CONN_LIFETIME")
     idle: str = os.getenv("IDLE")
     autocommit: str = os.getenv("AUTOCOMMIT")
+    optimize_prepare: str = os.getenv("OPTIMIZE_PREPARE")
+    dynamic_prepare: str = os.getenv("DYNAMIC_PREPARE")
     hostname: str = os.getenv("CLIENT_HOST_NAME_DEV")
     # hostname: str = os.getenv("CLIENT_HOST_NAME_PROD")
     proc_name: str = os.getenv("CLIENT_HOST_PROC")

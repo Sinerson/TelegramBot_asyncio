@@ -29,6 +29,8 @@ class DBConnector(object):
             "PWD": DbSecrets.password,
             "LANGUAGE": DbSecrets.lang,
             "AUTOCOMMIT": DbSecrets.autocommit,
+            "OPTIMIZEPREPARE": DbSecrets.optimize_prepare,
+            "DYNAMICPREPARE": DbSecrets.dynamic_prepare,
         }
 
     # def create_connection(self):
@@ -38,6 +40,7 @@ class DBConnector(object):
         """Создает новое подключение с валидацией параметров."""
         try:
             conn_str = ";".join([f"{k}={v}" for k, v in self.conn_params.items()])
+            print(f"{conn_str=}")
             conn = pyodbc.connect(conn_str, timeout=10)
             conn.autocommit = True  # Явное указание autocommit
             return conn

@@ -46,16 +46,15 @@ class Abonent:
 
     async def load_data(self):
         """Загрузка данных абонента из БД"""
+        print(f"{self.user_id=}")
+        name_data = None
         try:
-            # print(f"\n--- Загрузка данных для user_id: {self.user_id} ---")
+            print(f"\n--- Загрузка данных для user_id: {self.user_id} ---")
 
             # Получаем основные данные
             try:
-                name_data = DbConnection.execute_query(
-                    getAbonNameByUserID_query,
-                    int(self.user_id)
-                )
-                # print(f"Результат запроса к биллингу: {name_data}")
+                name_data = DbConnection.execute_query(getAbonNameByUserID_query, (self.user_id,))
+                print(f"Результат запроса к биллингу: {name_data}")
             except Exception as e:
                 print(f"Ошибка получения данных из биллинга. {e}")
             if name_data:
@@ -76,7 +75,7 @@ class Abonent:
                     )
                     self.services = [s['TARIFF_NAME'] for s in services_data if s]
                     self.monthly_payment = sum(item['TARIFF_COST'] for item in services_data)
-                    # print(f"Услуги абонента: {services_data}")
+                    print(f"Услуги абонента: {services_data}")
                 except Exception as e:
                     print(e)
 
@@ -84,10 +83,10 @@ class Abonent:
             try:
                 if self.contract_code:
                     try:
-                        balance_data = get_balance_by_contract_code(int(self.contract_code))
+                        balance_data = get_balance_by_contract_code(self.contract_code)
                         if balance_data:
                             self.balance = sum(item['TTL_EO_MONEY'] for item in balance_data)
-                        # print(f"Баланс: {balance_data}")
+                        print(f"Баланс: {balance_data}")
                     except Exception as e:
                         print(f"Ошибка выполнения запроса: {e}")
             except Exception as e:
