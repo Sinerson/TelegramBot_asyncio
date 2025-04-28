@@ -45,6 +45,13 @@ def keyboard_with_contract_client_type_code(abonents_data: list[dict], callback_
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=button_list)
 
 
+def send_email_keyboard(abonent_data: any) -> InlineKeyboardMarkup:
+    send_button: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text="Отправить", callback_data=f'SEND {abonent_data}')],
+    ]
+    return InlineKeyboardMarkup(row_width=1, inline_keyboard=send_button)
+
+
 def yes_no_keyboard(dice_value: int) -> InlineKeyboardMarkup:
     yes_no_buttons: list[list[InlineKeyboardButton]] = [
         [InlineKeyboardButton(text=LEXICON_RU['yes'], callback_data=f'DICE yes {dice_value}')],

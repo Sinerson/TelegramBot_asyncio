@@ -9,7 +9,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 
 from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
-from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard
+from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard, send_email_keyboard
 from keyboards.known_user_keyboard import user_keyboard, without_dice_kb_known_users, survey_list_kb, \
     survey_grade_choose
 from keyboards.new_user_kb import new_user_keyboard
@@ -514,23 +514,43 @@ async def new_services_answer(callback: CallbackQuery):
     contract_code = contract_code_from_callback(callback_data=callback.data)
     full_name_data = get_full_abonent_name_by_contract_code(
         contract_code=int(contract_code))  # принудительно приведем к int потому что функция возвращает str
-
+    message_text: str = f"Будут отправлены следующие данные:\n" \
+                        f"ФИО: <b>{full_name_data[0]['LAST_NAME']}" \
+                        f" {full_name_data[0]['FIRST_NAME']}" \
+                        f" {full_name_data[0]['PATRONYMIC']}</b>\n" \
+                        f"Договор: <b>{full_name_data[0]['CONTRACT']}</b>\n" \
+                        f"Телефон(-ы) для связи: <b>{full_name_data[0]['DEVICE'] if len(full_name_data) == 1 else ','.join(str(el['DEVICE']) for el in full_name_data)}</b>\n" \
+                        f"Если данные корректны, нажмите \"Отправить\"под сообщением"
     if full_name_data:
-        await callback.message.edit_text(text=f"{full_name_data[0]['FIRST_NAME']} {full_name_data[0]['PATRONYMIC']},"
-                                              f" проверьте ваши данные:\n"
-                                              f"ФИО: <b>{full_name_data[0]['LAST_NAME']}"
-                                              f" {full_name_data[0]['FIRST_NAME']}"
-                                              f" {full_name_data[0]['PATRONYMIC']}</b>\n"
-                                              f"Договор: <b>{full_name_data[0]['CONTRACT']}</b>\n"
-                                              f"Телефон(-ы) для связи: <b>{full_name_data[0]['DEVICE'] if len(full_name_data) == 1 else ','.join(str(el['DEVICE']) for el in full_name_data)}</b>",
-                                         parse_mode='HTML')
+        await callback.message.edit_text(text=message_text, parse_mode='HTML',
+                                         reply_markup=send_email_keyboard(contract_code))
     else:
         await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
 
-    # TODO: предложить указать подключаемую услугу
 
-    # TODO: сформировать и отправить заявку на почту
+# TODO: сформировать и отправить заявку на почту
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                        F.data.startswith("SEND"),
+                        StateFilter(default_state)
+                        )
+async def send_email_to_manager(callback: CallbackQuery):
+    contract_code = int(callback.data.split(" ")[1])
+    full_name_data = get_full_abonent_name_by_contract_code(contract_code=contract_code)
+    email_message_text: str = f"ФИО: {full_name_data[0]['LAST_NAME']}" \
+                              f" {full_name_data[0]['FIRST_NAME']}" \
+                              f" {full_name_data[0]['PATRONYMIC']}\n" \
+                              f"Договор: {full_name_data[0]['CONTRACT']}\n" \
+                              f"Телефон(-ы) для связи: {full_name_data[0]['DEVICE'] if len(full_name_data) == 1 else ','.join(str(el['DEVICE']) for el in full_name_data)}\n"
+    try:
+        send_res = await send_email(email_message_text)
+        if send_res == "success":
+            await callback.message.edit_text(text="Заявка отправлена, с Вами свяжутся в ближайшее рабочее время")
+            await callback.message.answer(text="Спасибо!", protect_content=False)
+        else:
+            await callback.message.answer(text="Не удалось отправить сообщение. Нажмите кнопку еще раз")
+    except Exception as e:
+        logging.error(f"Ошибка отправки email: {e}")
 
-    # TODO: поблагодарить за интерес
+# TODO: поблагодарить за интерес
 
 # endregion
