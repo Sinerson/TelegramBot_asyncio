@@ -1,5 +1,5 @@
 aiofiles==24.1.0
-aiogram==3.20.0.post0
+aiogram==3.18.0
 aiohappyeyeballs==2.5.0
 aiohttp==3.11.13
 aioredis==2.0.1
@@ -21,7 +21,6 @@ executing==2.0.1
 frozenlist==1.4.1
 get-annotations==0.1.2
 googleapis-common-protos==1.69.0
-gpt4all==2.6.0
 grpcio==1.70.0
 grpcio-tools==1.70.0
 h11==0.14.0
@@ -44,7 +43,6 @@ pydantic-settings==2.2.1
 pydantic_core==2.16.3
 Pygments==2.17.2
 PyJWT==2.10.1
-pymssql==2.2.10
 pyodbc==5.2.0
 python-dateutil==2.9.0
 python-dotenv==1.0.1

@@ -28,6 +28,7 @@ class FSMFillForm(StatesGroup):
     fill_wish_news = State()  # Состояние ожидания согласия или отказа от подписки
     fill_text_grade = State()  # Состояние ожидания текстовой оценки в опросе (ввод пользователя)
     fill_survey_id = State()  # Идентификатор опроса
+    new_connection_request_data = State()  # Данные которые ввел пользователь по заявке на подключение
 
 
 class Abonent:

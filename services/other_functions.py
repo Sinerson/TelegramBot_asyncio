@@ -13,7 +13,8 @@ from db.sql_queries import get_abonent_by_phonenumber_query, getBalance_query, g
     get_all_unbanned_users_query, get_all_known_unbanned_users_query, \
     getTechClaims_query, getContractCodeByUserId_query, add_client_properties_w_commentary, \
     add_client_properties_wo_commentary, getClientCodeByContractCode, update_unknown_user, checkUserExists, updateUser, \
-    getHelpDeskClaims_query, getAbonNameByUserID_query
+    getHelpDeskClaims_query, getAbonNameByUserID_query, getFullAbonNameByUserID_query, \
+    getFullAbonNameByContractCode_query
 # from db.sybase import DbConnection
 from db.sybase import DbConnectionHandler as DbConnection
 from settings import ExternalLinks, DbSecrets, BotSecrets
@@ -61,7 +62,22 @@ def get_abonents_from_db(phone: str) -> list[dict]:
 def get_abonent_name_by_user_id(user_id: int) -> list[dict]:
     """ Возвращает список словарей с полями USER_ID, CONTRACT_CODE, CONTRACT, FIRST_NAME, PATRONYMIC """
     result = DbConnection.execute_query(getAbonNameByUserID_query, (user_id,))
-    print(f'{result=}')
+    # print(f'{result=}')
+    return result
+
+
+def get_full_abonent_name_by_user_id(user_id: int) -> list[dict]:
+    """ Возвращает список словарей с полями USER_ID, CONTRACT_CODE, CONTRACT, LAST_NAME, FIRST_NAME, PATRONYMIC """
+    result = DbConnection.execute_query(getFullAbonNameByUserID_query, (user_id,))
+    return result
+
+
+def get_full_abonent_name_by_contract_code(contract_code: int) -> list[dict]:
+    # print(f"Получили contract_code: {contract_code}, тип данных: {type(contract_code)}")
+    """ Возвращает список словарей с полями USER_ID, CONTRACT_CODE, CONTRACT, LAST_NAME, FIRST_NAME, PATRONYMIC,
+    DEVICE """
+    result = DbConnection.execute_query(getFullAbonNameByContractCode_query, (contract_code,))
+    # print(f"{result=}")
     return result
 
 

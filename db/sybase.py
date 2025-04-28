@@ -40,7 +40,7 @@ class DBConnector(object):
         """Создает новое подключение с валидацией параметров."""
         try:
             conn_str = ";".join([f"{k}={v}" for k, v in self.conn_params.items()])
-            print(f"{conn_str=}")
+            # print(f"{conn_str=}")
             conn = pyodbc.connect(conn_str, timeout=10)
             conn.autocommit = True  # Явное указание autocommit
             return conn

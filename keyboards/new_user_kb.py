@@ -5,7 +5,8 @@ from icecream import ic
 # ----------------------------------- Кнопка отправки контакта ----------------------------------------------
 # Создаем список списков с кнопками
 buttons: list[list[KeyboardButton]] = [
-    [KeyboardButton(text="Отправить телефон", request_contact=True)]
+    [KeyboardButton(text="Отправить телефон", request_contact=True),
+     KeyboardButton(text=LEXICON_RU['new_services_request'])]
 ]
 
 new_user_keyboard = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)

@@ -10,23 +10,26 @@ from aiogram.types import Message, CallbackQuery
 
 from filters.filters import IsKnownUsers, user_ids, manager_ids, admin_ids
 from keyboards.admin_kb import keyboard_with_contract_client_type_code, yes_no_keyboard
-from keyboards.known_user_keyboard import user_keyboard, without_dice_kb_known_users, survey_list_kb, survey_grade_choose
+from keyboards.known_user_keyboard import user_keyboard, without_dice_kb_known_users, survey_list_kb, \
+    survey_grade_choose
 from keyboards.new_user_kb import new_user_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
+from services.input_validator import validate_user_input
+from services.mailer import send_email
 from services.other_functions import get_balance_by_contract_code, contract_code_from_callback, \
     get_client_services_list, phone_number_by_userid, contract_client_type_code_from_callback, \
     get_prise_new, set_promised_payment, get_promised_pay_date, inet_account_password, personal_area_password, \
     user_unbanned_bot_processing, notify_decline, get_contract_code_by_user_id, get_tech_claims, insert_prise_to_db, \
-    insert_client_properties, get_client_code_by_user_id
+    insert_client_properties, get_client_code_by_user_id, get_full_abonent_name_by_user_id, \
+    get_full_abonent_name_by_contract_code
 from services.classes import FSMFillForm
-from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description,\
+from services.surveys import get_all_surveys, insert_grade, get_available_surveys, get_survey_description, \
     get_all_surveys_voted_by_user, insert_grade_as_commentary
-
 
 user_rt = Router()
 
 
-# region Commnd Start
+# region Command Start
 # Хэндлер на команду /start для простых пользователей
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
                  Command(commands='start'),
@@ -98,7 +101,8 @@ async def client_services(message: Message):
     _abonents = phone_number_by_userid(message.from_user.id)
     if not _abonents:
         logging.error(f"для пользователя user_id: {message.from_user.id} не найден номер телефона в таблице")
-        await message.answer(text="Не найден номер телефона. Нажмите кнопку для отправки", reply_markup=new_user_keyboard)
+        await message.answer(text="Не найден номер телефона. Нажмите кнопку для отправки",
+                             reply_markup=new_user_keyboard)
     else:
         if len(_abonents) > 1:
             keyboard = keyboard_with_contract_client_type_code(_abonents, 'SERVICES')
@@ -121,9 +125,11 @@ async def services_answer(callback: CallbackQuery):
         cnt = 1
         for el in services:
             if el['TARIFF_COST'] is None:
-                services_list.append(f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {'уточняйте е/м платеж'} {LEXICON_RU['rubles']}")
+                services_list.append(
+                    f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {'уточняйте е/м платеж'} {LEXICON_RU['rubles']}")
             else:
-                services_list.append(f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
+                services_list.append(
+                    f"<b>{cnt})</b> {el['TARIFF_NAME']}, {LEXICON_RU['cost']}: {round(float(el['TARIFF_COST']), 2)} {LEXICON_RU['rubles']}")
             cnt += 1
         services_string = "\n".join(str(el) for el in services_list)
         await callback.message.edit_text(text=services_string, parse_mode='HTML')
@@ -214,7 +220,7 @@ async def dice_callback(callback: CallbackQuery):
             text=f"{LEXICON_RU['your_choice']} <u><b><a href='https://sv-tel.ru'>{prise_action}</a></b></u>",
             parse_mode='HTML',
             disable_web_page_preview=True
-            )
+        )
         await callback.message.answer(text=f"{LEXICON_RU['thanks_for_choice']}", reply_markup=kb_without_dice)
         await callback.answer()
     elif 'no' in callback_data:
@@ -290,7 +296,7 @@ async def personal_area_password_answer(callback: CallbackQuery):
                     await callback.message.answer(
                         text=f"*Имя пользователя:* `{el['PIN']}`\n*Пароль:* `{el['PIN_PASSWORD']}`",
                         parse_mode='MarkdownV2'
-                        )
+                    )
                     cnt -= 1
             await callback.message.answer(
                 text=f"Перейти в личный кабинет можно по <a href='https://bill.sv-tel.ru/'>ссылке</a>",
@@ -380,8 +386,8 @@ async def tech_claims_answer(callback: CallbackQuery):
             except Exception as e:
                 print(f"Ошибка отправки: {e}")
 
-# endregion
 
+# endregion
 
 # region Commnd Help
 # Хэндлер для команды /help
@@ -390,14 +396,15 @@ async def tech_claims_answer(callback: CallbackQuery):
                  )
 async def cmd_help(message: Message):
     await message.answer("Раздел помощи. Пока пустой.")
-# endregion
 
+
+# endregion
 
 # region Опросы
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  F.text.lower() == LEXICON_RU['take_part_in_the_survey'].lower(),
-                  StateFilter(default_state)
-                  )
+                 F.text.lower() == LEXICON_RU['take_part_in_the_survey'].lower(),
+                 StateFilter(default_state)
+                 )
 async def _client_survey_request(message: Message):
     survey_list = get_available_surveys(message.from_user.id)
     all_surveys = get_all_surveys()
@@ -421,9 +428,9 @@ async def _client_survey_request(message: Message):
 
 
 @user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith("SURVEY_CHOOSE"),
-                         StateFilter(default_state)
-                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+                        F.data.startswith("SURVEY_CHOOSE"),
+                        StateFilter(default_state)
+                        )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def _client_survey_choose(callback: CallbackQuery, state: FSMContext):
     survey_id = int(callback.data.split()[1])
     survey_type = int(callback.data.split()[2])
@@ -432,10 +439,11 @@ async def _client_survey_choose(callback: CallbackQuery, state: FSMContext):
     grade_keyboard = survey_grade_choose(survey_id=survey_id)
     survey_description = get_survey_description(survey_id=survey_id)
     if survey_type == 1:
-        await callback.message.edit_text(text=f"<b>{survey_description[0]['SURVEY_LONG_NAME']}</b>\n\n{LEXICON_RU['grade_the_survey']}",
-                                     parse_mode='HTML',
-                                     reply_markup=grade_keyboard
-                                     )
+        await callback.message.edit_text(
+            text=f"<b>{survey_description[0]['SURVEY_LONG_NAME']}</b>\n\n{LEXICON_RU['grade_the_survey']}",
+            parse_mode='HTML',
+            reply_markup=grade_keyboard
+        )
     elif survey_type == 2:
         await callback.message.edit_text(text="Введите пожалуйста свой ответ\n Если передумали, нажмите /cancel")
         await state.set_state(FSMFillForm.fill_text_grade)
@@ -444,10 +452,11 @@ async def _client_survey_choose(callback: CallbackQuery, state: FSMContext):
     else:
         await callback.answer(text="Получен некорректный тип опроса\n")
 
+
 @user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
-                         F.data.startswith("SURVEY_GRADE"),
-                         StateFilter(default_state)
-                         )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+                        F.data.startswith("SURVEY_GRADE"),
+                        StateFilter(default_state)
+                        )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def _client_set_survey_grade(callback: CallbackQuery):
     survey_id = int(callback.data.split()[1])
     survey_grade = int(callback.data.split()[2])
@@ -461,8 +470,8 @@ async def _client_set_survey_grade(callback: CallbackQuery):
 
 
 @user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
-                  StateFilter(FSMFillForm.fill_text_grade)
-                  )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
+                 StateFilter(FSMFillForm.fill_text_grade)
+                 )  # Проверяем что колл-бэк начинается с нужного слова и пропускаем дальше
 async def _client_set_text_survey_grade(message: Message, state: FSMContext):
     try:
         result = insert_grade_as_commentary(FSMFillForm.fill_survey_id, message.from_user.id, message.text)
@@ -471,5 +480,57 @@ async def _client_set_text_survey_grade(message: Message, state: FSMContext):
     except Exception as e:
         await message.answer(text=f"Повторите ввод")
 
+
+# endregion
+
+# region Заявка на подключение
+@user_rt.message(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                 F.text.lower() == LEXICON_RU['new_services_request'].lower(),
+                 StateFilter(default_state)
+                 )
+async def _client_new_services_request(message: Message):
+    # TODO: получить данные абонента
+    # - если номер у нескольких абонентов, попросить указать нужного
+
+    _abonents = phone_number_by_userid(message.from_user.id)
+    if not _abonents:
+        logging.error(f"для пользователя user_id: {message.from_user.id} не найден номер телефона в таблице")
+        await message.answer(text="Не найден номер телефона. Нажмите кнопку для отправки",
+                             reply_markup=new_user_keyboard)
+    else:
+        if len(_abonents) > 1:
+            keyboard = keyboard_with_contract_client_type_code(_abonents, 'NEW_SERVICES')
+            await message.answer(text=LEXICON_RU['phone_more_then_one_abonent'], reply_markup=keyboard)
+        else:
+            keyboard = keyboard_with_contract_client_type_code(_abonents, 'NEW_SERVICES')
+            await message.answer(text=LEXICON_RU['choose_abonent'], reply_markup=keyboard)
+
+
+@user_rt.callback_query(IsKnownUsers(user_ids, admin_ids, manager_ids),
+                        F.data.startswith("NEW_SERVICES"),
+                        StateFilter(default_state)
+                        )
+async def new_services_answer(callback: CallbackQuery):
+    contract_code = contract_code_from_callback(callback_data=callback.data)
+    full_name_data = get_full_abonent_name_by_contract_code(
+        contract_code=int(contract_code))  # принудительно приведем к int потому что функция возвращает str
+
+    if full_name_data:
+        await callback.message.edit_text(text=f"{full_name_data[0]['FIRST_NAME']} {full_name_data[0]['PATRONYMIC']},"
+                                              f" проверьте ваши данные:\n"
+                                              f"ФИО: <b>{full_name_data[0]['LAST_NAME']}"
+                                              f" {full_name_data[0]['FIRST_NAME']}"
+                                              f" {full_name_data[0]['PATRONYMIC']}</b>\n"
+                                              f"Договор: <b>{full_name_data[0]['CONTRACT']}</b>\n"
+                                              f"Телефон(-ы) для связи: <b>{full_name_data[0]['DEVICE'] if len(full_name_data) == 1 else ','.join(str(el['DEVICE']) for el in full_name_data)}</b>",
+                                         parse_mode='HTML')
+    else:
+        await callback.answer(text=LEXICON_RU['something_wrong'], show_alert=True)
+
+    # TODO: предложить указать подключаемую услугу
+
+    # TODO: сформировать и отправить заявку на почту
+
+    # TODO: поблагодарить за интерес
 
 # endregion

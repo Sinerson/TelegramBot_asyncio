@@ -61,3 +61,16 @@ class DbSecrets:
 class ExternalLinks:
     """ Класс содержит одну переменную, со ссылкой на документ Google Spreadsheet """
     marketing_doc_link: str = os.getenv("MARKETING_ACTION_LINK")
+
+
+@dataclass
+class Mailer:
+    """ Переменные для уведомления по email о новых заявка на подключение услуг """
+    smtp_server: str = os.getenv("SMTP_SERVER")
+    port: int = os.getenv("SMTP_PORT")
+    sender: str = os.getenv("SENDER_EMAIL")
+    username: str = os.getenv("SENDER_AUTH_NAME")
+    password: str = os.getenv("SENDER_AUTH_PASSW")
+    subject: str = "Telegram. Новая заявка на подключение услуг."
+    send_to: str = "bogdan.tabolin@gmail.com"
+    message_text: str = "Поступила новая заявка:"
