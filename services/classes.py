@@ -104,7 +104,6 @@ class Abonent:
     async def save_data(self):
         """
         Сохраняет данные абонента в Redis.
-        TTL: 24 часа (86400 секунд)
         """
         try:
             data = {

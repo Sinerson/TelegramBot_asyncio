@@ -72,5 +72,5 @@ class Mailer:
     username: str = os.getenv("SENDER_AUTH_NAME")
     password: str = os.getenv("SENDER_AUTH_PASSW")
     subject: str = "Telegram. Новая заявка на подключение услуг."
-    send_to: str = "bogdan.tabolin@gmail.com"
+    send_to: str = "zakazuslug@sv-tel.ru"
     message_text: str = "Поступила новая заявка:"
