@@ -30,7 +30,7 @@ class GptSecrets:
 @dataclass
 class DbSecrets:
     """ Класс содержит переменные для строки подключения к БД """
-    if platform == 'linux':
+    if platform.startswith('linux'):
         driver = os.getenv("LINUX_DRIVER")
     else:
         driver = os.getenv("WIN_DRIVER")
@@ -72,5 +72,5 @@ class Mailer:
     username: str = os.getenv("SENDER_AUTH_NAME")
     password: str = os.getenv("SENDER_AUTH_PASSW")
     subject: str = "Telegram. Новая заявка на подключение услуг."
-    send_to: str = "zakazuslug@sv-tel.ru"
+    send_to: str = os.getenv('RECEPIENT_EMAIL')
     message_text: str = "Поступила новая заявка:"

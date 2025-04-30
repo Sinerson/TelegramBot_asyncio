@@ -548,9 +548,8 @@ async def send_email_to_manager(callback: CallbackQuery):
             await callback.message.answer(text="Спасибо!", protect_content=False)
         else:
             await callback.message.answer(text="Не удалось отправить сообщение. Нажмите кнопку еще раз")
+            logging.error("Ошибка отправки email после нажатия на Inline кнопку\"Отправить\"")
     except Exception as e:
         logging.error(f"Ошибка отправки email: {e}")
-
-# TODO: поблагодарить за интерес
 
 # endregion
