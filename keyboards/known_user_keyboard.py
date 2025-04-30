@@ -8,10 +8,11 @@ import copy
 # Создаем список списков с кнопками
 buttons: list[list[KeyboardButton]] = [
     [KeyboardButton(text=LEXICON_RU['my_balance']), KeyboardButton(text=LEXICON_RU['my_services'])]
-    , [KeyboardButton(text=LEXICON_RU['take_part_in_the_survey']), KeyboardButton(text=LEXICON_RU['promised_payment'])]
+    , [KeyboardButton(text=LEXICON_RU['new_services_request']), KeyboardButton(text=LEXICON_RU['promised_payment'])]
     , [KeyboardButton(text=LEXICON_RU['inet_password']), KeyboardButton(text=LEXICON_RU['personal_area_password'])]
-    # , [KeyboardButton(text=LEXICON_RU['drop_the_dice'])]
-    , [KeyboardButton(text=LEXICON_RU['my_support_tickets']), KeyboardButton(text=LEXICON_RU['new_services_request'])]
+    # , [KeyboardButton(text=LEXICON_RU['drop_the_dice'])],
+    # KeyboardButton(text=LEXICON_RU['take_part_in_the_survey'])
+    , [KeyboardButton(text=LEXICON_RU['my_support_tickets']), ]
 ]
 
 user_keyboard = ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
