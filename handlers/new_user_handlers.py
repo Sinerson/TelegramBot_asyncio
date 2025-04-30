@@ -22,6 +22,15 @@ from services.other_functions import add_new_known_user, get_abonents_from_db, \
 new_user_rt = Router()
 
 
+# Этот хэндлер будет срабатывать на команду "/cancel" в любых состояниях,
+# кроме состояния по умолчанию, и отключать машину состояний
+@new_user_rt.message(Command(commands='cancel'), NewUser(user_ids, admin_ids, manager_ids), ~StateFilter(default_state))
+async def _process_command_state_cancellation(message: Message, state: FSMFillForm.new_connection_request_data):
+    await message.answer(text='Вы прервали ввод данных! Можете начать сначала.\n\n')
+    # Сбрасываем состояние и очищаем данные, полученные внутри состояний
+    await state.clear()
+
+
 # region команда Start
 # Хэндлер на команду /start для новых пользователей
 @new_user_rt.message(Command(commands='start'),
