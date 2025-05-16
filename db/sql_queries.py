@@ -162,16 +162,16 @@ where @CurDate >= M.MONTH and M.MONTH_NEXT >= M.MONTH
 select B.user_id as USER_ID,
        sum(CP.PAY_MONEY) as PAY_MONEY,
        CP.TYPE_CODE,
-       convert(smalldatetime, CP.PAY_DATE) as PAY_DATE,
-       PT.TYPE_NAME
+       convert(smalldatetime, CP.DATE_CHANGE) as PAY_DATE,
+       rtrim(PT.TYPE_NAME) as TYPE_NAME, CP.PAY_ID
 from INT_PAYM..CONTRACT_PAYS CP
 join INT_PAYM..PAY_TYPES PT on CP.MONTH = PT.MONTH and CP.TYPE_CODE = PT.TYPE_CODE and PT.MONTH = @CurMonth
 join SV..TBP_TELEGRAM_BOT B on CP.CONTRACT_CODE = B.contract_code
-where CP.PAY_DATE >= dateadd(hh,-3, getdate()) and
+where (CP.PAY_DATE >= dateadd(hh,-3, getdate())  or CP.DATE_CHANGE >= dateadd(hh,-3, getdate()) )and
       CP.MONTH = @CurMonth and
       CP.USED = 1 and
       CP.TYPE_CODE not in (162, 161, 160, 159, 152, 153, 136, 137, 125, 120,  15, 14, 4, 3, 2, 1)
-group by B.user_id, CP.TYPE_CODE, convert(smalldatetime, CP.PAY_DATE), PT.TYPE_NAME
+group by B.user_id, CP.TYPE_CODE, convert(smalldatetime, CP.DATE_CHANGE), rtrim(PT.TYPE_NAME), CP.PAY_ID
 """
 set_payment_notice_status = \
 	"""

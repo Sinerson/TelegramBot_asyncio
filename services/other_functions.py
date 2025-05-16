@@ -177,7 +177,7 @@ def set_promised_payment(client_code: int) -> list:
 
 def get_promised_pay_date(client_code: int) -> str:
     """ Установка доверительного платежа """
-    result = DbConnection.execute_query(PromisedPayDate, client_code)
+    result = DbConnection.execute_query(PromisedPayDate, (client_code,))
     f = lambda date: [res["DATE_CHANGE"] for res in date]
     return f(result)[0].strftime("%Y.%m.%d %H:%M")
 
@@ -196,13 +196,13 @@ def add_new_bot_manager(user_id: str) -> list[dict]:
 
 def inet_account_password(contract_code: int) -> list[dict]:
     """ Возращаем логин и пароль от учетной записи интернет """
-    result = DbConnection.execute_query(getInetAccountPassword_query, contract_code)
+    result = DbConnection.execute_query(getInetAccountPassword_query, (contract_code,))
     return result
 
 
 def personal_area_password(client_code: int) -> list[dict]:
     """ Возращаем логин и пароль от личного кабинета """
-    result = DbConnection.execute_query(getPersonalAreaPassword_query, client_code)
+    result = DbConnection.execute_query(getPersonalAreaPassword_query, (client_code,))
     return result
 
 
@@ -237,7 +237,7 @@ def notify_decline(user_id: int) -> bool:
 
 
 def get_tech_claims(contract_code: int) -> list[dict]:
-    result = DbConnection.execute_query(getHelpDeskClaims_query, contract_code)
+    result = DbConnection.execute_query(getHelpDeskClaims_query, (contract_code,))
     return result
 
 
@@ -248,13 +248,13 @@ def get_tech_claims(contract_code: int) -> list[dict]:
 
 
 def get_contract_code_by_user_id(user_id: int) -> int:
-    result = DbConnection.execute_query(getContractCodeByUserId_query, str(user_id))
+    result = DbConnection.execute_query(getContractCodeByUserId_query, (str(user_id),))
     return result
 
 
 def get_client_code_by_user_id(user_id: int) -> int:
     contract_code = int(get_contract_code_by_user_id(user_id)[0]['CONTRACT_CODE'])
-    result = DbConnection.execute_query(getClientCodeByContractCode, contract_code)
+    result = DbConnection.execute_query(getClientCodeByContractCode, (contract_code,))
     return int(result[0]['CLIENT_CODE'])
 
 
@@ -267,9 +267,9 @@ def insert_prise_to_db(user_id: int, prise: str) -> list[dict]:
 def insert_client_properties(client_code: int, prop_code: int, commentary: str = None) -> list[dict]:
     """ Вставка свойства абонента на основе кода свойства """
     if commentary:
-        result = DbConnection.execute_query(add_client_properties_w_commentary, client_code, prop_code, commentary)
+        result = DbConnection.execute_query(add_client_properties_w_commentary, (client_code, prop_code, commentary,))
     else:
-        result = DbConnection.execute_query(add_client_properties_wo_commentary, client_code, prop_code)
+        result = DbConnection.execute_query(add_client_properties_wo_commentary, (client_code, prop_code,))
     return result
 
 
@@ -323,12 +323,12 @@ def poll_id_from_callback(callback_data) -> any:
 
 async def add_phone_for_unknown_user(user_id: str, chat_id: str, phonenumber: str):
     """ Функция сохраняет номер телефона пользователя, но не являющегося абонентом"""
-    DbConnection.execute_query(update_unknown_user, user_id, chat_id, phonenumber)
+    DbConnection.execute_query(update_unknown_user, (user_id, chat_id, phonenumber,))
 
 
 async def check_user_is_exists(user_id: str) -> list:
     """ Проверим существование записи для user_id """
-    result = DbConnection.execute_query(checkUserExists, user_id)
+    result = DbConnection.execute_query(checkUserExists, (user_id,))
     return list(result)
 
 
@@ -336,7 +336,7 @@ async def convert_unknown_user_to_known(phonenumber: str, contract_code: int, us
     """ Обновление записи в БД для пользователя, который ранее обращался к боту, но его телефон не был найден в
     биллинге"""
     logging.info(f"phonenumber: {phonenumber}, contract_code: {contract_code}, user_id: {user_id}, chat_id: {chat_id}")
-    result = DbConnection.execute_query(updateUser, phonenumber, contract_code, user_id, chat_id)
+    result = DbConnection.execute_query(updateUser, (phonenumber, contract_code, user_id, chat_id,))
     return result
 
 
