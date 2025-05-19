@@ -45,7 +45,7 @@ async def send_payment_notice(delay_timer):
                                                         (pay_date, float(pay_sum), tg_user_id))
                     logging.info(
                         f"Результат обновления даты последнего платежа для пользователя {tg_user_id}: {'Успех' if result[0]['UPDATE_RESULT'] == 1 else 'Неудача'}")
-                    await bot.send_message(chat_id=124902528,  # tg_user_id,
+                    await bot.send_message(chat_id=tg_user_id,
                                            text=f"{LEXICON_RU['get_payment']} {round(float(pay_sum), 2)} {LEXICON_RU['rubles']}\n",
                                            disable_notification=False)
                     logging.info(
