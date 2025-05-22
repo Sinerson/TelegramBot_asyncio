@@ -60,11 +60,11 @@ async def start() -> None:
     logging.info(
         f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи добавления платежей")
     #   добавление оплат в redis
-    loop.create_task(add_payments_to_redis(10))
+    loop.create_task(add_payments_to_redis(30))
     #   отправка уведомления пользователю
     logging.info(
         f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи отправки уведомления о платежах")
-    loop.create_task(send_payment_notice(20))
+    loop.create_task(send_payment_notice(60))
     # Проверка у кого из пользователей бот забанен
     # logging.info(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} постановка в планировщик задачи проверки забанивших бота")
     # loop.create_task(check_ban_by_user(10800))

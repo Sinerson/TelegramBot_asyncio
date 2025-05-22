@@ -46,8 +46,9 @@ async def add_payments_to_redis(wait_for):
                         print(f"Время {datetime.datetime.now()}, обнаружили платежные данные")
                         logging.info(
                             f"Поставили в очередь на отправку уведомление для user_id: {pay['USER_ID']} сумму {pay['PAY_MONEY']} руб., дата платежа: {pay['PAY_DATE']}, ID платежа: {int(pay['PAY_ID'])} ")
-                        await push_payment_data(f"{pay['USER_ID']}:{pay['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",
-                                                str(pay['PAY_MONEY']), int(pay['PAY_ID']))
+                        await push_payment_data(
+                            f"payments:{pay['USER_ID']}:{pay['PAY_DATE'].strftime('%Y:%m:%d:%H:%M:%S')}",
+                            str(pay['PAY_MONEY']), int(pay['PAY_ID']))
                     else:
                         print(f"PAY_ID: {pay['PAY_ID']} меньше чем {last}")
                         continue
